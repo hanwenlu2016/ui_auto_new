@@ -1,0 +1,145 @@
+{
+    "name": "\u767b\u5f55\u8d26\u53f7 1",
+    "status": "passed",
+    "statusDetails": null,
+    "stage": null,
+    "description": null,
+    "descriptionHtml": null,
+    "steps": [
+        {
+            "name": "fill admin",
+            "status": "passed",
+            "statusDetails": null,
+            "stage": null,
+            "description": null,
+            "descriptionHtml": null,
+            "steps": [],
+            "attachments": [],
+            "parameters": [],
+            "start": 1763899981070,
+            "stop": 1763899981178,
+            "id": null
+        },
+        {
+            "name": "wait 1",
+            "status": "passed",
+            "statusDetails": null,
+            "stage": null,
+            "description": null,
+            "descriptionHtml": null,
+            "steps": [],
+            "attachments": [],
+            "parameters": [],
+            "start": 1763899981179,
+            "stop": 1763899982242,
+            "id": null
+        },
+        {
+            "name": "fill 123456",
+            "status": "passed",
+            "statusDetails": null,
+            "stage": null,
+            "description": null,
+            "descriptionHtml": null,
+            "steps": [],
+            "attachments": [],
+            "parameters": [],
+            "start": 1763899982243,
+            "stop": 1763899982308,
+            "id": null
+        },
+        {
+            "name": "wait 1",
+            "status": "passed",
+            "statusDetails": null,
+            "stage": null,
+            "description": null,
+            "descriptionHtml": null,
+            "steps": [],
+            "attachments": [],
+            "parameters": [],
+            "start": 1763899982309,
+            "stop": 1763899983387,
+            "id": null
+        },
+        {
+            "name": "click ",
+            "status": "passed",
+            "statusDetails": null,
+            "stage": null,
+            "description": null,
+            "descriptionHtml": null,
+            "steps": [],
+            "attachments": [],
+            "parameters": [],
+            "start": 1763899983388,
+            "stop": 1763899983520,
+            "id": null
+        },
+        {
+            "name": "wait 5",
+            "status": "passed",
+            "statusDetails": null,
+            "stage": null,
+            "description": null,
+            "descriptionHtml": null,
+            "steps": [],
+            "attachments": [],
+            "parameters": [],
+            "start": 1763899983522,
+            "stop": 1763899988595,
+            "id": null
+        }
+    ],
+    "attachments": [
+        {
+            "name": "Step 1: fill",
+            "source": "5d94e902-ef1b-475f-9d27-fc978e75faa1-step-1.png",
+            "type": "image/png"
+        },
+        {
+            "name": "Step 2: wait",
+            "source": "8ac2a7ec-6e57-4b9f-9767-1710e2988a5b-step-2.png",
+            "type": "image/png"
+        },
+        {
+            "name": "Step 3: fill",
+            "source": "a5fc637f-893b-48d2-bdef-7e171ae16ef4-step-3.png",
+            "type": "image/png"
+        },
+        {
+            "name": "Step 4: wait",
+            "source": "c1e63fcd-22e0-49a7-aa3a-bf987d08c1e1-step-4.png",
+            "type": "image/png"
+        },
+        {
+            "name": "Step 5: click",
+            "source": "054948b6-9695-4daf-9173-d1755866dcc0-step-5.png",
+            "type": "image/png"
+        },
+        {
+            "name": "Step 6: wait",
+            "source": "6b50907d-24a9-49f7-8646-649c396e0f4f-step-6.png",
+            "type": "image/png"
+        }
+    ],
+    "parameters": [],
+    "start": 1763899976535,
+    "stop": 1763899988596,
+    "uuid": "b7eee6dd-c0fc-4ab3-a003-c012922b0ca4",
+    "historyId": "TestCase_1",
+    "testCaseId": "1",
+    "fullName": "TestCase_1_\u767b\u5f55\u8d26\u53f7 1",
+    "labels": [
+        {
+            "name": "feature",
+            "value": "UI Automation"
+        },
+        {
+            "name": "story",
+            "value": "\u767b\u5f55\u8d26\u53f7 1"
+        }
+    ],
+    "links": [],
+    "titlePath": []
+}
