@@ -420,3 +420,6 @@ FROM pages
 WHERE pages.module_id = $1::INTEGER
 [2025-11-23 21:47:45] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 1.242s ago] (1,)
 [2025-11-23 21:47:45] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2025-11-23 21:49:50] [INFO] [ui_auto] [main.py:58]: UI Automation Platform API started successfully
+[2025-11-23 21:49:58] [INFO] [ui_auto] [main.py:58]: UI Automation Platform API started successfully
+[2025-11-23 21:49:58] [INFO] [ui_auto] [main.py:58]: UI Automation Platform API started successfully

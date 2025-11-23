@@ -59,7 +59,7 @@ async def list_reports(
             report_url=report_url
         ))
     return result
-
+    
 @router.delete("/{report_id}", response_model=TestReport)
 async def delete_report(
     report_id: int,
