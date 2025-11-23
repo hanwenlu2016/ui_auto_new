@@ -1,18 +1,43 @@
+"""
+Celery Worker 任务定义模块
+
+本模块定义了所有异步执行的 Celery 任务：
+1. run_test_case_task: 执行单个测试用例
+2. run_test_suite_task: 并发执行测试套件中的所有用例
+
+任务执行流程：
+- 接收来自 API 的任务请求
+- 在独立的数据库会话中执行测试
+- 生成 Allure 测试报告
+- 返回执行结果
+"""
 import asyncio
-import logging
 import nest_asyncio
 from app.core.celery_app import celery_app
 from app.services.runner import TestRunner
 from app.services.report_service import ReportService
 from app.db.session import AsyncSessionLocal
 
-# Allow nested event loops for Celery workers
-nest_asyncio.apply()
+# 初始化日志系统
+from app.core.logger import logger
 
-logger = logging.getLogger(__name__)
+# 允许嵌套事件循环 - Celery worker 需要
+nest_asyncio.apply()
 
 @celery_app.task(acks_late=True)
 def run_test_case_task(case_id: int, headless: bool = True, browser_type: str = "chromium", executor_id: int = None):
+    """
+    执行单个测试用例的 Celery 任务
+    
+    Args:
+        case_id: 测试用例 ID
+        headless: 是否使用无头模式运行浏览器
+        browser_type: 浏览器类型 (chromium/firefox/webkit)
+        executor_id: 执行者用户 ID
+    
+    Returns:
+        dict: 包含执行结果、报告路径等信息的字典
+    """
     logger.info(f"Starting test case execution for case_id={case_id}, headless={headless}, browser={browser_type}, executor={executor_id}")
     
     async def _run():
@@ -53,6 +78,21 @@ def run_test_case_task(case_id: int, headless: bool = True, browser_type: str = 
 
 @celery_app.task(acks_late=True)
 def run_test_suite_task(suite_id: int, headless: bool = True, browser_type: str = "chromium", executor_id: int = None):
+    """
+    并发执行测试套件中所有用例的 Celery 任务
+    
+    使用 asyncio.gather 实现并发执行，每个用例在独立的数据库会话中运行。
+    执行完成后生成包含所有用例结果的汇总 Allure 报告。
+    
+    Args:
+        suite_id: 测试套件 ID
+        headless: 是否使用无头模式运行浏览器
+        browser_type: 浏览器类型 (chromium/firefox/webkit)
+        executor_id: 执行者用户 ID
+    
+    Returns:
+        dict: 包含套件执行结果、通过/失败统计、报告路径等信息的字典
+    """
     logger.info(f"Starting test suite execution for suite_id={suite_id}, headless={headless}, browser={browser_type}, executor={executor_id}")
     
     async def run_single_case(case_id: int, case_name: str):

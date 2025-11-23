@@ -1,10 +1,22 @@
 import asyncio
-import json
-import logging
-from typing import Callable, Optional
-from playwright.async_api import async_playwright, Page, BrowserContext, Browser
+"""
+测试录制服务模块
 
-logger = logging.getLogger(__name__)
+本模块负责录制用户在浏览器中的操作并生成测试用例：
+1. 使用 Playwright 的 Inspector 模式录制用户操作
+2. 捕获页面元素的定位器信息
+3. 将录制的操作转换为测试步骤
+4. 自动保存到数据库
+
+录制模式：非无头模式，允许用户交互
+"""
+import json
+from typing import Callable, Optional, List, Dict, Any
+from playwright.async_api import async_playwright, Page, BrowserContext, Browser
+from app.tools.playwright_tool import PlaywrightTool
+
+# 使用全局日志系统
+from app.core.logger import logger
 
 # Simple JS to capture events
 RECORDER_SCRIPT = """

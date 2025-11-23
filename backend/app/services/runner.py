@@ -1,5 +1,19 @@
+"""
+测试用例执行器模块
+
+本模块负责执行 UI 自动化测试用例：
+1. 使用 Playwright 驱动浏览器执行测试步骤
+2. 生成 Allure 格式的测试结果
+3. 捕获每个步骤的截图作为附件
+4. 处理测试执行过程中的异常
+
+执行流程：
+- 从数据库加载测试用例及其关联的页面元素
+- 自动导航到项目的 base_url（如果配置）
+- 逐步执行测试步骤
+- 生成 JSON 格式的 Allure 测试结果
+"""
 import asyncio
-import logging
 import os
 import uuid
 from datetime import datetime
@@ -13,19 +27,45 @@ import allure_commons
 from allure_commons.types import LabelType, AttachmentType
 from allure_commons.model2 import TestResult, TestStepResult, Status, StatusDetails, Label, Parameter
 
-logger = logging.getLogger(__name__)
+# 使用全局日志系统
+from app.core.logger import logger
 
 class TestRunner:
+    """
+    测试用例执行器类
+    
+    负责执行单个测试用例，生成 Allure 测试报告。
+    """
     def __init__(self, db: AsyncSession):
+        """
+        初始化测试执行器
+        
+        Args:
+            db: 异步数据库会话
+        """
         self.db = db
-        # Calculate paths relative to backend root directory
-        # runner.py is in backend/app/services/
-        # so we go up 3 levels to get backend/
+        # 计算 Allure 结果目录路径（backend/allure-results）
+        # runner.py 位于 backend/app/services/，需要向上3级
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         self.results_dir = os.path.join(base_dir, "allure-results")
         os.makedirs(self.results_dir, exist_ok=True)
 
     async def run_test_case(self, test_case_id: int, headless: bool = True, browser_type: str = "chromium") -> Dict[str, Any]:
+        """
+        执行单个测试用例
+        
+        Args:
+            test_case_id: 测试用例 ID
+            headless: 是否使用无头模式运行浏览器
+            browser_type: 浏览器类型 (chromium/firefox/webkit)
+        
+        Returns:
+            Dict[str, Any]: 包含以下键的字典：
+                - success (bool): 测试是否成功
+                - steps (List): 每个步骤的执行结果
+                - error (str): 错误信息（如果失败）
+                - screenshot (str): Base64编码的失败截图（如果失败）
+        """
         result = {
             "success": False,
             "steps": [],

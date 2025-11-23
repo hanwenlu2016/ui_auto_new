@@ -1,7 +1,18 @@
+"""
+测试报告服务模块
+
+本模块负责 Allure 测试报告的生成和管理：
+1. 调用 Allure CLI 生成 HTML 测试报告
+2. 管理报告的数据库记录（CRUD 操作）
+3. 物理删除报告文件和目录
+4. 支持自定义报告名称（用于测试套件）
+
+报告存储路径：backend/allure-reports/
+结果文件路径：backend/allure-results/
+"""
 import os
 import subprocess
 import shutil
-import logging
 from typing import List, Dict, Optional
 from sqlalchemy import select
 from datetime import datetime
@@ -9,14 +20,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.report import TestReport
 from app.schemas.report import TestReportCreate
 
-logger = logging.getLogger(__name__)
+# 使用全局日志系统
+from app.core.logger import logger
 
 class ReportService:
+    """测试报告服务类 - 负责 Allure 报告的生成和管理"""
     def __init__(self, db: Optional[AsyncSession] = None):
+        """
+        初始化报告服务
+        
+        Args:
+            db: 异步数据库会话（可选）
+        """
         self.db = db
-        # Calculate paths relative to backend root directory
-        # report_service.py is in backend/app/services/
-        # so we go up 3 levels to get backend/
+        # 计算报告和结果目录路径（backend/allure-reports 和 backend/allure-results）
+        # report_service.py 位于 backend/app/services/，需要向上3级
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         self.results_dir = os.path.join(base_dir, "allure-results")
         self.reports_dir = os.path.join(base_dir, "allure-reports")
