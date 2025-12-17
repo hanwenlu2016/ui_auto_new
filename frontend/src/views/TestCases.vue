@@ -74,7 +74,13 @@
             />
           </n-form-item>
 
-          <n-divider title-placement="left">测试步骤</n-divider>
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+             <n-divider title-placement="left" style="margin: 0; flex: 1;">测试步骤</n-divider>
+             <n-button text type="primary" size="small" @click="showAIModal = true">
+               ✨ AI 生成
+             </n-button>
+          </div>
+          <div style="margin-bottom: 24px;"></div>
           
           <n-dynamic-input
             v-model:value="formValue.steps"
@@ -122,12 +128,59 @@
         </template>
       </n-card>
     </n-modal>
+    
+    <!-- AI Generation Modal -->
+    <n-modal v-model:show="showAIModal">
+      <n-card
+        title="✨ AI 生成测试步骤"
+        :bordered="false"
+        size="huge"
+        role="dialog"
+        aria-modal="true"
+        style="width: 600px"
+      >
+        <div style="margin-bottom: 20px;">
+           <p style="color: #666; margin-bottom: 8px;">
+             输入自然语言描述，AI 将自动为您生成测试步骤。
+           </p>
+           <p style="color: #888; font-size: 12px; margin-bottom: 16px;">
+             示例: "打开百度首页，等待 3 秒，在输入框中输入 'Selenium'，点击搜索按钮"
+           </p>
+           <n-input
+             v-model:value="aiPrompt"
+             type="textarea"
+             placeholder="请描述您的测试步骤..."
+             :rows="5"
+           />
+        </div>
+        
+        <div v-if="aiLoading" style="text-align: center; margin: 20px 0;">
+          <n-spin size="large">
+             <template #description>正在生成步骤...</template>
+          </n-spin>
+        </div>
+        
+        <template #footer>
+          <n-space justify="end">
+            <n-button @click="showAIModal = false">取消</n-button>
+            <n-button 
+              type="primary" 
+              @click="handleGenerateSteps" 
+              :disabled="!aiPrompt || aiLoading"
+              :loading="aiLoading"
+            >
+              生成
+            </n-button>
+          </n-space>
+        </template>
+      </n-card>
+    </n-modal>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, h, watch } from 'vue'
-import { NButton, NSpace, useMessage, type DataTableColumns, type FormInst, NCard, NDataTable, NModal, NForm, NFormItem, NInput, NSelect, NDivider, NDynamicInput, NGrid, NFormItemGridItem, NTag } from 'naive-ui'
+import { NButton, NSpace, useMessage, type DataTableColumns, type FormInst, NCard, NDataTable, NModal, NForm, NFormItem, NInput, NSelect, NDivider, NDynamicInput, NGrid, NFormItemGridItem, NTag, NSpin } from 'naive-ui'
 import api from '@/api'
 
 interface TestCase {
@@ -178,8 +231,13 @@ const formValue = ref({
   name: '',
   description: '',
   priority: 'P1',
-  steps: [] as { action: string; target: string; value: string; page_id?: number; element_id?: number }[]
+  steps: [] as { action: string; target: string; value: string; page_id?: number | null; element_id?: number | null }[]
 })
+
+// AI Generation State
+const showAIModal = ref(false)
+const aiPrompt = ref('')
+const aiLoading = ref(false)
 
 const rules = {
   name: {
@@ -308,19 +366,6 @@ const fetchPages = async () => {
   }
 }
 
-// Fetch all elements for the module (via pages) or just fetch all elements and filter locally?
-// Better to fetch elements by page when page is selected, but for editing existing steps we might need all.
-// Let's fetch all elements for the module's pages.
-// Actually, the API supports filtering by module_id? No, we removed it.
-// We need to fetch elements by page_id.
-// Strategy: When a page is selected in a step, fetch elements for that page if not already fetched?
-// Or just pre-fetch all elements for all pages in the module?
-// Let's keep it simple: fetch all elements for the current module's pages.
-// We'll need a new API endpoint or just loop through pages.
-// For now, let's just fetch elements when a page is selected in the UI.
-// But we need a way to populate the options.
-// Let's add a helper to fetch elements for a specific page.
-
 const fetchElementsForPage = async (pageId: number) => {
   try {
     const response = await api.get(`/elements/?page_id=${pageId}`)
@@ -438,6 +483,45 @@ const handleDelete = async (row: TestCase) => {
     fetchTestCases()
   } catch (error) {
     message.error('Failed to delete test case')
+  }
+}
+
+// AI Handler
+const handleGenerateSteps = async () => {
+  if (!aiPrompt.value) {
+    message.warning('请输入描述')
+    return
+  }
+  aiLoading.value = true
+  try {
+    const response = await api.post('/ai/generate', { prompt: aiPrompt.value })
+    const generatedSteps = response.data.steps
+    
+    if (generatedSteps && generatedSteps.length > 0) {
+      // Map AI steps to UI format
+      const newSteps = generatedSteps.map((s: any) => ({
+        action: s.action,
+        // AI returns raw 'target' (selector), so we put it in target
+        // and leave page_id/element_id empty as they are not mapped yet
+        target: s.target || '', 
+        value: s.value || '',
+        page_id: null,
+        element_id: null
+      }))
+      
+      // Re-assign array to trigger reactivity
+      formValue.value.steps = [...formValue.value.steps, ...newSteps]
+      
+      message.success(`成功生成 ${newSteps.length} 个步骤`)
+      showAIModal.value = false
+      aiPrompt.value = ''
+    } else {
+      message.warning('未能生成步骤，请尝试更详细的描述')
+    }
+  } catch (error) {
+    message.error('生成失败: ' + error)
+  } finally {
+    aiLoading.value = false
   }
 }
 
