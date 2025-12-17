@@ -1,5 +1,6 @@
 from typing import Optional
 from pydantic import BaseModel
+from datetime import datetime
 
 class PageElementBase(BaseModel):
     name: str
@@ -16,6 +17,12 @@ class PageElementUpdate(PageElementBase):
 class PageElement(PageElementBase):
     id: int
     page_id: int
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    creator_id: Optional[int] = None
+    updater_id: Optional[int] = None
+    creator_name: Optional[str] = None
+    updater_name: Optional[str] = None
 
     class Config:
         from_attributes = True

@@ -27,6 +27,9 @@ class TestCase(TestCaseBase):
     creator_id: Optional[int] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
+    updater_id: Optional[int] = None
+    creator_name: Optional[str] = None
+    updater_name: Optional[str] = None
 
     class Config:
         from_attributes = True

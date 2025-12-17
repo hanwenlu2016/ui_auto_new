@@ -36,7 +36,7 @@ async def create_test_suite(
     """
     Create new test suite.
     """
-    test_suite = await suite_service.create(db, obj_in=test_suite_in)
+    test_suite = await suite_service.create(db, obj_in=test_suite_in, creator_id=current_user.id, updater_id=current_user.id)
     return test_suite
 
 @router.get("/{suite_id}", response_model=TestSuiteSchema)
@@ -69,7 +69,7 @@ async def update_test_suite(
     if not test_suite:
         raise HTTPException(status_code=404, detail="Test suite not found")
     
-    test_suite = await suite_service.update(db, db_obj=test_suite, obj_in=test_suite_in)
+    test_suite = await suite_service.update(db, db_obj=test_suite, obj_in=test_suite_in, updater_id=current_user.id)
     return test_suite
 
 @router.delete("/{suite_id}", response_model=TestSuiteSchema)

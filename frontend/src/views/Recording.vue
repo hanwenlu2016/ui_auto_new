@@ -12,6 +12,13 @@
       <n-grid-item :span="24">
         <n-card :bordered="false" class="control-card">
           <n-input-group>
+            <n-select
+              v-model:value="selectedProjectId"
+              :options="projectOptions"
+              placeholder="选择项目"
+              style="width: 200px"
+              :disabled="isRecording"
+            />
             <n-input 
               v-model:value="url" 
               placeholder="请输入要录制的网址 (例如: https://example.com)" 
@@ -29,6 +36,15 @@
               style="width: 120px"
             >
               {{ isRecording ? '停止录制' : '开始录制' }}
+            </n-button>
+            <n-button
+              type="success"
+              @click="showSaveModal = true"
+              size="large"
+              style="width: 120px; margin-left: 12px;"
+              :disabled="isRecording || events.length === 0"
+            >
+              保存用例
             </n-button>
           </n-input-group>
         </n-card>
@@ -60,22 +76,188 @@
         </n-card>
       </n-grid-item>
     </n-grid>
+
+    <!-- Save Modal -->
+    <n-modal v-model:show="showSaveModal" style="width: 600px">
+      <n-card
+        title="保存为测试用例"
+        :bordered="false"
+        size="huge"
+        role="dialog"
+        aria-modal="true"
+      >
+        <n-form ref="formRef" :model="formValue" :rules="rules" label-placement="top">
+          <n-form-item label="用例名称" path="name">
+            <n-input v-model:value="formValue.name" placeholder="请输入测试用例名称" />
+          </n-form-item>
+          <n-form-item label="所属模块" path="module_id">
+            <n-select
+              v-model:value="formValue.module_id"
+              :options="moduleOptions"
+              placeholder="选择模块"
+            />
+          </n-form-item>
+          <n-form-item label="优先级" path="priority">
+            <n-select
+              v-model:value="formValue.priority"
+              :options="[
+                { label: 'P0', value: 'P0' },
+                { label: 'P1', value: 'P1' },
+                { label: 'P2', value: 'P2' }
+              ]"
+            />
+          </n-form-item>
+          <n-form-item label="描述" path="description">
+            <n-input
+              v-model:value="formValue.description"
+              type="textarea"
+              placeholder="描述（可选）"
+            />
+          </n-form-item>
+        </n-form>
+        <template #footer>
+          <n-space justify="end">
+            <n-button @click="showSaveModal = false">取消</n-button>
+            <n-button type="primary" @click="handleSave">保存</n-button>
+          </n-space>
+        </template>
+      </n-card>
+    </n-modal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onUnmounted } from 'vue'
-import { useMessage, NCard, NInputGroup, NInput, NButton, NScrollbar, NTimeline, NTimelineItem, NGrid, NGridItem, NTag, NEmpty } from 'naive-ui'
+import { ref, onUnmounted, onMounted, watch } from 'vue'
+import { useMessage, NCard, NInputGroup, NInput, NButton, NScrollbar, NTimeline, NTimelineItem, NGrid, NGridItem, NTag, NEmpty, NModal, NForm, NFormItem, NSelect, NSpace, type FormRules } from 'naive-ui'
+import api from '@/api'
 
 const message = useMessage()
-const url = ref('https://example.com')
+const url = ref('')
 const isRecording = ref(false)
 const events = ref<any[]>([])
 let ws: WebSocket | null = null
 
+// Project Selection
+const projects = ref<any[]>([])
+const projectOptions = ref<{ label: string; value: number }[]>([])
+const selectedProjectId = ref<number | null>(null)
+
+// Save Implementation
+const showSaveModal = ref(false)
+const formRef = ref(null)
+const moduleOptions = ref<{ label: string; value: number }[]>([])
+const formValue = ref({
+  name: '',
+  module_id: null as number | null,
+  priority: 'P1',
+  description: ''
+})
+
+const rules: FormRules = {
+  name: { required: true, message: '请输入用例名称', trigger: 'blur' },
+  module_id: { required: true, type: 'number', message: '请选择模块', trigger: 'change' }
+}
+
+const fetchProjects = async () => {
+  try {
+    const response = await api.get('/projects/')
+    projects.value = response.data
+    projectOptions.value = projects.value.map((p: any) => ({
+      label: p.name,
+      value: p.id
+    }))
+    // Select first project by default if available
+    if (projects.value.length > 0) {
+      selectedProjectId.value = projects.value[0].id
+    }
+  } catch (error) {
+    message.error('获取项目列表失败')
+  }
+}
+
+// Watch selected project to update URL
+watch(selectedProjectId, (newId) => {
+  if (newId) {
+    const project = projects.value.find(p => p.id === newId)
+    if (project && project.base_url) {
+      url.value = project.base_url
+    } else {
+      url.value = ''
+    }
+  } else {
+    url.value = ''
+  }
+})
+
+const fetchModules = async (projectId: number | null) => {
+  if (!projectId) {
+    moduleOptions.value = []
+    return
+  }
+  try {
+    // Pass project_id to filter modules
+    const response = await api.get(`/modules/?project_id=${projectId}`)
+    moduleOptions.value = response.data.map((m: any) => ({
+      label: m.name,
+      value: m.id
+    }))
+    if (moduleOptions.value.length > 0) {
+      formValue.value.module_id = moduleOptions.value[0].value
+    } else {
+       formValue.value.module_id = null
+    }
+  } catch (error) {
+    message.error('获取模块列表失败')
+  }
+}
+
+// Watch showSaveModal to fetch modules when opened
+watch(showSaveModal, (show) => {
+  if (show && selectedProjectId.value) {
+    fetchModules(selectedProjectId.value)
+  }
+})
+
+const handleSave = async () => {
+  // @ts-ignore
+  formRef.value?.validate(async (errors) => {
+    if (!errors) {
+      try {
+        const steps = events.value.map(e => ({
+          action: e.action,
+          target: e.selector, // Map selector to target
+          value: e.value || '',
+          page_id: null,
+          element_id: null
+        }))
+        
+        // Ensure steps is not empty? Maybe add a check.
+        if (steps.length === 0) {
+          message.warning('没有可保存的步骤')
+          return
+        }
+
+        const payload = {
+          ...formValue.value,
+          steps: steps
+        }
+        
+        await api.post('/cases/', payload)
+        message.success('测试用例保存成功')
+        showSaveModal.value = false
+        // Optionally navigate to test cases list
+        // router.push('/cases') // Assuming /cases is the route
+      } catch (error) {
+        message.error('保存失败')
+      }
+    }
+  })
+}
+
+// Recording Implementation
 const connectWebSocket = () => {
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-  const wsUrl = `${protocol}//${window.location.host}/ws`
+  const wsUrl = `${protocol}//${window.location.host}/api/v1/recording/ws`
   
   ws = new WebSocket(wsUrl)
   
@@ -91,6 +273,9 @@ const connectWebSocket = () => {
     } else if (data.status === 'stopped') {
       isRecording.value = false
       message.success('录制已停止')
+    } else if (data.status === 'error') {
+      isRecording.value = false
+      message.error(`录制启动失败: ${data.message}`)
     } else if (data.action) {
       events.value.push(data)
     }
@@ -116,27 +301,29 @@ const toggleRecording = () => {
     }
     events.value = []
     connectWebSocket()
-    // In a real implementation, we would send a start message to the backend
-    // For now, we simulate it via WebSocket connection logic or assume backend handles it on connect
-    // But typically we need to send a message
+    
     if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ action: 'start', url: url.value }))
+      ws.send(JSON.stringify({ type: 'start', url: url.value }))
     } else {
-      // Wait for connection if just created
       setTimeout(() => {
         if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({ action: 'start', url: url.value }))
+          ws.send(JSON.stringify({ type: 'start', url: url.value }))
         }
       }, 1000)
     }
   } else {
     if (ws) {
-      ws.send(JSON.stringify({ action: 'stop' }))
+      ws.send(JSON.stringify({ type: 'stop' }))
       ws.close()
     }
     isRecording.value = false
   }
 }
+
+onMounted(() => {
+  fetchProjects()
+  // fetchModules() - Removed, we fetch on modal open or project select
+})
 
 onUnmounted(() => {
   if (ws) {

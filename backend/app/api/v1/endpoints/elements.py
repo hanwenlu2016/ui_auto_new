@@ -36,7 +36,7 @@ async def create_page_element(
     """
     Create new page element.
     """
-    page_element = await element_service.create(db, obj_in=page_element_in)
+    page_element = await element_service.create(db, obj_in=page_element_in, creator_id=current_user.id, updater_id=current_user.id)
     return page_element
 
 @router.get("/{element_id}", response_model=PageElementSchema)
@@ -69,7 +69,7 @@ async def update_page_element(
     if not page_element:
         raise HTTPException(status_code=404, detail="Page element not found")
     
-    page_element = await element_service.update(db, db_obj=page_element, obj_in=page_element_in)
+    page_element = await element_service.update(db, db_obj=page_element, obj_in=page_element_in, updater_id=current_user.id)
     return page_element
 
 @router.delete("/{element_id}", response_model=PageElementSchema)

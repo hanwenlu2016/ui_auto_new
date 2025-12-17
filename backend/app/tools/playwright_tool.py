@@ -75,6 +75,11 @@ class PlaywrightTool:
         """
         if not self.page:
             raise RuntimeError("Browser not started. Call start() first.")
+        
+        # Set default timeout to 60 seconds if not specified
+        if "timeout" not in kwargs:
+            kwargs["timeout"] = 60000
+            
         await self.page.goto(url, **kwargs)
         logger.debug(f"Navigated to {url}")
     

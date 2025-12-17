@@ -50,7 +50,8 @@ class ReportService:
         status: str = "success",
         error_message: Optional[str] = None,
         executor_id: Optional[int] = None,
-        report_name: Optional[str] = None
+        report_name: Optional[str] = None,
+        results_dir: Optional[str] = None
     ) -> TestReport:
         """Generate Allure report and save to database."""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -68,9 +69,12 @@ class ReportService:
         
         report_path = os.path.join(self.reports_dir, report_name)
         
+        # Use provided results_dir or default to self.results_dir
+        source_dir = results_dir if results_dir else self.results_dir
+        
         try:
             subprocess.run(
-                ["allure", "generate", self.results_dir, "-o", report_path, "--clean"],
+                ["allure", "generate", source_dir, "-o", report_path, "--clean"],
                 check=True,
                 timeout=30
             )

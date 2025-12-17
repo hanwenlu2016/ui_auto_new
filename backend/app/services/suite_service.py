@@ -17,7 +17,11 @@ class SuiteService(CRUDBase[TestSuite, TestSuiteCreate, TestSuiteUpdate]):
         self, db: AsyncSession, *, skip: int = 0, limit: int = 100, filters: dict = None
     ) -> List[TestSuite]:
         from sqlalchemy.orm import selectinload
-        stmt = select(TestSuite).options(selectinload(TestSuite.test_cases))
+        stmt = select(TestSuite).options(
+            selectinload(TestSuite.test_cases),
+            selectinload(TestSuite.creator),
+            selectinload(TestSuite.updater)
+        )
         
         if filters:
             for key, value in filters.items():
@@ -26,7 +30,15 @@ class SuiteService(CRUDBase[TestSuite, TestSuiteCreate, TestSuiteUpdate]):
                     
         stmt = stmt.offset(skip).limit(limit)
         result = await db.execute(stmt)
-        return result.scalars().all()
+        suites = result.scalars().all()
+        
+        for suite in suites:
+            if suite.creator:
+                suite.creator_name = suite.creator.full_name or suite.creator.email
+            if suite.updater:
+                suite.updater_name = suite.updater.full_name or suite.updater.email
+                
+        return suites
 
     async def create(self, db: AsyncSession, *, obj_in: TestSuiteCreate, **kwargs) -> TestSuite:
         db_obj = TestSuite(

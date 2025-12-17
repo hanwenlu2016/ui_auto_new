@@ -28,25 +28,28 @@ nest_asyncio.apply()
 def run_test_case_task(case_id: int, headless: bool = True, browser_type: str = "chromium", executor_id: int = None):
     """
     执行单个测试用例的 Celery 任务
-    
-    Args:
-        case_id: 测试用例 ID
-        headless: 是否使用无头模式运行浏览器
-        browser_type: 浏览器类型 (chromium/firefox/webkit)
-        executor_id: 执行者用户 ID
-    
-    Returns:
-        dict: 包含执行结果、报告路径等信息的字典
     """
+    import tempfile
+    import shutil
+    import uuid
+    import os
+    
     logger.info(f"Starting test case execution for case_id={case_id}, headless={headless}, browser={browser_type}, executor={executor_id}")
+    
+    # Create a unique temporary directory for this execution
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    temp_results_dir = os.path.join(base_dir, "temp_results", f"case_{case_id}_{uuid.uuid4()}")
+    os.makedirs(temp_results_dir, exist_ok=True)
     
     async def _run():
         async with AsyncSessionLocal() as db:
-            runner = TestRunner(db)
+            # Initialize with temp results dir
+            runner = TestRunner(db, results_dir=temp_results_dir)
+            
             result = await runner.run_test_case(case_id, headless=headless, browser_type=browser_type)
             logger.info(f"Test case {case_id} completed. Success: {result.get('success')}")
             
-            # Generate Allure report
+            # Generate Allure report using temp results dir
             try:
                 report_service = ReportService(db)
                 status = "success" if result.get('success') else "failure"
@@ -58,7 +61,8 @@ def run_test_case_task(case_id: int, headless: bool = True, browser_type: str = 
                     headless=headless,
                     status=status,
                     error_message=error_msg,
-                    executor_id=executor_id
+                    executor_id=executor_id,
+                    results_dir=temp_results_dir  # Pass temp dir
                 )
                 logger.info(f"Report generated: {report.report_path}")
                 result['report_id'] = report.id
@@ -75,30 +79,39 @@ def run_test_case_task(case_id: int, headless: bool = True, browser_type: str = 
     except Exception as e:
         logger.error(f"Test case {case_id} failed with error: {e}", exc_info=True)
         raise
+    finally:
+        # cleanup temp directory
+        if os.path.exists(temp_results_dir):
+            try:
+                shutil.rmtree(temp_results_dir, ignore_errors=True)
+                logger.info(f"Cleaned up temp results directory: {temp_results_dir}")
+            except Exception as e:
+                logger.warning(f"Failed to clean up temp dir {temp_results_dir}: {e}")
 
 @celery_app.task(acks_late=True)
 def run_test_suite_task(suite_id: int, headless: bool = True, browser_type: str = "chromium", executor_id: int = None):
     """
     并发执行测试套件中所有用例的 Celery 任务
-    
-    使用 asyncio.gather 实现并发执行，每个用例在独立的数据库会话中运行。
-    执行完成后生成包含所有用例结果的汇总 Allure 报告。
-    
-    Args:
-        suite_id: 测试套件 ID
-        headless: 是否使用无头模式运行浏览器
-        browser_type: 浏览器类型 (chromium/firefox/webkit)
-        executor_id: 执行者用户 ID
-    
-    Returns:
-        dict: 包含套件执行结果、通过/失败统计、报告路径等信息的字典
     """
+    import tempfile
+    import shutil
+    import uuid
+    import os
+    
     logger.info(f"Starting test suite execution for suite_id={suite_id}, headless={headless}, browser={browser_type}, executor={executor_id}")
+    
+    # Create a unique temporary directory for this suite execution
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    temp_results_dir = os.path.join(base_dir, "temp_results", f"suite_{suite_id}_{uuid.uuid4()}")
+    os.makedirs(temp_results_dir, exist_ok=True)
     
     async def run_single_case(case_id: int, case_name: str):
         """Run a single test case in its own DB session"""
         async with AsyncSessionLocal() as db:
-            runner = TestRunner(db)
+            # Initialize with same temp results dir (assuming suite results should be aggregated)
+            # Actually, concurrent writes to same dir might be an issue for some tools, but Allure handles multiple json files fine.
+            # Runner generates UUID-based filenames, so it should be safe.
+            runner = TestRunner(db, results_dir=temp_results_dir)
             try:
                 logger.info(f"Running test case {case_id} ({case_name}) in suite {suite_id}")
                 result = await runner.run_test_case(case_id, headless=headless, browser_type=browser_type)
@@ -153,7 +166,8 @@ def run_test_suite_task(suite_id: int, headless: bool = True, browser_type: str 
                     headless=headless,
                     status=overall_status,
                     executor_id=executor_id,
-                    report_name=suite_name  # Use suite name for report folder
+                    report_name=suite_name,  # Use suite name for report folder
+                    results_dir=temp_results_dir # Pass temp dir
                 )
                 logger.info(f"Suite report generated: {report.report_path}")
                 
@@ -181,3 +195,11 @@ def run_test_suite_task(suite_id: int, headless: bool = True, browser_type: str 
     except Exception as e:
         logger.error(f"Test suite {suite_id} failed with error: {e}", exc_info=True)
         raise
+    finally:
+        # cleanup
+        if os.path.exists(temp_results_dir):
+            try:
+                shutil.rmtree(temp_results_dir, ignore_errors=True)
+                logger.info(f"Cleaned up temp results directory: {temp_results_dir}")
+            except Exception as e:
+                logger.warning(f"Failed to clean up temp dir {temp_results_dir}: {e}")

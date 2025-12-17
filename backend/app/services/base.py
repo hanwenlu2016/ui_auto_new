@@ -41,13 +41,17 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         db: AsyncSession,
         *,
         db_obj: ModelType,
-        obj_in: Union[UpdateSchemaType, Dict[str, Any]]
+        obj_in: Union[UpdateSchemaType, Dict[str, Any]],
+        **kwargs
     ) -> ModelType:
         obj_data = db_obj.__dict__
         if isinstance(obj_in, dict):
             update_data = obj_in
         else:
             update_data = obj_in.model_dump(exclude_unset=True)
+            
+        # Add kwargs to update_data (e.g. updater_id)
+        update_data.update(kwargs)
             
         for field in obj_data:
             if field in update_data:

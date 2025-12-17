@@ -23,6 +23,31 @@
       </n-space>
     </div>
 
+
+    <!-- Search Form -->
+    <n-card :bordered="false" class="search-card" style="margin-bottom: 16px">
+      <n-form inline label-placement="left" :show-feedback="false">
+        <n-form-item label="模块名称">
+          <n-input v-model:value="searchForm.name" placeholder="请输入模块名称" clearable />
+        </n-form-item>
+        <n-form-item label="创建时间">
+          <n-date-picker v-model:value="searchForm.dateRange" type="daterange" clearable />
+        </n-form-item>
+        <n-form-item label="创建人">
+          <n-input v-model:value="searchForm.creator" placeholder="请输入创建人" clearable />
+        </n-form-item>
+        <n-form-item label="更新人">
+          <n-input v-model:value="searchForm.updater" placeholder="请输入更新人" clearable />
+        </n-form-item>
+        <n-form-item>
+          <n-space>
+            <n-button type="primary" @click="handleSearch">搜索</n-button>
+            <n-button @click="handleReset">重置</n-button>
+          </n-space>
+        </n-form-item>
+      </n-form>
+    </n-card>
+
     <!-- Modules Table -->
     <n-card :bordered="false" class="table-card">
       <n-data-table
@@ -77,7 +102,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, h } from 'vue'
-import { NButton, NSpace, useMessage, type DataTableColumns, type FormInst, NCard, NDataTable, NModal, NForm, NFormItem, NInput, NSelect } from 'naive-ui'
+import { NButton, NSpace, useMessage, type DataTableColumns, type FormInst, NCard, NDataTable, NModal, NForm, NFormItem, NInput, NSelect, NDatePicker } from 'naive-ui'
 import api from '@/api'
 
 interface Module {
@@ -85,6 +110,10 @@ interface Module {
   name: string
   description: string
   project_id: number
+  created_at: string
+  updated_at: string
+  creator_name: string
+  updater_name: string
 }
 
 interface Project {
@@ -101,6 +130,13 @@ const selectedProjectId = ref<number | null>(null)
 const showCreateModal = ref(false)
 const formRef = ref<FormInst | null>(null)
 const editingId = ref<number | null>(null)
+
+const searchForm = ref({
+  name: '',
+  creator: '',
+  updater: '',
+  dateRange: null as [number, number] | null
+})
 
 const formValue = ref({
   name: '',
@@ -119,6 +155,24 @@ const columns: DataTableColumns<Module> = [
   { title: 'ID', key: 'id', width: 80 },
   { title: '名称', key: 'name' },
   { title: '描述', key: 'description' },
+  { 
+    title: '创建时间', 
+    key: 'created_at',
+    width: 180,
+    render(row) {
+      return row.created_at ? new Date(row.created_at).toLocaleString() : '-'
+    }
+  },
+  { 
+    title: '更新时间', 
+    key: 'updated_at',
+    width: 180,
+    render(row) {
+      return row.updated_at ? new Date(row.updated_at).toLocaleString() : '-'
+    }
+  },
+  { title: '创建人', key: 'creator_name', width: 120 },
+  { title: '更新人', key: 'updater_name', width: 120 },
   {
     title: '操作',
     key: 'actions',
@@ -174,13 +228,37 @@ const fetchModules = async () => {
   if (!selectedProjectId.value) return
   loading.value = true
   try {
-    const response = await api.get(`/modules/?project_id=${selectedProjectId.value}`)
+    let url = `/modules/?project_id=${selectedProjectId.value}`
+    if (searchForm.value.name) url += `&name=${searchForm.value.name}`
+    if (searchForm.value.creator) url += `&creator=${searchForm.value.creator}`
+    if (searchForm.value.updater) url += `&updater=${searchForm.value.updater}`
+    if (searchForm.value.dateRange) {
+      url += `&created_after=${new Date(searchForm.value.dateRange[0]).toISOString()}`
+      url += `&created_before=${new Date(searchForm.value.dateRange[1]).toISOString()}`
+    }
+    const response = await api.get(url)
     modules.value = response.data
   } catch (error) {
     message.error('获取模块列表失败')
   } finally {
     loading.value = false
   }
+}
+
+
+
+const handleSearch = () => {
+  fetchModules()
+}
+
+const handleReset = () => {
+  searchForm.value = {
+    name: '',
+    creator: '',
+    updater: '',
+    dateRange: null
+  }
+  fetchModules()
 }
 
 const handleCreate = async () => {

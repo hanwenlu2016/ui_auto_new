@@ -19,15 +19,24 @@ from app.tools.playwright_tool import PlaywrightTool
 from app.core.logger import logger
 
 # Simple JS to capture events
+
 RECORDER_SCRIPT = """
 document.addEventListener('click', (e) => {
     let target = e.target;
+    // Don't record clicks on input elements to avoid duplicate actions with 'change' or 'fill'
+    // But sometimes we need to click inputs (e.g. checkboxes).
+    // Let's filter out text inputs from click events if they will be handled by change.
+    if (target.tagName === 'INPUT' && (target.type === 'text' || target.type === 'password' || target.type === 'email')) {
+        return;
+    }
+
     let selector = '';
     
+    // Improved Selector Logic
     if (target.id) {
         selector = '#' + target.id;
-    } else if (target.className) {
-        selector = '.' + target.className.split(' ').join('.');
+    } else if (target.className && typeof target.className === 'string' && target.className.trim() !== '') {
+        selector = '.' + target.className.split(' ').filter(c => c.trim() !== '').join('.');
     } else {
         selector = target.tagName.toLowerCase();
     }
@@ -64,16 +73,28 @@ document.addEventListener('click', (e) => {
     });
 }, true);
 
-document.addEventListener('input', (e) => {
+// Use 'change' event instead of 'input' to capture final value only
+document.addEventListener('change', (e) => {
     let target = e.target;
-    let selector = '#' + target.id || target.tagName.toLowerCase(); // Simplified
-    window.recordEvent({
-        action: 'fill',
-        selector: selector,
-        value: target.value
-    });
+    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') {
+        let selector = '';
+        if (target.id) {
+            selector = '#' + target.id;
+        } else {
+             // Re-use logic or simplistic fallback for now
+             selector = target.tagName.toLowerCase(); 
+             // Ideally we should use the same robust selector generator function
+        }
+        
+        window.recordEvent({
+            action: 'fill',
+            selector: selector,
+            value: target.value
+        });
+    }
 }, true);
 """
+
 
 class RecorderService:
     def __init__(self):
@@ -102,11 +123,19 @@ class RecorderService:
             await self.event_callback(event)
 
     async def stop_recording(self):
-        if self.context:
-            await self.context.close()
-        if self.browser:
-            await self.browser.close()
-        if self.playwright:
-            await self.playwright.stop()
+        try:
+            logger.info("Stopping recording and closing browser...")
+            if self.context:
+                await self.context.close()
+                self.context = None
+            if self.browser:
+                await self.browser.close()
+                self.browser = None
+            if self.playwright:
+                await self.playwright.stop()
+                self.playwright = None
+            logger.info("Recording stopped and browser closed successfully")
+        except Exception as e:
+            logger.error(f"Error closing recording browser: {e}")
             
 recorder_service = RecorderService()

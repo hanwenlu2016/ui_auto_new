@@ -19,6 +19,10 @@ class TestSuite(TestSuiteBase):
     project_id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
+    creator_id: Optional[int] = None
+    updater_id: Optional[int] = None
+    creator_name: Optional[str] = None
+    updater_name: Optional[str] = None
     test_cases: List[TestCase] = []
 
     class Config:

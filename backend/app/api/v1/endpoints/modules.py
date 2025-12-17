@@ -1,4 +1,5 @@
 from typing import Any, List
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.api import deps
@@ -14,6 +15,11 @@ async def read_modules(
     skip: int = 0,
     limit: int = 100,
     project_id: int = None,
+    name: str = None,
+    created_after: datetime = None,
+    created_before: datetime = None,
+    creator: str = None,
+    updater: str = None,
     current_user: User = Depends(deps.get_current_user),
 ) -> Any:
     """
@@ -23,7 +29,17 @@ async def read_modules(
     if project_id:
         filters["project_id"] = project_id
         
-    modules = await module_service.get_multi(db, skip=skip, limit=limit, filters=filters)
+    modules = await module_service.get_multi(
+        db, 
+        skip=skip, 
+        limit=limit, 
+        filters=filters,
+        name=name,
+        created_after=created_after,
+        created_before=created_before,
+        creator=creator,
+        updater=updater
+    )
     return modules
 
 @router.post("/", response_model=ModuleSchema)
@@ -36,7 +52,7 @@ async def create_module(
     """
     Create new module.
     """
-    module = await module_service.create(db, obj_in=module_in)
+    module = await module_service.create(db, obj_in=module_in, creator_id=current_user.id, updater_id=current_user.id)
     return module
 
 @router.get("/{module_id}", response_model=ModuleSchema)
@@ -69,7 +85,7 @@ async def update_module(
     if not module:
         raise HTTPException(status_code=404, detail="Module not found")
     
-    module = await module_service.update(db, db_obj=module, obj_in=module_in)
+    module = await module_service.update(db, db_obj=module, obj_in=module_in, updater_id=current_user.id)
     return module
 
 @router.delete("/{module_id}", response_model=ModuleSchema)

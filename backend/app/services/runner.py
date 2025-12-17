@@ -36,18 +36,23 @@ class TestRunner:
     
     负责执行单个测试用例，生成 Allure 测试报告。
     """
-    def __init__(self, db: AsyncSession):
+    def __init__(self, db: AsyncSession, results_dir: str = None):
         """
         初始化测试执行器
         
         Args:
             db: 异步数据库会话
+            results_dir: Allure 结果存储目录。如果未提供，使用默认的 backend/allure-results
         """
         self.db = db
         # 计算 Allure 结果目录路径（backend/allure-results）
         # runner.py 位于 backend/app/services/，需要向上3级
-        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        self.results_dir = os.path.join(base_dir, "allure-results")
+        if results_dir:
+            self.results_dir = results_dir
+        else:
+            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            self.results_dir = os.path.join(base_dir, "allure-results")
+        
         os.makedirs(self.results_dir, exist_ok=True)
 
     async def run_test_case(self, test_case_id: int, headless: bool = True, browser_type: str = "chromium") -> Dict[str, Any]:
@@ -218,16 +223,22 @@ class TestRunner:
         
         try:
             # For actions that need element selector, fetch the element
-            selector = None
+            selector = step.get("target") or step.get("selector")
+            
             if element_id and action not in ["goto", "wait"]:
                 stmt = select(PageElement).where(PageElement.id == element_id)
                 res = await self.db.execute(stmt)
                 element = res.scalars().first()
                 
-                if not element:
+                if element:
+                    selector = element.locator_value
+                # If element not found but we have element_id, ideally we should fail? 
+                # Or fallback to raw selector if provided? 
+                # Let's enforce element existence if ID provided to avoid ambiguity.
+                elif not selector: 
                     raise Exception(f"Element {element_id} not found")
-                
-                selector = element.locator_value
+            
+            # If no element_id, we use the raw selector (common for recorded steps)
             
             # Execute action using PlaywrightTool
             result = await tool.execute_action(

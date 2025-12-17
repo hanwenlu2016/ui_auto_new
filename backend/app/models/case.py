@@ -17,7 +17,9 @@ class TestCase(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     creator_id = Column(Integer, ForeignKey("users.id"))
+    updater_id = Column(Integer, ForeignKey("users.id"), nullable=True)
 
     module = relationship("Module", back_populates="test_cases")
-    creator = relationship("User")
+    creator = relationship("User", foreign_keys=[creator_id])
+    updater = relationship("User", foreign_keys=[updater_id])
     test_suites = relationship("TestSuite", secondary=test_suite_cases, back_populates="test_cases")

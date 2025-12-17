@@ -39,7 +39,7 @@ async def create_test_case(
     """
     Create new test case.
     """
-    test_case = await case_service.create(db, obj_in=test_case_in, creator_id=current_user.id)
+    test_case = await case_service.create(db, obj_in=test_case_in, creator_id=current_user.id, updater_id=current_user.id)
     return test_case
 
 @router.get("/{case_id}", response_model=TestCaseSchema)
@@ -72,7 +72,7 @@ async def update_test_case(
     if not test_case:
         raise HTTPException(status_code=404, detail="Test case not found")
     
-    test_case = await case_service.update(db, db_obj=test_case, obj_in=test_case_in)
+    test_case = await case_service.update(db, db_obj=test_case, obj_in=test_case_in, updater_id=current_user.id)
     return test_case
 
 @router.delete("/{case_id}", response_model=TestCaseSchema)

@@ -1,6 +1,6 @@
 <template>
   <div class="reports-page">
-    <n-card title="测试报告列表" style="margin: 20px;">
+    <n-card title="报告管理" style="margin: 20px;">
       <n-data-table :columns="columns" :data="reports" :loading="loading" />
     </n-card>
   </div>

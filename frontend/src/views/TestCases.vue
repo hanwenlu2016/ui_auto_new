@@ -137,6 +137,10 @@ interface TestCase {
   priority: string
   module_id: number
   steps: any[]
+  created_at: string
+  updated_at: string
+  creator_name: string
+  updater_name: string
 }
 
 interface Module {
@@ -208,6 +212,24 @@ const columns: DataTableColumns<TestCase> = [
     }
   },
   { title: '描述', key: 'description' },
+  { 
+    title: '创建时间', 
+    key: 'created_at',
+    width: 180,
+    render(row) {
+      return row.created_at ? new Date(row.created_at).toLocaleString() : '-'
+    }
+  },
+  { 
+    title: '更新时间', 
+    key: 'updated_at',
+    width: 180,
+    render(row) {
+      return row.updated_at ? new Date(row.updated_at).toLocaleString() : '-'
+    }
+  },
+  { title: '创建人', key: 'creator_name', width: 100 },
+  { title: '更新人', key: 'updater_name', width: 100 },
   {
     title: '操作',
     key: 'actions',

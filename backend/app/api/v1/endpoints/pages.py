@@ -35,7 +35,7 @@ async def create_page(
     Create new page.
     """
     service = PageService(db)
-    return await service.create(db, obj_in=page_in)
+    return await service.create(db, obj_in=page_in, creator_id=current_user.id, updater_id=current_user.id)
 
 @router.put("/{id}", response_model=Page)
 async def update_page(
@@ -52,7 +52,7 @@ async def update_page(
     page = await service.get(db, id)
     if not page:
         raise HTTPException(status_code=404, detail="Page not found")
-    return await service.update(db, db_obj=page, obj_in=page_in)
+    return await service.update(db, db_obj=page, obj_in=page_in, updater_id=current_user.id)
 
 @router.delete("/{id}", response_model=Page)
 async def delete_page(

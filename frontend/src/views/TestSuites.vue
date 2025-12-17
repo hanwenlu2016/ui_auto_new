@@ -95,6 +95,10 @@ interface TestSuite {
   description: string
   project_id: number
   test_cases: any[]
+  created_at: string
+  updated_at: string
+  creator_name: string
+  updater_name: string
 }
 
 interface Project {
@@ -138,6 +142,24 @@ const columns: DataTableColumns<TestSuite> = [
       return row.test_cases?.length || 0
     }
   },
+  { 
+    title: '创建时间', 
+    key: 'created_at',
+    width: 180,
+    render(row) {
+      return row.created_at ? new Date(row.created_at).toLocaleString() : '-'
+    }
+  },
+  { 
+    title: '更新时间', 
+    key: 'updated_at',
+    width: 180,
+    render(row) {
+      return row.updated_at ? new Date(row.updated_at).toLocaleString() : '-'
+    }
+  },
+  { title: '创建人', key: 'creator_name', width: 100 },
+  { title: '更新人', key: 'updater_name', width: 100 },
   {
     title: '操作',
     key: 'actions',

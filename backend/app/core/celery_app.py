@@ -11,7 +11,7 @@ from celery import Celery
 from app.core.config import settings
 
 # 创建 Celery 应用实例
-celery_app = Celery("worker", broker=settings.CELERY_BROKER_URL)
+celery_app = Celery("worker", broker=settings.CELERY_BROKER_URL, include=['app.worker'])
 
 # 配置结果后端
 celery_app.conf.update(

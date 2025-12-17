@@ -17,9 +17,12 @@ async def websocket_endpoint(websocket: WebSocket):
             message = json.loads(data)
             
             if message.get("type") == "start":
-                url = message.get("url")
-                await recorder_service.start_recording(url, send_event_to_client)
-                await websocket.send_json({"status": "started", "url": url})
+                try:
+                    url = message.get("url")
+                    await recorder_service.start_recording(url, send_event_to_client)
+                    await websocket.send_json({"status": "started", "url": url})
+                except Exception as e:
+                    await websocket.send_json({"status": "error", "message": str(e)})
                 
             elif message.get("type") == "stop":
                 await recorder_service.stop_recording()

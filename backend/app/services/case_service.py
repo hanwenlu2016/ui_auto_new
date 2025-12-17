@@ -4,6 +4,7 @@ from app.models.module import Module
 from app.schemas.case import TestCaseCreate, TestCaseUpdate
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 class CaseService(CRUDBase[TestCase, TestCaseCreate, TestCaseUpdate]):
     async def create(self, db: AsyncSession, *, obj_in: TestCaseCreate, **kwargs) -> TestCase:
@@ -30,7 +31,21 @@ class CaseService(CRUDBase[TestCase, TestCaseCreate, TestCaseUpdate]):
                 if hasattr(self.model, attr) and value is not None:
                     query = query.where(getattr(self.model, attr) == value)
         
+        # Add eager loading for creator and updater
+        query = query.options(
+            selectinload(TestCase.creator),
+            selectinload(TestCase.updater)
+        )
+        
         result = await db.execute(query.offset(skip).limit(limit))
-        return result.scalars().all()
+        cases = result.scalars().all()
+        
+        for case in cases:
+            if case.creator:
+                case.creator_name = case.creator.full_name or case.creator.email
+            if case.updater:
+                case.updater_name = case.updater.full_name or case.updater.email
+                
+        return cases
 
 case_service = CaseService(TestCase)

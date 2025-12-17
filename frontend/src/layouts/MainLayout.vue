@@ -98,29 +98,29 @@ const menuOptions: MenuOption[] = [
     icon: renderIcon(HomeIcon)
   },
   {
-    label: '项目',
+    label: '项目管理',
     key: 'Projects',
     icon: renderIcon(ProjectIcon)
   },
   {
-    label: '模块',
+    label: '模块管理',
     key: 'Modules',
     icon: renderIcon(ModuleIcon)
   },
   {
-    label: '页面',
+    label: '页面管理',
     key: 'Pages',
+    icon: renderIcon(ListIcon)
+  },
+  {
+    label: '页面元素',
+    key: 'PageElements',
     icon: renderIcon(ListIcon)
   },
   {
     label: '测试用例',
     key: 'TestCases',
     icon: renderIcon(CaseIcon)
-  },
-  {
-    label: '页面元素',
-    key: 'PageElements',
-    icon: renderIcon(ListIcon)
   },
   {
     label: '测试套件',
@@ -133,7 +133,7 @@ const menuOptions: MenuOption[] = [
     icon: renderIcon(RecordIcon)
   },
   {
-    label: '报告',
+    label: '报告管理',
     key: 'Reports',
     icon: renderIcon(ReportIcon)
   }
