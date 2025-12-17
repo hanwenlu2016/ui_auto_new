@@ -4,26 +4,7 @@
 
 ## 🏗 架构设计图
 
-```mermaid
-graph TD
-    Client[用户浏览器 (Frontend)] -->|HTTP/REST| API[后端 API (FastAPI)]
-    
-    subgraph "后端服务 (Backend)"
-        API -->|CRUD| DB[(数据库 PostgreSQL/SQLite)]
-        API -->|解析指令| AI[AI 服务 (Heuristic/LLM)]
-        API -->|分发任务| Redis[(Redis 消息队列)]
-    end
-    
-    subgraph "执行引擎 (Worker)"
-        Worker[Celery Worker] -->|消费任务| Redis
-        Worker -->|控制| PW[Playwright 浏览器]
-        PW -->|自动化操作| Target[目标网站]
-        Worker -->|生成| Report[Allure 报告]
-        Report -->|存储| Disk[文件系统]
-    end
-    
-    Client -->|查看| Report
-```
+![架构设计图](https://mermaid.ink/img/CmdyYXBoIFRECiAgICBDbGllbnRb55So5oi35rWP6KeI5ZmoIChGcm9udGVuZCldIC0tPnxIVFRQL1JFU1R8IEFQSVvlkI7nq68gQVBJIChGYXN0QVBJKV0KICAgIAogICAgc3ViZ3JhcGggIuWQjuerr-acjeWKoSAoQmFja2VuZCkiCiAgICAgICAgQVBJIC0tPnxDUlVEfCBEQlso5pWw5o2u5bqTIFBvc3RncmVTUUwvU1FMaXRlKV0KICAgICAgICBBUEkgLS0-fOino-aekOaMh-S7pHwgQUlbQUkg5pyN5YqhIChIZXVyaXN0aWMvTExNKV0KICAgICAgICBBUEkgLS0-fOWIhuWPkeS7u-WKoXwgUmVkaXNbKFJlZGlzIOa2iOaBr-mYn-WIlyldCiAgICBlbmQKICAgIAogICAgc3ViZ3JhcGggIuaJp-ihjOW8leaTjiAoV29ya2VyKSIKICAgICAgICBXb3JrZXJbQ2VsZXJ5IFdvcmtlcl0gLS0-fOa2iOi0ueS7u-WKoXwgUmVkaXMKICAgICAgICBXb3JrZXIgLS0-fOaOp-WItnwgUFdbUGxheXdyaWdodCDmtY_op4jlmahdCiAgICAgICAgUFcgLS0-fOiHquWKqOWMluaTjeS9nHwgVGFyZ2V0W-ebruagh-e9keermV0KICAgICAgICBXb3JrZXIgLS0-fOeUn-aIkHwgUmVwb3J0W0FsbHVyZSDmiqXlkYpdCiAgICAgICAgUmVwb3J0IC0tPnzlrZjlgqh8IERpc2tb5paH5Lu257O757ufXQogICAgZW5kCiAgICAKICAgIENsaWVudCAtLT585p-l55yLfCBSZXBvcnQK)
 
 ## ✨ 核心功能
 
