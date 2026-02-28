@@ -1,73 +1,67 @@
 <template>
-  <div class="modules-container">
+  <div class="page-container animate-fade-up">
     <!-- Page Header -->
-    <div class="page-header">
-      <div class="header-text">
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+      <div>
         <h1>模块管理</h1>
-        <p>管理项目下的功能模块</p>
+        <p>管理所属项目下的功能模块</p>
       </div>
-      <n-space>
+      <div style="display: flex; gap: 12px; align-items: center;">
         <n-select
           v-model:value="selectedProjectId"
           :options="projectOptions"
-          placeholder="选择项目"
+          placeholder="过滤: 选择所属项目"
           style="width: 200px"
           @update:value="fetchModules"
+          clearable
         />
         <n-button type="primary" @click="showCreateModal = true" :disabled="!selectedProjectId">
           <template #icon>
-            <span style="font-size: 18px;">➕</span>
+            <span style="font-size: 16px;">➕</span>
           </template>
           创建模块
         </n-button>
-      </n-space>
+      </div>
     </div>
 
-
-    <!-- Search Form -->
-    <n-card :bordered="false" class="search-card" style="margin-bottom: 16px">
-      <n-form inline label-placement="left" :show-feedback="false">
+    <!-- Search / Filter Area -->
+    <div class="card-wrap shadow-sm animate-fade-up" style="animation-delay: 0.1s; margin-bottom: 20px; padding: 20px;">
+      <n-form inline label-placement="left" :show-feedback="false" size="medium" style="display: flex; flex-wrap: wrap; gap: 16px;">
         <n-form-item label="模块名称">
-          <n-input v-model:value="searchForm.name" placeholder="请输入模块名称" clearable />
+          <n-input v-model:value="searchForm.name" placeholder="请输入名称" clearable style="width: 180px;" />
         </n-form-item>
         <n-form-item label="创建时间">
-          <n-date-picker v-model:value="searchForm.dateRange" type="daterange" clearable />
+          <n-date-picker v-model:value="searchForm.dateRange" type="daterange" clearable style="width: 260px;" />
         </n-form-item>
         <n-form-item label="创建人">
-          <n-input v-model:value="searchForm.creator" placeholder="请输入创建人" clearable />
+          <n-input v-model:value="searchForm.creator" placeholder="创建人姓名" clearable style="width: 130px;" />
         </n-form-item>
-        <n-form-item label="更新人">
-          <n-input v-model:value="searchForm.updater" placeholder="请输入更新人" clearable />
-        </n-form-item>
-        <n-form-item>
-          <n-space>
-            <n-button type="primary" @click="handleSearch">搜索</n-button>
-            <n-button @click="handleReset">重置</n-button>
-          </n-space>
-        </n-form-item>
+        <div style="display: flex; gap: 12px; margin-left: auto;">
+          <n-button @click="handleReset" secondary>重置</n-button>
+          <n-button type="primary" @click="handleSearch">搜索匹配</n-button>
+        </div>
       </n-form>
-    </n-card>
+    </div>
 
     <!-- Modules Table -->
-    <n-card :bordered="false" class="table-card">
+    <div class="card-wrap shadow-sm animate-fade-up" style="animation-delay: 0.2s">
       <n-data-table
         :columns="columns"
         :data="modules"
         :loading="loading"
         :pagination="pagination"
       />
-    </n-card>
+    </div>
 
     <!-- Create/Edit Modal -->
     <n-modal v-model:show="showCreateModal">
       <n-card
-        style="width: 600px"
-        :title="editingId ? '编辑模块' : '创建模块'"
+        style="width: 500px; max-width: 90vw"
+        :title="editingId ? '✏️ 编辑模块' : '➕ 创建模块'"
         :bordered="false"
         size="huge"
         role="dialog"
         aria-modal="true"
-        class="modal-card"
       >
         <n-form
           ref="formRef"
@@ -76,24 +70,24 @@
           label-placement="top"
         >
           <n-form-item label="模块名称" path="name">
-            <n-input v-model:value="formValue.name" placeholder="请输入模块名称" />
+            <n-input v-model:value="formValue.name" placeholder="例如：登录模块、支付中心" />
           </n-form-item>
-          <n-form-item label="描述" path="description">
+          <n-form-item label="描述说明" path="description">
             <n-input
               v-model:value="formValue.description"
               type="textarea"
-              placeholder="请输入描述（可选）"
-              :autosize="{ minRows: 3, maxRows: 6 }"
+              placeholder="简述该模块的业务范围（可选）"
+              :autosize="{ minRows: 3, maxRows: 5 }"
             />
           </n-form-item>
         </n-form>
         <template #footer>
-          <n-space justify="end">
+           <div style="display: flex; justify-content: flex-end; gap: 12px;">
             <n-button @click="handleCloseModal">取消</n-button>
             <n-button type="primary" @click="handleCreate">
-              {{ editingId ? '更新' : '创建' }}
+              {{ editingId ? '保存更改' : '确认创建' }}
             </n-button>
-          </n-space>
+          </div>
         </template>
       </n-card>
     </n-modal>
@@ -116,15 +110,10 @@ interface Module {
   updater_name: string
 }
 
-interface Project {
-  id: number
-  name: string
-}
-
 const message = useMessage()
 const loading = ref(false)
 const modules = ref<Module[]>([])
-const projects = ref<Project[]>([])
+const projects = ref<any[]>([])
 const projectOptions = ref<{ label: string; value: number }[]>([])
 const selectedProjectId = ref<number | null>(null)
 const showCreateModal = ref(false)
@@ -144,77 +133,48 @@ const formValue = ref({
 })
 
 const rules = {
-  name: {
-    required: true,
-    message: '请输入模块名称',
-    trigger: 'blur'
-  }
+  name: { required: true, message: '请输入模块名称', trigger: 'blur' }
 }
 
 const columns: DataTableColumns<Module> = [
-  { title: 'ID', key: 'id', width: 80 },
-  { title: '名称', key: 'name' },
-  { title: '描述', key: 'description' },
+  { title: '模块名称', key: 'name', minWidth: 150 },
+  { title: '业务描述', key: 'description' },
   { 
     title: '创建时间', 
     key: 'created_at',
-    width: 180,
-    render(row) {
-      return row.created_at ? new Date(row.created_at).toLocaleString() : '-'
-    }
+    width: 170,
+    render: (row) => row.created_at ? new Date(row.created_at).toLocaleString() : '-'
   },
   { 
     title: '更新时间', 
     key: 'updated_at',
-    width: 180,
-    render(row) {
-      return row.updated_at ? new Date(row.updated_at).toLocaleString() : '-'
-    }
+    width: 170,
+    render: (row) => row.updated_at ? new Date(row.updated_at).toLocaleString() : '-'
   },
-  { title: '创建人', key: 'creator_name', width: 120 },
-  { title: '更新人', key: 'updater_name', width: 120 },
+  { title: '维护人', key: 'updater_name', width: 120, render: (row) => row.updater_name || row.creator_name || '-' },
   {
     title: '操作',
     key: 'actions',
+    width: 160,
+    fixed: 'right' as const,
     render(row) {
-      return h(NSpace, null, {
+      return h(NSpace, { align: 'center', wrap: false }, {
         default: () => [
-          h(
-            NButton,
-            {
-              size: 'small',
-              type: 'primary',
-              secondary: true,
-              onClick: () => handleEdit(row)
-            },
-            { default: () => '编辑' }
-          ),
-          h(
-            NButton,
-            {
-              size: 'small',
-              type: 'error',
-              secondary: true,
-              onClick: () => handleDelete(row)
-            },
-            { default: () => '删除' }
-          )
+          h(NButton, { size: 'small', tertiary: true, type: 'primary', onClick: () => handleEdit(row) }, { default: () => '编辑' }),
+          h(NButton, { size: 'small', tertiary: true, type: 'error', onClick: () => handleDelete(row) }, { default: () => '删除' })
         ]
       })
     }
   }
 ]
 
-const pagination = { pageSize: 10 }
+const pagination = { pageSize: 15 }
 
 const fetchProjects = async () => {
   try {
     const response = await api.get('/projects/')
     projects.value = response.data
-    projectOptions.value = projects.value.map(p => ({
-      label: p.name,
-      value: p.id
-    }))
+    projectOptions.value = projects.value.map(p => ({ label: p.name, value: p.id }))
     if (projects.value.length > 0 && !selectedProjectId.value) {
       selectedProjectId.value = projects.value[0].id
       fetchModules()
@@ -239,25 +199,16 @@ const fetchModules = async () => {
     const response = await api.get(url)
     modules.value = response.data
   } catch (error) {
-    message.error('获取模块列表失败')
+    message.error('获取列表数据失败')
   } finally {
     loading.value = false
   }
 }
 
-
-
-const handleSearch = () => {
-  fetchModules()
-}
+const handleSearch = () => fetchModules()
 
 const handleReset = () => {
-  searchForm.value = {
-    name: '',
-    creator: '',
-    updater: '',
-    dateRange: null
-  }
+  searchForm.value = { name: '', creator: '', updater: '', dateRange: null }
   fetchModules()
 }
 
@@ -268,15 +219,15 @@ const handleCreate = async () => {
         const data = { ...formValue.value, project_id: selectedProjectId.value }
         if (editingId.value) {
           await api.put(`/modules/${editingId.value}`, data)
-          message.success('模块更新成功')
+          message.success('模块修改成功')
         } else {
           await api.post('/modules/', data)
-          message.success('模块创建成功')
+          message.success('新模块已创建')
         }
         handleCloseModal()
         fetchModules()
       } catch (error) {
-        message.error(editingId.value ? '更新模块失败' : '创建模块失败')
+        message.error(editingId.value ? '保存失败' : '创建失败')
       }
     }
   })
@@ -284,10 +235,7 @@ const handleCreate = async () => {
 
 const handleEdit = (row: Module) => {
   editingId.value = row.id
-  formValue.value = {
-    name: row.name,
-    description: row.description
-  }
+  formValue.value = { name: row.name, description: row.description || '' }
   showCreateModal.value = true
 }
 
@@ -300,69 +248,20 @@ const handleCloseModal = () => {
 const handleDelete = async (row: Module) => {
   try {
     await api.delete(`/modules/${row.id}`)
-    message.success('模块删除成功')
+    message.success('模块已删除')
     fetchModules()
-  } catch (error) {
-    message.error('删除模块失败')
-  }
+  } catch (error) {}
 }
 
-onMounted(() => {
-  fetchProjects()
-})
+onMounted(() => fetchProjects())
 </script>
 
 <style scoped>
-.modules-container {
-  padding: 16px;
-}
-
-.page-header {
-  margin-bottom: 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #fff;
-  padding: 16px 24px;
-  border-radius: 4px;
-  box-shadow: 0 1px 2px -2px rgba(0, 0, 0, 0.16), 0 3px 6px 0 rgba(0, 0, 0, 0.12), 0 5px 12px 4px rgba(0, 0, 0, 0.09);
-}
-
-.header-text h1 {
-  font-size: 20px;
-  font-weight: 500;
-  color: #1f2225;
-  margin: 0 0 4px 0;
-}
-
-.header-text p {
-  margin: 0;
-  color: #666;
-  font-size: 14px;
-}
-
-.table-card {
-  border-radius: 4px;
-  box-shadow: 0 1px 2px -2px rgba(0, 0, 0, 0.16), 0 3px 6px 0 rgba(0, 0, 0, 0.12), 0 5px 12px 4px rgba(0, 0, 0, 0.09);
-}
-
-.modal-card {
-  border-radius: 4px;
-}
-
-.modal-card :deep(.n-card-header) {
-  padding: 16px 24px;
-  border-bottom: 1px solid #e8eaec;
-  font-size: 16px;
-  font-weight: 500;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .page-header {
-    flex-direction: column;
-    gap: 16px;
-    align-items: stretch;
-  }
+.card-wrap {
+  background: var(--color-card);
+  border-radius: 16px;
+  border: 1px solid var(--color-divider);
+  padding: 4px;
+  overflow: hidden;
 }
 </style>

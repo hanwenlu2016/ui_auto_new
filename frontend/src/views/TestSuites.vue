@@ -1,47 +1,48 @@
 <template>
-  <div class="test-suites-container">
+  <div class="page-container animate-fade-up">
     <!-- Page Header -->
-    <div class="page-header">
-      <div class="header-text">
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+      <div>
         <h1>测试套件</h1>
-        <p>管理和执行测试套件</p>
+        <p>组装并执行批量的自动化测试用例</p>
       </div>
-      <n-space>
+      <div style="display: flex; gap: 12px; align-items: center;">
         <n-select
           v-model:value="selectedProjectId"
           :options="projectOptions"
-          placeholder="选择项目"
+          placeholder="过滤: 选择项目"
           style="width: 200px"
           @update:value="fetchTestSuites"
+          clearable
         />
         <n-button type="primary" @click="handleOpenCreate" :disabled="!selectedProjectId">
           <template #icon>
-            <span style="font-size: 18px;">➕</span>
+            <span style="font-size: 16px;">➕</span>
           </template>
           创建套件
         </n-button>
-      </n-space>
+      </div>
     </div>
 
     <!-- Test Suites Table -->
-    <n-card :bordered="false" class="table-card">
+    <div class="card-wrap shadow-sm animate-fade-up" style="animation-delay: 0.1s">
       <n-data-table
         :columns="columns"
         :data="testSuites"
         :loading="loading"
         :pagination="pagination"
       />
-    </n-card>
+    </div>
 
     <!-- Create/Edit Modal -->
-    <n-modal v-model:show="showCreateModal" style="width: 800px">
+    <n-modal v-model:show="showCreateModal">
       <n-card
-        :title="editingId ? '编辑套件' : '创建套件'"
+        style="width: 700px; max-width: 90vw"
+        :title="editingId ? '✏️ 编辑测试套件' : '➕ 创建测试套件'"
         :bordered="false"
         size="huge"
         role="dialog"
         aria-modal="true"
-        class="modal-card"
       >
         <n-form
           ref="formRef"
@@ -50,34 +51,36 @@
           label-placement="top"
         >
           <n-form-item label="套件名称" path="name">
-            <n-input v-model:value="formValue.name" placeholder="请输入套件名称" />
+            <n-input v-model:value="formValue.name" placeholder="例如：核心交易流程回归赛道" />
           </n-form-item>
-          <n-form-item label="描述" path="description">
+          <n-form-item label="套件描述" path="description">
             <n-input
               v-model:value="formValue.description"
               type="textarea"
-              placeholder="请输入描述（可选）"
+              placeholder="简述套件覆盖的业务场景..."
               :autosize="{ minRows: 2, maxRows: 4 }"
             />
           </n-form-item>
           
-          <n-form-item label="关联用例" path="test_case_ids">
-            <n-transfer
-              v-model:value="formValue.test_case_ids"
-              :options="testCaseOptions"
-              source-title="可用用例"
-              target-title="已选用例"
-              filterable
-            />
-          </n-form-item>
+          <div style="background: var(--color-bg); padding: 16px 20px; border-radius: 12px; margin-top: 8px;">
+            <n-form-item label="选择关联用例 (可多选)" path="test_case_ids" style="margin-bottom: 0;">
+              <n-transfer
+                v-model:value="formValue.test_case_ids"
+                :options="testCaseOptions"
+                source-title="项目中可选的用例"
+                target-title="套件包含的用例"
+                filterable
+              />
+            </n-form-item>
+          </div>
         </n-form>
         <template #footer>
-          <n-space justify="end">
+          <div style="display: flex; justify-content: flex-end; gap: 12px;">
             <n-button @click="handleCloseModal">取消</n-button>
             <n-button type="primary" @click="handleCreate">
-              {{ editingId ? '更新' : '创建' }}
+              {{ editingId ? '保存更改' : '确认创建' }}
             </n-button>
-          </n-space>
+          </div>
         </template>
       </n-card>
     </n-modal>
@@ -101,15 +104,10 @@ interface TestSuite {
   updater_name: string
 }
 
-interface Project {
-  id: number
-  name: string
-}
-
 const message = useMessage()
 const loading = ref(false)
 const testSuites = ref<TestSuite[]>([])
-const projects = ref<Project[]>([])
+const projects = ref<any[]>([])
 const projectOptions = ref<{ label: string; value: number }[]>([])
 const selectedProjectId = ref<number | null>(null)
 const showCreateModal = ref(false)
@@ -124,94 +122,54 @@ const formValue = ref({
 })
 
 const rules = {
-  name: {
-    required: true,
-    message: '请输入套件名称',
-    trigger: 'blur'
-  }
+  name: { required: true, message: '请输入套件名称', trigger: 'blur' }
 }
 
 const columns: DataTableColumns<TestSuite> = [
-  { title: 'ID', key: 'id', width: 80 },
-  { title: '名称', key: 'name' },
-  { title: '描述', key: 'description' },
+  { title: '套件名称', key: 'name', minWidth: 200 },
+  { title: '业务描述', key: 'description' },
   { 
-    title: '用例数', 
+    title: '包含用例数', 
     key: 'test_cases',
+    width: 120,
     render(row) {
-      return row.test_cases?.length || 0
+      return h('span', { style: 'font-weight: 600; color: var(--color-primary);' }, `${row.test_cases?.length || 0} 个`)
     }
   },
   { 
-    title: '创建时间', 
-    key: 'created_at',
-    width: 180,
-    render(row) {
-      return row.created_at ? new Date(row.created_at).toLocaleString() : '-'
-    }
-  },
-  { 
-    title: '更新时间', 
+    title: '最近更新', 
     key: 'updated_at',
-    width: 180,
+    width: 160,
     render(row) {
-      return row.updated_at ? new Date(row.updated_at).toLocaleString() : '-'
+      const d = row.updated_at || row.created_at
+      return d ? new Date(d).toLocaleString() : '-'
     }
   },
-  { title: '创建人', key: 'creator_name', width: 100 },
-  { title: '更新人', key: 'updater_name', width: 100 },
+  { title: '维护人', key: 'updater_name', width: 120, render: (row) => row.updater_name || row.creator_name || '-' },
   {
     title: '操作',
     key: 'actions',
+    width: 200,
+    fixed: 'right' as const,
     render(row) {
-      return h(NSpace, null, {
+      return h(NSpace, { align: 'center', wrap: false }, {
         default: () => [
-          h(
-            NButton,
-            {
-              size: 'small',
-              type: 'primary',
-              secondary: true,
-              onClick: () => handleRun(row)
-            },
-            { default: () => '运行' }
-          ),
-          h(
-            NButton,
-            {
-              size: 'small',
-              type: 'primary',
-              secondary: true,
-              onClick: () => handleEdit(row)
-            },
-            { default: () => '编辑' }
-          ),
-          h(
-            NButton,
-            {
-              size: 'small',
-              type: 'error',
-              secondary: true,
-              onClick: () => handleDelete(row)
-            },
-            { default: () => '删除' }
-          )
+          h(NButton, { size: 'small', type: 'primary', onClick: () => handleRun(row) }, { default: () => '触发运行' }),
+          h(NButton, { size: 'small', tertiary: true, onClick: () => handleEdit(row) }, { default: () => '编辑' }),
+          h(NButton, { size: 'small', tertiary: true, type: 'error', onClick: () => handleDelete(row) }, { default: () => '删除' })
         ]
       })
     }
   }
 ]
 
-const pagination = { pageSize: 10 }
+const pagination = { pageSize: 15 }
 
 const fetchProjects = async () => {
   try {
     const response = await api.get('/projects/')
     projects.value = response.data
-    projectOptions.value = projects.value.map(p => ({
-      label: p.name,
-      value: p.id
-    }))
+    projectOptions.value = projects.value.map(p => ({ label: p.name, value: p.id }))
     if (projects.value.length > 0 && !selectedProjectId.value) {
       selectedProjectId.value = projects.value[0].id
       fetchTestSuites()
@@ -228,7 +186,7 @@ const fetchTestSuites = async () => {
     const response = await api.get(`/suites/?project_id=${selectedProjectId.value}`)
     testSuites.value = response.data
   } catch (error) {
-    message.error('获取测试套件列表失败')
+    message.error('获取套件列表失败')
   } finally {
     loading.value = false
   }
@@ -237,22 +195,19 @@ const fetchTestSuites = async () => {
 const fetchTestCases = async () => {
   if (!selectedProjectId.value) return
   try {
-    // Fetch all modules for the project first
+    // 简化获取当前项目所有用例（通过模块）
     const modulesRes = await api.get(`/modules/?project_id=${selectedProjectId.value}`)
-    const modules = modulesRes.data
-    
     let allCases: any[] = []
-    for (const module of modules) {
-      const casesRes = await api.get(`/cases/?module_id=${module.id}`)
-      allCases = [...allCases, ...casesRes.data]
-    }
+    // 注意：如果有大量数据，这种串行请求不推荐。但作为 Demo 可以接受
+    const mPromises = modulesRes.data.map((m: any) => api.get(`/cases/?module_id=${m.id}`))
+    const results = await Promise.all(mPromises)
+    results.forEach(res => {
+      allCases = [...allCases, ...res.data]
+    })
     
-    testCaseOptions.value = allCases.map(c => ({
-      label: c.name,
-      value: c.id
-    }))
+    testCaseOptions.value = allCases.map(c => ({ label: c.name, value: c.id }))
   } catch (error) {
-    message.error('获取测试用例失败')
+    message.error('加载项目下所有用例失败')
   }
 }
 
@@ -268,15 +223,15 @@ const handleCreate = async () => {
         const data = { ...formValue.value, project_id: selectedProjectId.value }
         if (editingId.value) {
           await api.put(`/suites/${editingId.value}`, data)
-          message.success('套件更新成功')
+          message.success('套件信息修改成功')
         } else {
           await api.post('/suites/', data)
-          message.success('套件创建成功')
+          message.success('新套件已创建')
         }
         handleCloseModal()
         fetchTestSuites()
       } catch (error) {
-        message.error(editingId.value ? '更新套件失败' : '创建套件失败')
+        message.error(editingId.value ? '保存失败' : '创建失败')
       }
     }
   })
@@ -287,7 +242,7 @@ const handleEdit = async (row: TestSuite) => {
   editingId.value = row.id
   formValue.value = {
     name: row.name,
-    description: row.description,
+    description: row.description || '',
     test_case_ids: row.test_cases?.map((c: any) => c.id) || []
   }
   showCreateModal.value = true
@@ -302,83 +257,34 @@ const handleCloseModal = () => {
 const handleDelete = async (row: TestSuite) => {
   try {
     await api.delete(`/suites/${row.id}`)
-    message.success('套件删除成功')
+    message.success('套件已删除')
     fetchTestSuites()
-  } catch (error) {
-    message.error('删除套件失败')
-  }
+  } catch (error) {}
 }
 
 const handleRun = async (row: TestSuite) => {
   try {
-    message.loading('正在启动测试套件...')
+    message.info('正在分发套件运行任务...')
     const response = await api.post(`/execution/suites/${row.id}/run`)
     if (response.data.task_id) {
-      message.success('测试套件已启动，请前往测试报告页面查看结果')
+      message.success('套件任务已推入执行队列，请到报告页查看进度')
     } else {
-      message.error(`启动测试套件失败: ${response.data.message || '未知错误'}`)
+      message.error(`下发任务异常: ${response.data.message || '未知错误'}`)
     }
   } catch (error) {
-    message.error('执行测试套件失败')
+    message.error('套件触发失败，这可能是网络或服务问题')
   }
 }
 
-onMounted(() => {
-  fetchProjects()
-})
+onMounted(() => fetchProjects())
 </script>
 
 <style scoped>
-.test-suites-container {
-  padding: 16px;
-}
-
-.page-header {
-  margin-bottom: 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #fff;
-  padding: 16px 24px;
-  border-radius: 4px;
-  box-shadow: 0 1px 2px -2px rgba(0, 0, 0, 0.16), 0 3px 6px 0 rgba(0, 0, 0, 0.12), 0 5px 12px 4px rgba(0, 0, 0, 0.09);
-}
-
-.header-text h1 {
-  font-size: 20px;
-  font-weight: 500;
-  color: #1f2225;
-  margin: 0 0 4px 0;
-}
-
-.header-text p {
-  margin: 0;
-  color: #666;
-  font-size: 14px;
-}
-
-.table-card {
-  border-radius: 4px;
-  box-shadow: 0 1px 2px -2px rgba(0, 0, 0, 0.16), 0 3px 6px 0 rgba(0, 0, 0, 0.12), 0 5px 12px 4px rgba(0, 0, 0, 0.09);
-}
-
-.modal-card {
-  border-radius: 4px;
-}
-
-.modal-card :deep(.n-card-header) {
-  padding: 16px 24px;
-  border-bottom: 1px solid #e8eaec;
-  font-size: 16px;
-  font-weight: 500;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .page-header {
-    flex-direction: column;
-    gap: 16px;
-    align-items: stretch;
-  }
+.card-wrap {
+  background: var(--color-card);
+  border-radius: 16px;
+  border: 1px solid var(--color-divider);
+  padding: 4px;
+  overflow: hidden;
 }
 </style>

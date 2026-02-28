@@ -1,54 +1,55 @@
 <template>
-  <div class="page-elements-container">
+  <div class="page-container animate-fade-up">
     <!-- Page Header -->
-    <div class="page-header">
-      <div class="header-text">
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+      <div>
         <h1>页面元素</h1>
-        <p>管理页面元素定位信息</p>
+        <p>管理系统中所有用于 UI 测试的元素定位信息</p>
       </div>
-      <n-space>
+      <div style="display: flex; gap: 12px; align-items: center;">
         <n-select
           v-model:value="selectedModuleId"
           :options="moduleOptions"
-          placeholder="选择模块"
-          style="width: 200px"
+          placeholder="过滤: 选择所属模块"
+          style="width: 160px"
+          clearable
         />
         <n-select
           v-model:value="selectedPageId"
           :options="pageOptions"
-          placeholder="选择页面"
-          style="width: 200px"
+          placeholder="过滤: 选择目标页面"
+          style="width: 160px"
           :disabled="!selectedModuleId"
+          clearable
         />
         <n-button type="primary" @click="handleOpenCreate" :disabled="!selectedPageId">
           <template #icon>
-            <span style="font-size: 18px;">➕</span>
+            <span style="font-size: 16px;">➕</span>
           </template>
           创建元素
         </n-button>
-      </n-space>
+      </div>
     </div>
 
     <!-- Elements Table -->
-    <n-card :bordered="false" class="table-card">
+    <div class="card-wrap shadow-sm animate-fade-up" style="animation-delay: 0.1s">
       <n-data-table
         :columns="columns"
         :data="elements"
         :loading="loading"
         :pagination="pagination"
       />
-    </n-card>
+    </div>
 
     <!-- Create/Edit Modal -->
     <n-modal v-model:show="showCreateModal">
       <n-card
-        style="width: 600px"
-        :title="editingId ? '编辑元素' : '创建元素'"
+        style="width: 650px; max-width: 90vw"
+        :title="editingId ? '✏️ 编辑元素' : '➕ 创建元素'"
         :bordered="false"
         size="huge"
         role="dialog"
         aria-modal="true"
-        class="modal-card"
       >
         <n-form
           ref="formRef"
@@ -57,36 +58,41 @@
           label-placement="top"
         >
           <n-form-item label="元素名称" path="name">
-            <n-input v-model:value="formValue.name" placeholder="请输入元素名称" />
+            <n-input v-model:value="formValue.name" placeholder="例如：登录按钮、用户名输入框" />
           </n-form-item>
-          <n-form-item label="描述" path="description">
+          <n-form-item label="元素描述" path="description">
             <n-input
               v-model:value="formValue.description"
               type="textarea"
-              placeholder="请输入描述（可选）"
+              placeholder="添加补充说明（可选）"
               :autosize="{ minRows: 2, maxRows: 4 }"
             />
           </n-form-item>
-          <n-grid :cols="2" :x-gap="24">
-            <n-form-item-grid-item label="定位方式" path="locator_type">
-              <n-select
-                v-model:value="formValue.locator_type"
-                :options="locatorOptions"
-                placeholder="选择定位方式"
-              />
-            </n-form-item-grid-item>
-            <n-form-item-grid-item label="定位值" path="locator_value">
-              <n-input v-model:value="formValue.locator_value" placeholder="例如: //div[@id='app']" />
-            </n-form-item-grid-item>
-          </n-grid>
+          
+          <div style="background: var(--color-bg); padding: 16px 20px; border-radius: 12px; margin-top: 8px;">
+            <div style="font-weight: 500; font-size: 13px; color: var(--color-text-2); margin-bottom: 12px;">定位规则配置</div>
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 16px;">
+              <n-form-item label="定位方式" path="locator_type" style="margin-bottom: 0;">
+                <n-select
+                  v-model:value="formValue.locator_type"
+                  :options="locatorOptions"
+                  placeholder="选择方式"
+                />
+              </n-form-item>
+              <n-form-item label="定位特征值" path="locator_value" style="margin-bottom: 0;">
+                <n-input v-model:value="formValue.locator_value" placeholder="例如: #login-btn 或 //*[@id='app']" />
+              </n-form-item>
+            </div>
+          </div>
         </n-form>
+        
         <template #footer>
-          <n-space justify="end">
+          <div style="display: flex; justify-content: flex-end; gap: 12px;">
             <n-button @click="handleCloseModal">取消</n-button>
             <n-button type="primary" @click="handleCreate">
-              {{ editingId ? '更新' : '创建' }}
+              {{ editingId ? '保存更改' : '确认创建' }}
             </n-button>
-          </n-space>
+          </div>
         </template>
       </n-card>
     </n-modal>
@@ -95,7 +101,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, h, watch } from 'vue'
-import { NButton, NSpace, useMessage, type DataTableColumns, type FormInst, NCard, NDataTable, NModal, NForm, NFormItem, NInput, NSelect, NGrid, NFormItemGridItem, NTag } from 'naive-ui'
+import { NButton, NSpace, useMessage, type DataTableColumns, type FormInst, NCard, NDataTable, NModal, NForm, NFormItem, NInput, NSelect, NTag } from 'naive-ui'
 import api from '@/api'
 
 interface PageElement {
@@ -111,21 +117,11 @@ interface PageElement {
   updater_name: string
 }
 
-interface Module {
-  id: number
-  name: string
-}
-
-interface Page {
-  id: number
-  name: string
-}
-
 const message = useMessage()
 const loading = ref(false)
 const elements = ref<PageElement[]>([])
-const modules = ref<Module[]>([])
-const pages = ref<Page[]>([])
+const modules = ref<any[]>([])
+const pages = ref<any[]>([])
 const moduleOptions = ref<{ label: string; value: number }[]>([])
 const pageOptions = ref<{ label: string; value: number }[]>([])
 const selectedModuleId = ref<number | null>(null)
@@ -142,21 +138,9 @@ const formValue = ref({
 })
 
 const rules = {
-  name: {
-    required: true,
-    message: '请输入元素名称',
-    trigger: 'blur'
-  },
-  locator_type: {
-    required: true,
-    message: '请选择定位方式',
-    trigger: 'change'
-  },
-  locator_value: {
-    required: true,
-    message: '请输入定位值',
-    trigger: 'blur'
-  }
+  name: { required: true, message: '请输入元素名称', trigger: 'blur' },
+  locator_type: { required: true, message: '请选择定位方式', trigger: 'change' },
+  locator_value: { required: true, message: '请输入定位特征值', trigger: 'blur' }
 }
 
 const locatorOptions = [
@@ -169,78 +153,49 @@ const locatorOptions = [
 ]
 
 const columns: DataTableColumns<PageElement> = [
-  { title: 'ID', key: 'id', width: 80 },
-  { title: '名称', key: 'name' },
+  { title: '元素名称', key: 'name', minWidth: 150 },
   { 
     title: '定位方式', 
     key: 'locator_type',
     width: 120,
     render(row) {
-      return h(NTag, { type: 'info', size: 'small' }, { default: () => row.locator_type })
+      return h(NTag, { type: 'info', size: 'small', bordered: false, style: 'font-weight: 500;' }, { default: () => row.locator_type.toUpperCase() })
     }
   },
-  { title: '定位值', key: 'locator_value', ellipsis: true },
-  { title: '描述', key: 'description', ellipsis: true },
+  { title: '定位特征值', key: 'locator_value', ellipsis: true },
   { 
-    title: '创建时间', 
-    key: 'created_at',
-    width: 180,
-    render(row) {
-      return row.created_at ? new Date(row.created_at).toLocaleString() : '-'
-    }
-  },
-  { 
-    title: '更新时间', 
+    title: '最近更新', 
     key: 'updated_at',
-    width: 180,
+    width: 160,
     render(row) {
-      return row.updated_at ? new Date(row.updated_at).toLocaleString() : '-'
+      const d = row.updated_at || row.created_at
+      return d ? new Date(d).toLocaleString() : '-'
     }
   },
-  { title: '创建人', key: 'creator_name', width: 100 },
-  { title: '更新人', key: 'updater_name', width: 100 },
+  { title: '维护人', key: 'updater_name', width: 120, render: (row) => row.updater_name || row.creator_name || '-' },
   {
     title: '操作',
     key: 'actions',
+    width: 160,
+    fixed: 'right' as const,
     render(row) {
-      return h(NSpace, null, {
+      return h(NSpace, { align: 'center', wrap: false }, {
         default: () => [
-          h(
-            NButton,
-            {
-              size: 'small',
-              type: 'primary',
-              secondary: true,
-              onClick: () => handleEdit(row)
-            },
-            { default: () => '编辑' }
-          ),
-          h(
-            NButton,
-            {
-              size: 'small',
-              type: 'error',
-              secondary: true,
-              onClick: () => handleDelete(row)
-            },
-            { default: () => '删除' }
-          )
+          h(NButton, { size: 'small', tertiary: true, type: 'primary', onClick: () => handleEdit(row) }, { default: () => '编辑' }),
+          h(NButton, { size: 'small', tertiary: true, type: 'error', onClick: () => handleDelete(row) }, { default: () => '删除' })
         ]
       })
     }
   }
 ]
 
-const pagination = { pageSize: 10 }
+const pagination = { pageSize: 15 }
 
 const fetchModules = async () => {
   try {
     const response = await api.get('/modules/')
     modules.value = response.data
-    moduleOptions.value = modules.value.map(m => ({
-      label: m.name,
-      value: m.id
-    }))
+    moduleOptions.value = modules.value.map(m => ({ label: m.name, value: m.id }))
     if (modules.value.length > 0 && !selectedModuleId.value) {
       selectedModuleId.value = modules.value[0].id
     }
@@ -251,7 +206,6 @@ const fetchModules = async () => {
 
 const fetchPages = async () => {
   if (!selectedModuleId.value) {
-    pages.value = []
     pageOptions.value = []
     selectedPageId.value = null
     return
@@ -259,18 +213,13 @@ const fetchPages = async () => {
   try {
     const response = await api.get(`/pages/?module_id=${selectedModuleId.value}`)
     pages.value = response.data
-    pageOptions.value = pages.value.map(p => ({
-      label: p.name,
-      value: p.id
-    }))
+    pageOptions.value = pages.value.map(p => ({ label: p.name, value: p.id }))
     if (pages.value.length > 0) {
       selectedPageId.value = pages.value[0].id
     } else {
       selectedPageId.value = null
     }
-  } catch (error) {
-    message.error('获取页面列表失败')
-  }
+  } catch (error) {}
 }
 
 const fetchElements = async () => {
@@ -283,23 +232,16 @@ const fetchElements = async () => {
     const response = await api.get(`/elements/?page_id=${selectedPageId.value}`)
     elements.value = response.data
   } catch (error) {
-    message.error('获取元素列表失败')
+    message.error('获取列表数据失败')
   } finally {
     loading.value = false
   }
 }
 
-watch(selectedModuleId, () => {
-  fetchPages()
-})
+watch(selectedModuleId, () => fetchPages())
+watch(selectedPageId, () => fetchElements())
 
-watch(selectedPageId, () => {
-  fetchElements()
-})
-
-const handleOpenCreate = () => {
-  showCreateModal.value = true
-}
+const handleOpenCreate = () => showCreateModal.value = true
 
 const handleCreate = async () => {
   formRef.value?.validate(async (errors) => {
@@ -308,15 +250,15 @@ const handleCreate = async () => {
         const data = { ...formValue.value, page_id: selectedPageId.value }
         if (editingId.value) {
           await api.put(`/elements/${editingId.value}`, data)
-          message.success('元素更新成功')
+          message.success('元素信息修改成功')
         } else {
           await api.post('/elements/', data)
-          message.success('元素创建成功')
+          message.success('新元素已创建')
         }
         handleCloseModal()
         fetchElements()
       } catch (error) {
-        message.error(editingId.value ? '更新元素失败' : '创建元素失败')
+        message.error(editingId.value ? '保存失败' : '创建失败')
       }
     }
   })
@@ -326,7 +268,7 @@ const handleEdit = (row: PageElement) => {
   editingId.value = row.id
   formValue.value = {
     name: row.name,
-    description: row.description,
+    description: row.description || '',
     locator_type: row.locator_type,
     locator_value: row.locator_value
   }
@@ -342,69 +284,20 @@ const handleCloseModal = () => {
 const handleDelete = async (row: PageElement) => {
   try {
     await api.delete(`/elements/${row.id}`)
-    message.success('元素删除成功')
+    message.success('元素已删除')
     fetchElements()
-  } catch (error) {
-    message.error('删除元素失败')
-  }
+  } catch (error) {}
 }
 
-onMounted(() => {
-  fetchModules()
-})
+onMounted(() => fetchModules())
 </script>
 
 <style scoped>
-.page-elements-container {
-  padding: 16px;
-}
-
-.page-header {
-  margin-bottom: 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #fff;
-  padding: 16px 24px;
-  border-radius: 4px;
-  box-shadow: 0 1px 2px -2px rgba(0, 0, 0, 0.16), 0 3px 6px 0 rgba(0, 0, 0, 0.12), 0 5px 12px 4px rgba(0, 0, 0, 0.09);
-}
-
-.header-text h1 {
-  font-size: 20px;
-  font-weight: 500;
-  color: #1f2225;
-  margin: 0 0 4px 0;
-}
-
-.header-text p {
-  margin: 0;
-  color: #666;
-  font-size: 14px;
-}
-
-.table-card {
-  border-radius: 4px;
-  box-shadow: 0 1px 2px -2px rgba(0, 0, 0, 0.16), 0 3px 6px 0 rgba(0, 0, 0, 0.12), 0 5px 12px 4px rgba(0, 0, 0, 0.09);
-}
-
-.modal-card {
-  border-radius: 4px;
-}
-
-.modal-card :deep(.n-card-header) {
-  padding: 16px 24px;
-  border-bottom: 1px solid #e8eaec;
-  font-size: 16px;
-  font-weight: 500;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .page-header {
-    flex-direction: column;
-    gap: 16px;
-    align-items: stretch;
-  }
+.card-wrap {
+  background: var(--color-card);
+  border-radius: 16px;
+  border: 1px solid var(--color-divider);
+  padding: 4px;
+  overflow: hidden;
 }
 </style>

@@ -8,7 +8,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, h } from 'vue'
-import { useMessage, NCard, NDataTable, NButton, NSpace, NTag } from 'naive-ui'
+import { useMessage, NCard, NDataTable, NButton, NSpace, NTag, type DataTableColumns } from 'naive-ui'
 import api from '@/api'
 
 interface Report {
@@ -39,7 +39,7 @@ const formatDate = (dateStr: string) => {
   }).replace(/\//g, '-')
 }
 
-const columns = [
+const columns: DataTableColumns<Report> = [
   { title: '报告 ID', key: 'id', width: 80 },
   { title: '用例名称', key: 'test_case_name', width: 200 },
   { title: '执行人', key: 'executor_name', width: 150 },

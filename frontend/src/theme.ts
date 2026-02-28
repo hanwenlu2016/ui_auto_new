@@ -1,27 +1,120 @@
 import { GlobalThemeOverrides } from 'naive-ui'
 
 export const adminTheme: GlobalThemeOverrides = {
-    common: {
-        primaryColor: '#2d8cf0',
-        primaryColorHover: '#57a3f3',
-        primaryColorPressed: '#2061a5',
-        primaryColorSuppl: '#2d8cf0',
-        borderRadius: '4px',
-        fontFamily: 'v-sans, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"'
-    },
-    Card: {
-        borderRadius: '8px',
-        boxShadow: '0 1px 2px -2px rgba(0, 0, 0, 0.08), 0 3px 6px 0 rgba(0, 0, 0, 0.06), 0 5px 12px 4px rgba(0, 0, 0, 0.04)'
-    },
-    Button: {
-        borderRadius: '4px',
-        fontWeight: '500'
-    },
-    Menu: {
-        itemColorActive: '#e6f7ff',
-        itemColorActiveHover: '#e6f7ff',
-        itemTextColorActive: '#2d8cf0',
-        itemIconColorActive: '#2d8cf0',
-        itemBorderRadius: '4px'
+  common: {
+    primaryColor: '#4F81FF',
+    primaryColorHover: '#6E97FF',
+    primaryColorPressed: '#3A65E0',
+    primaryColorSuppl: '#4F81FF',
+    borderRadius: '10px',
+    borderRadiusSmall: '7px',
+    fontFamily: '"Inter", "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif',
+    fontSize: '14px',
+    lineHeight: '1.6',
+    // Neutral palette
+    baseColor: '#ffffff',
+    bodyColor: '#F5F7FC',
+    cardColor: '#ffffff',
+    textColorBase: '#1A1D23',
+    textColor1: '#1A1D23',
+    textColor2: '#4E5669',
+    textColor3: '#8F95A3',
+    dividerColor: '#ECEEF5',
+    borderColor: '#E2E5F0',
+  },
+  Card: {
+    borderRadius: '14px',
+    boxShadow: '0 2px 12px 0 rgba(79, 129, 255, 0.06), 0 1px 3px 0 rgba(0,0,0,0.04)',
+    paddingMedium: '20px 24px',
+    titleFontSizeMedium: '15px',
+    titleFontWeight: '600',
+    titleTextColor: '#1A1D23',
+  },
+  Button: {
+    borderRadius: '9px',
+    fontWeight: '500',
+    fontSizeMedium: '14px',
+    heightMedium: '36px',
+    paddingMedium: '0 18px',
+    // Primary button
+    colorPrimary: '#4F81FF',
+    colorHoverPrimary: '#6E97FF',
+    colorPressedPrimary: '#3A65E0',
+    textColorPrimary: '#ffffff',
+    borderPrimary: '1px solid #4F81FF',
+    borderHoverPrimary: '1px solid #6E97FF',
+    // Ghost/Default
+    border: '1px solid #E2E5F0',
+    borderHover: '1px solid #4F81FF',
+    textColorHover: '#4F81FF',
+  },
+  DataTable: {
+    borderRadius: '14px',
+    thColor: '#F8F9FD',
+    thTextColor: '#8F95A3',
+    thFontWeight: '500',
+    tdColor: '#ffffff',
+    tdColorHover: '#F5F7FC',
+    borderColor: '#ECEEF5',
+    thPaddingMedium: '12px 16px',
+    tdPaddingMedium: '14px 16px',
+    fontSizeMedium: '14px',
+  },
+  Menu: {
+    itemColorActive: 'rgba(79,129,255,0.10)',
+    itemColorActiveHover: 'rgba(79,129,255,0.14)',
+    itemColorHover: 'rgba(79,129,255,0.06)',
+    itemTextColorActive: '#4F81FF',
+    itemTextColorActiveHover: '#4F81FF',
+    itemIconColorActive: '#4F81FF',
+    itemIconColorActiveHover: '#4F81FF',
+    itemBorderRadius: '10px',
+    itemTextColor: '#4E5669',
+    itemIconColor: '#8F95A3',
+    fontSize: '14px',
+    collapsedIconSize: '20px',
+  },
+  Modal: {
+    borderRadius: '18px',
+    boxShadow: '0 20px 60px rgba(79,129,255,0.15), 0 4px 20px rgba(0,0,0,0.08)',
+    color: '#ffffff',
+  },
+  Input: {
+    borderRadius: '9px',
+    border: '1.5px solid #E2E5F0',
+    borderHover: '1.5px solid #4F81FF',
+    borderFocus: '1.5px solid #4F81FF',
+    boxShadowFocus: '0 0 0 3px rgba(79,129,255,0.15)',
+    placeholderColor: '#C0C4CE',
+    height: '38px',
+    heightMedium: '38px',
+  },
+  Select: {
+    peers: {
+      InternalSelection: {
+        borderRadius: '9px',
+        border: '1.5px solid #E2E5F0',
+        borderHover: '1.5px solid #4F81FF',
+        borderFocus: '1.5px solid #4F81FF',
+        boxShadowActive: '0 0 0 3px rgba(79,129,255,0.15)',
+        heightMedium: '38px',
+      }
     }
+  },
+  Tag: {
+    borderRadius: '6px',
+  },
+  Form: {
+    labelFontWeight: '500',
+    labelTextColor: '#4E5669',
+    labelFontSizeMedium: '13px',
+  },
+  Pagination: {
+    itemBorderRadius: '8px',
+  },
+  Breadcrumb: {
+    itemTextColor: '#8F95A3',
+    separatorColor: '#C0C4CE',
+    fontSizeMedium: '13px',
+  },
 }

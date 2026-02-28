@@ -1,47 +1,48 @@
 <template>
-  <div class="test-cases-container">
+  <div class="page-container animate-fade-up">
     <!-- Page Header -->
-    <div class="page-header">
-      <div class="header-text">
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+      <div>
         <h1>测试用例</h1>
-        <p>管理和执行测试用例</p>
+        <p>管理和执行模块下的测试用例</p>
       </div>
-      <n-space>
+      <div style="display: flex; gap: 12px; align-items: center;">
         <n-select
           v-model:value="selectedModuleId"
           :options="moduleOptions"
-          placeholder="选择模块"
+          placeholder="过滤: 选择模块"
           style="width: 200px"
           @update:value="fetchTestCases"
+          clearable
         />
         <n-button type="primary" @click="showCreateModal = true" :disabled="!selectedModuleId">
           <template #icon>
-            <span style="font-size: 18px;">➕</span>
+            <span style="font-size: 16px;">➕</span>
           </template>
           创建用例
         </n-button>
-      </n-space>
+      </div>
     </div>
 
     <!-- Test Cases Table -->
-    <n-card :bordered="false" class="table-card">
+    <div class="card-wrap shadow-sm animate-fade-up" style="animation-delay: 0.1s">
       <n-data-table
         :columns="columns"
         :data="testCases"
         :loading="loading"
         :pagination="pagination"
       />
-    </n-card>
+    </div>
 
     <!-- Create/Edit Modal -->
-    <n-modal v-model:show="showCreateModal" style="width: 800px">
+    <n-modal v-model:show="showCreateModal">
       <n-card
-        :title="editingId ? '编辑用例' : '创建用例'"
+        style="width: 800px; max-width: 90vw;"
+        :title="editingId ? '✏️ 编辑测试用例' : '➕ 创建测试用例'"
         :bordered="false"
         size="huge"
         role="dialog"
         aria-modal="true"
-        class="modal-card"
       >
         <n-form
           ref="formRef"
@@ -49,82 +50,88 @@
           :rules="rules"
           label-placement="top"
         >
-          <n-grid :cols="2" :x-gap="24">
-            <n-form-item-grid-item label="用例名称" path="name">
-              <n-input v-model:value="formValue.name" placeholder="请输入用例名称" />
-            </n-form-item-grid-item>
-            <n-form-item-grid-item label="优先级" path="priority">
+          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+            <n-form-item label="用例名称" path="name">
+              <n-input v-model:value="formValue.name" placeholder="简要描述测试目的" />
+            </n-form-item>
+            <n-form-item label="优先级" path="priority">
               <n-select
                 v-model:value="formValue.priority"
                 :options="[
-                  { label: 'P0', value: 'P0' },
-                  { label: 'P1', value: 'P1' },
-                  { label: 'P2', value: 'P2' }
+                  { label: 'P0 核心', value: 'P0' },
+                  { label: 'P1 重要', value: 'P1' },
+                  { label: 'P2 一般', value: 'P2' }
                 ]"
               />
-            </n-form-item-grid-item>
-          </n-grid>
+            </n-form-item>
+          </div>
           
-          <n-form-item label="描述" path="description">
+          <n-form-item label="详细描述 (可选)" path="description">
             <n-input
               v-model:value="formValue.description"
               type="textarea"
-              placeholder="请输入描述（可选）"
+              placeholder="添加前提条件、前置数据等信息..."
               :autosize="{ minRows: 2, maxRows: 4 }"
             />
           </n-form-item>
 
-          <div style="display: flex; align-items: center; justify-content: space-between;">
-             <n-divider title-placement="left" style="margin: 0; flex: 1;">测试步骤</n-divider>
-             <n-button text type="primary" size="small" @click="showAIModal = true">
-               ✨ AI 生成
+          <div style="display: flex; align-items: center; justify-content: space-between; margin: 24px 0 16px 0;">
+             <div style="font-weight: 600; font-size: 15px; color: var(--color-text-1);">测试步骤定义</div>
+             <n-button round type="primary" ghost size="small" @click="showAIModal = true">
+               ✨ AI 智能生成
              </n-button>
           </div>
-          <div style="margin-bottom: 24px;"></div>
           
-          <n-dynamic-input
-            v-model:value="formValue.steps"
-            :on-create="onCreateStep"
-            #="{ index, value }"
-          >
-            <div style="display: flex; gap: 12px; width: 100%; align-items: center;">
-              <n-select
-                v-model:value="value.page_id"
-                :options="pageOptions"
-                placeholder="选择页面"
-                style="width: 150px"
-                @update:value="(val) => fetchElementsForPage(val)"
-              />
-              <n-select
-                v-model:value="value.element_id"
-                :options="elementOptions.filter(e => e.page_id === value.page_id)"
-                placeholder="选择元素"
-                style="width: 150px"
-                :disabled="!value.page_id"
-              />
-              <n-select
-                v-model:value="value.action"
-                :options="[
-                  { label: '点击', value: 'click' },
-                  { label: '输入', value: 'fill' },
-                  { label: '跳转', value: 'goto' },
-                  { label: '断言文本', value: 'assert_text' },
-                  { label: '等待', value: 'wait' }
-                ]"
-                placeholder="操作"
-                style="width: 120px"
-              />
-              <n-input v-model:value="value.value" placeholder="值 (Value)" style="flex: 1" />
+          <div style="background: var(--color-bg); padding: 16px; border-radius: 12px; border: 1px solid var(--color-divider);">
+            <n-dynamic-input
+              v-model:value="formValue.steps"
+              :on-create="onCreateStep"
+              #="{ index, value }"
+            >
+              <div style="display: flex; gap: 10px; width: 100%; align-items: center;">
+                <n-tag type="info" size="small" :bordered="false" style="width: 24px; justify-content: center; font-weight: 600;">{{ index + 1 }}</n-tag>
+                <n-select
+                  v-model:value="value.page_id"
+                  :options="pageOptions"
+                  placeholder="页面上下文"
+                  style="width: 140px"
+                  @update:value="(val) => fetchElementsForPage(val)"
+                />
+                <n-select
+                  v-model:value="value.element_id"
+                  :options="elementOptions.filter(e => e.page_id === value.page_id)"
+                  placeholder="目标元素"
+                  style="width: 150px"
+                  :disabled="!value.page_id"
+                  clearable
+                />
+                <n-select
+                  v-model:value="value.action"
+                  :options="[
+                    { label: '🖱️ 点击', value: 'click' },
+                    { label: '⌨️ 输入', value: 'fill' },
+                    { label: '🔗 跳转', value: 'goto' },
+                    { label: '✅ 断言', value: 'assert_text' },
+                    { label: '⏳ 等待', value: 'wait' }
+                  ]"
+                  placeholder="操作"
+                  style="width: 130px"
+                />
+                <n-input v-model:value="value.value" placeholder="参数 (Value)" style="flex: 1" />
+              </div>
+            </n-dynamic-input>
+            <div v-if="formValue.steps.length === 0" style="text-align: center; color: var(--color-text-3); padding: 12px 0; font-size: 13px;">
+              暂无步骤，点击右侧添加按钮或使用AI生成
             </div>
-          </n-dynamic-input>
+          </div>
         </n-form>
         <template #footer>
-          <n-space justify="end">
+          <div style="display: flex; justify-content: flex-end; gap: 12px;">
             <n-button @click="handleCloseModal">取消</n-button>
             <n-button type="primary" @click="handleCreate">
-              {{ editingId ? '更新' : '创建' }}
+              {{ editingId ? '保存更改' : '确认创建' }}
             </n-button>
-          </n-space>
+          </div>
         </template>
       </n-card>
     </n-modal>
@@ -132,46 +139,44 @@
     <!-- AI Generation Modal -->
     <n-modal v-model:show="showAIModal">
       <n-card
-        title="✨ AI 生成测试步骤"
+        title="✨ AI 智能解析步骤"
         :bordered="false"
-        size="huge"
+        size="large"
         role="dialog"
         aria-modal="true"
-        style="width: 600px"
+        style="width: 500px;"
       >
         <div style="margin-bottom: 20px;">
-           <p style="color: #666; margin-bottom: 8px;">
-             输入自然语言描述，AI 将自动为您生成测试步骤。
-           </p>
-           <p style="color: #888; font-size: 12px; margin-bottom: 16px;">
-             示例: "打开百度首页，等待 3 秒，在输入框中输入 'Selenium'，点击搜索按钮"
+           <p style="color: var(--color-text-2); font-size: 13px; line-height: 1.6; margin-bottom: 16px;">
+             使用自然语言描述连续动作，AI 将自动将其转化为标准化的执行步骤。<br/>
+             <span style="color: var(--color-text-3); font-size: 12px;">💡 提示：描述越明确（包含页面元素名称和输入值），生成的质量越高。</span>
            </p>
            <n-input
              v-model:value="aiPrompt"
              type="textarea"
-             placeholder="请描述您的测试步骤..."
-             :rows="5"
+             placeholder="示例: 打开百度首页，在搜索框输入 'Vue3'，然后点击百度一下按钮"
+             :rows="4"
+             style="background: var(--color-bg);"
            />
         </div>
         
-        <div v-if="aiLoading" style="text-align: center; margin: 20px 0;">
-          <n-spin size="large">
-             <template #description>正在生成步骤...</template>
-          </n-spin>
+        <div v-if="aiLoading" style="text-align: center; margin: 30px 0;">
+          <n-spin size="medium" />
+          <div style="margin-top: 12px; color: var(--color-primary); font-size: 13px;">AI 大脑正在飞速运转中...</div>
         </div>
         
         <template #footer>
-          <n-space justify="end">
-            <n-button @click="showAIModal = false">取消</n-button>
+          <div style="display: flex; justify-content: flex-end; gap: 12px;">
+            <n-button @click="showAIModal = false" :disabled="aiLoading">取消</n-button>
             <n-button 
               type="primary" 
               @click="handleGenerateSteps" 
               :disabled="!aiPrompt || aiLoading"
               :loading="aiLoading"
             >
-              生成
+              一键生成
             </n-button>
-          </n-space>
+          </div>
         </template>
       </n-card>
     </n-modal>
@@ -180,7 +185,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, h, watch } from 'vue'
-import { NButton, NSpace, useMessage, type DataTableColumns, type FormInst, NCard, NDataTable, NModal, NForm, NFormItem, NInput, NSelect, NDivider, NDynamicInput, NGrid, NFormItemGridItem, NTag, NSpin } from 'naive-ui'
+import { NButton, NSpace, useMessage, type DataTableColumns, type FormInst, NCard, NDataTable, NModal, NForm, NFormItem, NInput, NSelect, NDynamicInput, NTag, NSpin } from 'naive-ui'
 import api from '@/api'
 
 interface TestCase {
@@ -196,28 +201,12 @@ interface TestCase {
   updater_name: string
 }
 
-interface Module {
-  id: number
-  name: string
-}
-
-interface Page {
-  id: number
-  name: string
-}
-
-interface PageElement {
-  id: number
-  name: string
-  page_id: number
-}
-
 const message = useMessage()
 const loading = ref(false)
 const testCases = ref<TestCase[]>([])
-const modules = ref<Module[]>([])
-const pages = ref<Page[]>([])
-const elements = ref<PageElement[]>([])
+const modules = ref<any[]>([])
+const pages = ref<any[]>([])
+const elements = ref<any[]>([])
 const moduleOptions = ref<{ label: string; value: number }[]>([])
 const pageOptions = ref<{ label: string; value: number }[]>([])
 const elementOptions = ref<{ label: string; value: number; page_id: number }[]>([])
@@ -231,7 +220,7 @@ const formValue = ref({
   name: '',
   description: '',
   priority: 'P1',
-  steps: [] as { action: string; target: string; value: string; page_id?: number | null; element_id?: number | null }[]
+  steps: [] as any[]
 })
 
 // AI Generation State
@@ -240,11 +229,7 @@ const aiPrompt = ref('')
 const aiLoading = ref(false)
 
 const rules = {
-  name: {
-    required: true,
-    message: '请输入用例名称',
-    trigger: 'blur'
-  }
+  name: { required: true, message: '请输入用例名称', trigger: 'blur' }
 }
 
 const onCreateStep = () => {
@@ -258,90 +243,56 @@ const onCreateStep = () => {
 }
 
 const columns: DataTableColumns<TestCase> = [
-  { title: 'ID', key: 'id', width: 80 },
-  { title: '名称', key: 'name' },
+  { title: '用例名称', key: 'name', minWidth: 200 },
   { 
     title: '优先级', 
     key: 'priority',
-    width: 100,
+    width: 90,
     render(row) {
-      const type = row.priority === 'P0' ? 'error' : row.priority === 'P1' ? 'warning' : 'info'
-      return h(NTag, { type, size: 'small' }, { default: () => row.priority })
+      if (row.priority === 'P0') return h('span', { class: 'badge badge-p0' }, 'P0')
+      if (row.priority === 'P1') return h('span', { class: 'badge badge-p1' }, 'P1')
+      return h('span', { class: 'badge badge-p2' }, row.priority || 'P2')
     }
   },
-  { title: '描述', key: 'description' },
+  { title: '步骤数', key: 'steps', width: 80, render: (row) => row.steps?.length || 0 },
   { 
-    title: '创建时间', 
-    key: 'created_at',
-    width: 180,
-    render(row) {
-      return row.created_at ? new Date(row.created_at).toLocaleString() : '-'
-    }
-  },
-  { 
-    title: '更新时间', 
+    title: '最近更新', 
     key: 'updated_at',
-    width: 180,
+    width: 160,
     render(row) {
-      return row.updated_at ? new Date(row.updated_at).toLocaleString() : '-'
+      const d = row.updated_at || row.created_at
+      return d ? new Date(d).toLocaleString() : '-'
     }
   },
-  { title: '创建人', key: 'creator_name', width: 100 },
-  { title: '更新人', key: 'updater_name', width: 100 },
+  { title: '维护人', key: 'updater_name', width: 120, render: (row) => row.updater_name || row.creator_name || '-' },
   {
     title: '操作',
     key: 'actions',
+    width: 220,
+    fixed: 'right' as const,
     render(row) {
-      return h(NSpace, null, {
+      return h(NSpace, { align: 'center', wrap: false }, {
         default: () => [
-          h(
-            NButton,
-            {
-              size: 'small',
-              type: 'primary',
-              secondary: true,
-              onClick: () => handleRun(row)
-            },
-            { default: () => '运行' }
-          ),
-          h(
-            NButton,
-            {
-              size: 'small',
-              type: 'primary',
-              secondary: true,
-              onClick: () => handleEdit(row)
-            },
-            { default: () => '编辑' }
-          ),
-          h(
-            NButton,
-            {
-              size: 'small',
-              type: 'error',
-              secondary: true,
-              onClick: () => handleDelete(row)
-            },
-            { default: () => '删除' }
-          )
+          h(NButton, { size: 'small', type: 'primary', onClick: () => handleRun(row) }, { default: () => '执行' }),
+          h(NButton, { size: 'small', tertiary: true, onClick: () => handleEdit(row) }, { default: () => '编辑' }),
+          h(NButton, { size: 'small', tertiary: true, type: 'error', onClick: () => handleDelete(row) }, { default: () => '删除' })
         ]
       })
     }
   }
 ]
 
-const pagination = { pageSize: 10 }
+const pagination = { pageSize: 15 }
 
 const fetchModules = async () => {
   try {
     const response = await api.get('/modules/')
     modules.value = response.data
-    moduleOptions.value = modules.value.map(m => ({
-      label: m.name,
-      value: m.id
-    }))
+    moduleOptions.value = modules.value.map(m => ({ label: m.name, value: m.id }))
     if (modules.value.length > 0 && !selectedModuleId.value) {
       selectedModuleId.value = modules.value[0].id
+    } else {
+      fetchTestCases()
     }
   } catch (error) {
     message.error('获取模块列表失败')
@@ -350,36 +301,27 @@ const fetchModules = async () => {
 
 const fetchPages = async () => {
   if (!selectedModuleId.value) {
-    pages.value = []
     pageOptions.value = []
     return
   }
   try {
     const response = await api.get(`/pages/?module_id=${selectedModuleId.value}`)
     pages.value = response.data
-    pageOptions.value = pages.value.map(p => ({
-      label: p.name,
-      value: p.id
-    }))
-  } catch (error) {
-    message.error('获取页面列表失败')
-  }
+    pageOptions.value = pages.value.map(p => ({ label: p.name, value: p.id }))
+  } catch (error) {}
 }
 
 const fetchElementsForPage = async (pageId: number) => {
   try {
     const response = await api.get(`/elements/?page_id=${pageId}`)
     const newElements = response.data
-    // Merge into elements list avoiding duplicates
-    newElements.forEach((e: PageElement) => {
+    newElements.forEach((e: any) => {
       if (!elements.value.find(el => el.id === e.id)) {
         elements.value.push(e)
       }
     })
     updateElementOptions()
-  } catch (error) {
-    console.error('Failed to fetch elements', error)
-  }
+  } catch (error) {}
 }
 
 const updateElementOptions = () => {
@@ -391,13 +333,13 @@ const updateElementOptions = () => {
 }
 
 const fetchTestCases = async () => {
-  if (!selectedModuleId.value) return
   loading.value = true
   try {
-    const response = await api.get(`/cases/?module_id=${selectedModuleId.value}`)
+    const url = selectedModuleId.value ? `/cases/?module_id=${selectedModuleId.value}` : '/cases/'
+    const response = await api.get(url)
     testCases.value = response.data
   } catch (error) {
-    message.error('获取测试用例列表失败')
+    message.error('获取用例列表失败')
   } finally {
     loading.value = false
   }
@@ -406,7 +348,6 @@ const fetchTestCases = async () => {
 watch(selectedModuleId, async () => {
   await fetchPages()
   fetchTestCases()
-  // Clear elements when module changes
   elements.value = []
   updateElementOptions()
 })
@@ -418,15 +359,16 @@ const handleCreate = async () => {
         const data = { ...formValue.value, module_id: selectedModuleId.value }
         if (editingId.value) {
           await api.put(`/cases/${editingId.value}`, data)
-          message.success('用例更新成功')
+          message.success('用例修改成功')
         } else {
           await api.post('/cases/', data)
           message.success('用例创建成功')
         }
         handleCloseModal()
         fetchTestCases()
-      } catch (error) {
-        message.error(editingId.value ? '更新用例失败' : '创建用例失败')
+      } catch (error: any) {
+        const d = error?.response?.data?.detail
+        message.error(d ? `保存失败：${d}` : '操作失败')
       }
     }
   })
@@ -434,37 +376,25 @@ const handleCreate = async () => {
 
 const handleRun = async (row: TestCase) => {
   try {
+    message.info('准备执行测试引擎...')
     const response = await api.post(`/execution/cases/${row.id}/run`)
-    const data = response.data
-    
-    // 显示后端返回的消息
-    message.success(data.message || '测试已启动,请到测试报告页面查看执行结果')
-    
+    message.success(response.data.message || '测试任务已触发，请查看报告')
   } catch (error) {
-    message.error('启动测试失败')
+    message.error('触发测试执行失败')
   }
 }
 
 const handleEdit = async (row: TestCase) => {
   editingId.value = row.id
-  // We need to ensure we have the pages and elements loaded for this case's module
-  // But selectedModuleId might be different.
-  // Ideally we should switch to the case's module or just load data.
-  // For simplicity, assume we are in the correct module view.
-  
-  // Pre-load elements for pages used in steps
   if (row.steps) {
     for (const step of row.steps) {
-      if (step.page_id) {
-        await fetchElementsForPage(step.page_id)
-      }
+      if (step.page_id) await fetchElementsForPage(step.page_id)
     }
   }
-
   formValue.value = {
     name: row.name,
     description: row.description,
-    priority: row.priority,
+    priority: row.priority || 'P1',
     steps: row.steps ? row.steps.map(s => ({...s})) : []
   }
   showCreateModal.value = true
@@ -479,53 +409,48 @@ const handleCloseModal = () => {
 const handleDelete = async (row: TestCase) => {
   try {
     await api.delete(`/cases/${row.id}`)
-    message.success('Test case deleted successfully')
+    message.success('已删除用例')
     fetchTestCases()
-  } catch (error) {
-    message.error('Failed to delete test case')
-  }
+  } catch (error) {}
 }
 
-// AI Handler
 const handleGenerateSteps = async () => {
-  if (!aiPrompt.value) {
-    message.warning('请输入描述')
-    return
-  }
+  if (!aiPrompt.value) return
   aiLoading.value = true
   try {
     const response = await api.post('/ai/generate', { prompt: aiPrompt.value })
     const generatedSteps = response.data.steps
-    
     if (generatedSteps && generatedSteps.length > 0) {
-      // Map AI steps to UI format
       const newSteps = generatedSteps.map((s: any) => ({
         action: s.action,
-        // AI returns raw 'target' (selector), so we put it in target
-        // and leave page_id/element_id empty as they are not mapped yet
-        target: s.target || '', 
+        target: s.target || s.selector || '', 
         value: s.value || '',
         page_id: null,
         element_id: null
       }))
-      
-      // Re-assign array to trigger reactivity
       formValue.value.steps = [...formValue.value.steps, ...newSteps]
-      
-      message.success(`成功生成 ${newSteps.length} 个步骤`)
+      message.success(`成功解析并添加 ${newSteps.length} 个步骤`)
       showAIModal.value = false
       aiPrompt.value = ''
     } else {
-      message.warning('未能生成步骤，请尝试更详细的描述')
+      message.warning('未生成步骤，请尝试换种描述')
     }
   } catch (error) {
-    message.error('生成失败: ' + error)
+    message.error('AI 解析异常')
   } finally {
     aiLoading.value = false
   }
 }
 
-onMounted(() => {
-  fetchModules()
-})
+onMounted(() => fetchModules())
 </script>
+
+<style scoped>
+.card-wrap {
+  background: var(--color-card);
+  border-radius: 16px;
+  border: 1px solid var(--color-divider);
+  padding: 4px; /* DataTable component natively provides padding */
+  overflow: hidden;
+}
+</style>

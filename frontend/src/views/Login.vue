@@ -43,12 +43,12 @@
 import { ref } from 'vue'
 import { useMessage, type FormInst, NCard, NForm, NFormItem, NInput, NButton } from 'naive-ui'
 import { useUserStore } from '@/stores/user'
-import { useRouter } from 'vue-router'
+
 
 const formRef = ref<FormInst | null>(null)
 const message = useMessage()
 const userStore = useUserStore()
-const router = useRouter()
+ // const router = useRouter()
 const loading = ref(false)
 
 const formValue = ref({
@@ -76,7 +76,7 @@ const handleLogin = async () => {
       try {
         await userStore.login(formValue.value)
         message.success('Login successful')
-        router.push('/')
+        setTimeout(() => { window.location.href = "/"; }, 500);
       } catch (error: any) {
         message.error(error.response?.data?.detail || 'Login failed')
       } finally {

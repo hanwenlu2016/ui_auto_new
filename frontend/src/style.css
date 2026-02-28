@@ -1,79 +1,170 @@
+/* ============================================
+   Aurora Design System - Global Styles
+   ============================================ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
+  --color-primary: #4F81FF;
+  --color-primary-light: rgba(79, 129, 255, 0.1);
+  --color-bg: #F5F7FC;
+  --color-card: #ffffff;
+  --color-text-1: #1A1D23;
+  --color-text-2: #4E5669;
+  --color-text-3: #8F95A3;
+  --color-border: #E2E5F0;
+  --color-divider: #ECEEF5;
+
+  /* Gradient palette */
+  --gradient-blue: linear-gradient(135deg, #4F81FF 0%, #7FA5FF 100%);
+  --gradient-teal: linear-gradient(135deg, #2DD4BF 0%, #5BE0CE 100%);
+  --gradient-purple: linear-gradient(135deg, #A78BFA 0%, #C4B5FD 100%);
+  --gradient-amber: linear-gradient(135deg, #FB923C 0%, #FCA963 100%);
+  --gradient-green: linear-gradient(135deg, #34D399 0%, #6EE7B7 100%);
+
+  font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  line-height: 1.6;
   font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color: var(--color-text-1);
+  background-color: var(--color-bg);
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
-a:hover {
-  color: #535bf2;
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
 }
 
 body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
+  display: block;
+  place-items: unset;
   min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-.card {
-  padding: 2em;
+  background-color: var(--color-bg);
 }
 
 #app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  max-width: unset;
+  margin: 0;
+  padding: 0;
+  text-align: unset;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+/* ---- Scrollbar ---- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #D1D9F0;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #A8B4D8;
+}
+
+/* ---- Page layout utility ---- */
+.page-container {
+  padding: 24px;
+  min-height: calc(100vh - 64px);
+}
+
+/* ---- Page header ---- */
+.page-header {
+  margin-bottom: 24px;
+}
+
+.page-header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text-1);
+  margin: 0 0 4px 0;
+  letter-spacing: -0.3px;
+}
+
+.page-header p {
+  font-size: 13px;
+  color: var(--color-text-3);
+  margin: 0;
+}
+
+/* ---- General tag / priority badges ---- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.badge-p0 { background: rgba(239,68,68,0.1); color: #EF4444; }
+.badge-p1 { background: rgba(251,146,60,0.1); color: #FB923C; }
+.badge-p2 { background: rgba(34,211,153,0.1); color: #10B981; }
+
+/* ---- Subtle entrance animation ---- */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
   }
-  a:hover {
-    color: #747bff;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
-  button {
-    background-color: #f9f9f9;
-  }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.35s ease both;
+}
+
+/* ---- Card hover lift ---- */
+.card-hoverable {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hoverable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(79, 129, 255, 0.12) !important;
+}
+
+/* ---- Empty placeholder ---- */
+.empty-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 0;
+  color: var(--color-text-3);
+}
+
+/* ---- Override Naive UI globals ---- */
+.n-layout-content {
+  background: var(--color-bg) !important;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+a:hover {
+  color: #6E97FF;
 }

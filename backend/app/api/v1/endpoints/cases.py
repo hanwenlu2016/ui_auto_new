@@ -39,8 +39,11 @@ async def create_test_case(
     """
     Create new test case.
     """
-    test_case = await case_service.create(db, obj_in=test_case_in, creator_id=current_user.id, updater_id=current_user.id)
-    return test_case
+    try:
+        test_case = await case_service.create(db, obj_in=test_case_in, creator_id=current_user.id, updater_id=current_user.id)
+        return test_case
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.get("/{case_id}", response_model=TestCaseSchema)
 async def read_test_case(

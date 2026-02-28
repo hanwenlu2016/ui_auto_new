@@ -8,15 +8,29 @@ from sqlalchemy.orm import selectinload
 
 class CaseService(CRUDBase[TestCase, TestCaseCreate, TestCaseUpdate]):
     async def create(self, db: AsyncSession, *, obj_in: TestCaseCreate, **kwargs) -> TestCase:
-        # Check if case with same name exists in the module
-        result = await db.execute(
-            select(TestCase)
-            .where(TestCase.module_id == obj_in.module_id)
-            .where(TestCase.name == obj_in.name)
-        )
-        if result.scalars().first():
-            raise ValueError(f"Test case with name '{obj_in.name}' already exists in this module")
-        return await super().create(db, obj_in=obj_in, **kwargs)
+        # If name already exists in the module, auto-append a numeric suffix
+        base_name = obj_in.name
+        candidate = base_name
+        counter = 2
+        while True:
+            result = await db.execute(
+                select(TestCase)
+                .where(TestCase.module_id == obj_in.module_id)
+                .where(TestCase.name == candidate)
+            )
+            if not result.scalars().first():
+                break
+            candidate = f"{base_name} ({counter})"
+            counter += 1
+
+        # Use a mutable copy with the resolved unique name
+        obj_data = obj_in.model_dump()
+        obj_data["name"] = candidate
+        db_obj = TestCase(**obj_data, **kwargs)
+        db.add(db_obj)
+        await db.commit()
+        await db.refresh(db_obj)
+        return db_obj
 
     async def get_multi(
         self, db: AsyncSession, *, skip: int = 0, limit: int = 100, filters: dict = None
