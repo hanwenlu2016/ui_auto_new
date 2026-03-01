@@ -13823,3 +13823,1201 @@ FROM test_reports
 WHERE test_reports.status = $1::VARCHAR
 [2026-03-01 00:28:29] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 1574s ago] ('success',)
 [2026-03-01 00:28:29] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:39:55] [INFO] [ui_auto] [ai_service.py:24]: AI Service initialized with model: gemini-pro-latest
+[2026-03-01 14:40:22] [INFO] [ui_auto] [ai_service.py:24]: AI Service initialized with model: gemini-pro-latest
+[2026-03-01 14:40:22] [INFO] [ui_auto] [main.py:58]: UI Automation Platform API started successfully
+[2026-03-01 14:41:18] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: select pg_catalog.version()
+[2026-03-01 14:41:18] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [raw sql] ()
+[2026-03-01 14:41:18] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: select current_schema()
+[2026-03-01 14:41:18] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [raw sql] ()
+[2026-03-01 14:41:19] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: show standard_conforming_strings
+[2026-03-01 14:41:19] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [raw sql] ()
+[2026-03-01 14:41:19] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:41:19] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:41:19] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00025s] ('admin@163.com',)
+[2026-03-01 14:41:19] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:41:19] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:41:19] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:41:19] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.4173s ago] ('admin@163.com',)
+[2026-03-01 14:41:19] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:41:20] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:41:20] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:41:20] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 1.014s ago] ('admin@163.com',)
+[2026-03-01 14:41:20] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:41:20] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:41:20] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(projects.id) AS count_1 
+FROM projects
+[2026-03-01 14:41:20] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00014s] ()
+[2026-03-01 14:41:20] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_cases.id) AS count_1 
+FROM test_cases
+[2026-03-01 14:41:20] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00014s] ()
+[2026-03-01 14:41:20] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_reports.id) AS count_1 
+FROM test_reports
+[2026-03-01 14:41:20] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00014s] ()
+[2026-03-01 14:41:20] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_reports.id) AS count_1 
+FROM test_reports 
+WHERE test_reports.status = $1::VARCHAR
+[2026-03-01 14:41:20] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00034s] ('success',)
+[2026-03-01 14:41:20] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:41:20] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:41:20] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_reports.id, test_reports.status, test_reports.created_at, test_reports.report_path, test_cases.name AS case_name 
+FROM test_reports LEFT OUTER JOIN test_cases ON test_reports.test_case_id = test_cases.id ORDER BY test_reports.created_at DESC 
+ LIMIT $1::INTEGER
+[2026-03-01 14:41:20] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00013s] (5,)
+[2026-03-01 14:41:20] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:41:34] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:41:34] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:41:34] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 15.44s ago] ('admin@163.com',)
+[2026-03-01 14:41:36] [ERROR] [ui_auto] [ai_service.py:63]: Error generating steps with LLM: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. 
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-3-pro
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-3-pro
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-3-pro
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-3-pro
+Please retry in 23.505622529s. [links {
+  description: "Learn more about Gemini API quotas"
+  url: "https://ai.google.dev/gemini-api/docs/rate-limits"
+}
+, violations {
+  quota_metric: "generativelanguage.googleapis.com/generate_content_free_tier_input_token_count"
+  quota_id: "GenerateContentInputTokensPerModelPerDay-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "gemini-3-pro"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+}
+violations {
+  quota_metric: "generativelanguage.googleapis.com/generate_content_free_tier_requests"
+  quota_id: "GenerateRequestsPerDayPerProjectPerModel-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "gemini-3-pro"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+}
+violations {
+  quota_metric: "generativelanguage.googleapis.com/generate_content_free_tier_requests"
+  quota_id: "GenerateRequestsPerMinutePerProjectPerModel-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "gemini-3-pro"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+}
+violations {
+  quota_metric: "generativelanguage.googleapis.com/generate_content_free_tier_input_token_count"
+  quota_id: "GenerateContentInputTokensPerModelPerMinute-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "gemini-3-pro"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+}
+, retry_delay {
+  seconds: 23
+}
+]
+[2026-03-01 14:41:36] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:41:45] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:41:45] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:41:45] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 26.95s ago] ('admin@163.com',)
+[2026-03-01 14:41:45] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_reports.id, test_reports.test_case_id, test_reports.test_suite_id, test_reports.executor_id, test_reports.report_path, test_reports.status, test_reports.browser_type, test_reports.headless, test_reports.error_message, test_reports.created_at 
+FROM test_reports 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-01 14:41:45] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00044s] (100, 0)
+[2026-03-01 14:41:45] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id AS test_cases_id, test_cases.name AS test_cases_name, test_cases.description AS test_cases_description, test_cases.module_id AS test_cases_module_id, test_cases.priority AS test_cases_priority, test_cases.status AS test_cases_status, test_cases.steps AS test_cases_steps, test_cases.created_at AS test_cases_created_at, test_cases.updated_at AS test_cases_updated_at, test_cases.creator_id AS test_cases_creator_id, test_cases.updater_id AS test_cases_updater_id 
+FROM test_cases 
+WHERE test_cases.id = $1::INTEGER
+[2026-03-01 14:41:45] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00044s] (7,)
+[2026-03-01 14:41:46] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id AS test_cases_id, test_cases.name AS test_cases_name, test_cases.description AS test_cases_description, test_cases.module_id AS test_cases_module_id, test_cases.priority AS test_cases_priority, test_cases.status AS test_cases_status, test_cases.steps AS test_cases_steps, test_cases.created_at AS test_cases_created_at, test_cases.updated_at AS test_cases_updated_at, test_cases.creator_id AS test_cases_creator_id, test_cases.updater_id AS test_cases_updater_id 
+FROM test_cases 
+WHERE test_cases.id = $1::INTEGER
+[2026-03-01 14:41:46] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.006075s ago] (11,)
+[2026-03-01 14:41:46] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:41:46] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:41:46] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:41:46] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 27.95s ago] ('admin@163.com',)
+[2026-03-01 14:41:46] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT projects.id, projects.name, projects.description, projects.base_url, projects.owner_id, projects.created_at, projects.updated_at 
+FROM projects 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-01 14:41:46] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00011s] (100, 0)
+[2026-03-01 14:41:46] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:41:47] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:41:47] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:41:47] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 28.47s ago] ('admin@163.com',)
+[2026-03-01 14:41:47] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT projects.id, projects.name, projects.description, projects.base_url, projects.owner_id, projects.created_at, projects.updated_at 
+FROM projects 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-01 14:41:47] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.5227s ago] (100, 0)
+[2026-03-01 14:41:47] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:41:47] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:41:47] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:41:47] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 28.49s ago] ('admin@163.com',)
+[2026-03-01 14:41:47] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_suites.id, test_suites.name, test_suites.description, test_suites.project_id, test_suites.created_at, test_suites.updated_at, test_suites.creator_id, test_suites.updater_id 
+FROM test_suites 
+WHERE test_suites.project_id = $1::INTEGER 
+ LIMIT $2::INTEGER OFFSET $3::INTEGER
+[2026-03-01 14:41:47] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00021s] (2, 100, 0)
+[2026-03-01 14:41:47] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:41:48] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:41:48] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:41:48] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 29.36s ago] ('admin@163.com',)
+[2026-03-01 14:41:48] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT modules.id, modules.name, modules.description, modules.project_id, modules.parent_id, modules.created_at, modules.updated_at, modules.creator_id, modules.updater_id 
+FROM modules 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-01 14:41:48] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00012s] (100, 0)
+[2026-03-01 14:41:48] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 14:41:48] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00030s] (1,)
+[2026-03-01 14:41:48] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 14:41:48] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00022s] (1,)
+[2026-03-01 14:41:48] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:41:48] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:41:48] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:41:48] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 29.38s ago] ('admin@163.com',)
+[2026-03-01 14:41:48] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT pages.id, pages.name, pages.description, pages.module_id, pages.created_at, pages.updated_at, pages.creator_id, pages.updater_id 
+FROM pages 
+WHERE pages.module_id = $1::INTEGER
+[2026-03-01 14:41:48] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00011s] (1,)
+[2026-03-01 14:41:48] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 14:41:48] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00019s] (1,)
+[2026-03-01 14:41:48] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:41:48] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:41:48] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:41:48] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 29.4s ago] ('admin@163.com',)
+[2026-03-01 14:41:48] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT page_elements.id, page_elements.name, page_elements.description, page_elements.module_id, page_elements.page_id, page_elements.locator_type, page_elements.locator_value, page_elements.metadata_json, page_elements.created_at, page_elements.updated_at, page_elements.creator_id, page_elements.updater_id 
+FROM page_elements 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-01 14:41:48] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00012s] (100, 0)
+[2026-03-01 14:41:48] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 14:41:48] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00018s] (1,)
+[2026-03-01 14:41:48] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:41:50] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:41:50] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:41:50] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 31.52s ago] ('admin@163.com',)
+[2026-03-01 14:41:50] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT modules.id, modules.name, modules.description, modules.project_id, modules.parent_id, modules.created_at, modules.updated_at, modules.creator_id, modules.updater_id 
+FROM modules 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-01 14:41:50] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 2.152s ago] (100, 0)
+[2026-03-01 14:41:50] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 14:41:50] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 2.151s ago] (1,)
+[2026-03-01 14:41:50] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 14:41:50] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 2.151s ago] (1,)
+[2026-03-01 14:41:50] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:41:50] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:41:50] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:41:50] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 31.54s ago] ('admin@163.com',)
+[2026-03-01 14:41:50] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT pages.id, pages.name, pages.description, pages.module_id, pages.created_at, pages.updated_at, pages.creator_id, pages.updater_id 
+FROM pages 
+WHERE pages.module_id = $1::INTEGER
+[2026-03-01 14:41:50] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 2.157s ago] (1,)
+[2026-03-01 14:41:50] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 14:41:50] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 2.155s ago] (1,)
+[2026-03-01 14:41:50] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:41:51] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:41:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:41:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 32.02s ago] ('admin@163.com',)
+[2026-03-01 14:41:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT projects.id, projects.name, projects.description, projects.base_url, projects.owner_id, projects.created_at, projects.updated_at 
+FROM projects 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-01 14:41:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 4.069s ago] (100, 0)
+[2026-03-01 14:41:51] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:41:51] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:41:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:41:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 32.03s ago] ('admin@163.com',)
+[2026-03-01 14:41:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT modules.id, modules.name, modules.description, modules.project_id, modules.parent_id, modules.created_at, modules.updated_at, modules.creator_id, modules.updater_id 
+FROM modules 
+WHERE modules.project_id = $1::INTEGER 
+ LIMIT $2::INTEGER OFFSET $3::INTEGER
+[2026-03-01 14:41:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00011s] (2, 100, 0)
+[2026-03-01 14:41:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 14:41:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 2.664s ago] (1,)
+[2026-03-01 14:41:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 14:41:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 2.663s ago] (1,)
+[2026-03-01 14:41:51] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:41:51] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:41:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(projects.id) AS count_1 
+FROM projects
+[2026-03-01 14:41:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 31.5s ago] ()
+[2026-03-01 14:41:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_cases.id) AS count_1 
+FROM test_cases
+[2026-03-01 14:41:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 31.49s ago] ()
+[2026-03-01 14:41:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_reports.id) AS count_1 
+FROM test_reports
+[2026-03-01 14:41:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 31.49s ago] ()
+[2026-03-01 14:41:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_reports.id) AS count_1 
+FROM test_reports 
+WHERE test_reports.status = $1::VARCHAR
+[2026-03-01 14:41:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 31.49s ago] ('success',)
+[2026-03-01 14:41:51] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:41:51] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:41:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_reports.id, test_reports.status, test_reports.created_at, test_reports.report_path, test_cases.name AS case_name 
+FROM test_reports LEFT OUTER JOIN test_cases ON test_reports.test_case_id = test_cases.id ORDER BY test_reports.created_at DESC 
+ LIMIT $1::INTEGER
+[2026-03-01 14:41:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 31.49s ago] (5,)
+[2026-03-01 14:41:51] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:42:12] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:42:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:42:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 53.22s ago] ('admin@163.com',)
+[2026-03-01 14:42:12] [ERROR] [ui_auto] [ai_service.py:63]: Error generating steps with LLM: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. 
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-3-pro
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-3-pro
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-3-pro
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-3-pro
+Please retry in 47.502195789s. [links {
+  description: "Learn more about Gemini API quotas"
+  url: "https://ai.google.dev/gemini-api/docs/rate-limits"
+}
+, violations {
+  quota_metric: "generativelanguage.googleapis.com/generate_content_free_tier_input_token_count"
+  quota_id: "GenerateContentInputTokensPerModelPerDay-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "gemini-3-pro"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+}
+violations {
+  quota_metric: "generativelanguage.googleapis.com/generate_content_free_tier_requests"
+  quota_id: "GenerateRequestsPerDayPerProjectPerModel-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "gemini-3-pro"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+}
+violations {
+  quota_metric: "generativelanguage.googleapis.com/generate_content_free_tier_requests"
+  quota_id: "GenerateRequestsPerMinutePerProjectPerModel-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "gemini-3-pro"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+}
+violations {
+  quota_metric: "generativelanguage.googleapis.com/generate_content_free_tier_input_token_count"
+  quota_id: "GenerateContentInputTokensPerModelPerMinute-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "gemini-3-pro"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+}
+, retry_delay {
+  seconds: 47
+}
+]
+[2026-03-01 14:42:12] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:43:05] [INFO] [ui_auto] [ai_service.py:24]: AI Service initialized with model: gemini-pro-latest
+[2026-03-01 14:43:05] [INFO] [ui_auto] [main.py:58]: UI Automation Platform API started successfully
+[2026-03-01 14:43:29] [INFO] [ui_auto] [ai_service.py:24]: AI Service initialized with model: gemini-pro-latest
+[2026-03-01 14:43:29] [INFO] [ui_auto] [main.py:58]: UI Automation Platform API started successfully
+[2026-03-01 14:44:00] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: select pg_catalog.version()
+[2026-03-01 14:44:00] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [raw sql] ()
+[2026-03-01 14:44:00] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: select current_schema()
+[2026-03-01 14:44:00] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [raw sql] ()
+[2026-03-01 14:44:00] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: show standard_conforming_strings
+[2026-03-01 14:44:00] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [raw sql] ()
+[2026-03-01 14:44:00] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00024s] ('admin@163.com',)
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(projects.id) AS count_1 
+FROM projects
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00029s] ()
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_cases.id) AS count_1 
+FROM test_cases
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00011s] ()
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_reports.id) AS count_1 
+FROM test_reports
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00009s] ()
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_reports.id) AS count_1 
+FROM test_reports 
+WHERE test_reports.status = $1::VARCHAR
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00010s] ('success',)
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_reports.id, test_reports.status, test_reports.created_at, test_reports.report_path, test_cases.name AS case_name 
+FROM test_reports LEFT OUTER JOIN test_cases ON test_reports.test_case_id = test_cases.id ORDER BY test_reports.created_at DESC 
+ LIMIT $1::INTEGER
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00015s] (5,)
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.3538s ago] ('admin@163.com',)
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(projects.id) AS count_1 
+FROM projects
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.3204s ago] ()
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_cases.id) AS count_1 
+FROM test_cases
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.3183s ago] ()
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_reports.id) AS count_1 
+FROM test_reports
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.3175s ago] ()
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_reports.id) AS count_1 
+FROM test_reports 
+WHERE test_reports.status = $1::VARCHAR
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.3161s ago] ('success',)
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_reports.id, test_reports.status, test_reports.created_at, test_reports.report_path, test_cases.name AS case_name 
+FROM test_reports LEFT OUTER JOIN test_cases ON test_reports.test_case_id = test_cases.id ORDER BY test_reports.created_at DESC 
+ LIMIT $1::INTEGER
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.3059s ago] (5,)
+[2026-03-01 14:44:01] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:44:08] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:44:08] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:44:08] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 7.141s ago] ('admin@163.com',)
+[2026-03-01 14:44:11] [ERROR] [ui_auto] [ai_service.py:63]: Error generating steps with LLM: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. 
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-3-pro
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-3-pro
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-3-pro
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-3-pro
+Please retry in 48.771853199s. [links {
+  description: "Learn more about Gemini API quotas"
+  url: "https://ai.google.dev/gemini-api/docs/rate-limits"
+}
+, violations {
+  quota_metric: "generativelanguage.googleapis.com/generate_content_free_tier_input_token_count"
+  quota_id: "GenerateContentInputTokensPerModelPerDay-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "gemini-3-pro"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+}
+violations {
+  quota_metric: "generativelanguage.googleapis.com/generate_content_free_tier_requests"
+  quota_id: "GenerateRequestsPerDayPerProjectPerModel-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "gemini-3-pro"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+}
+violations {
+  quota_metric: "generativelanguage.googleapis.com/generate_content_free_tier_requests"
+  quota_id: "GenerateRequestsPerMinutePerProjectPerModel-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "gemini-3-pro"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+}
+violations {
+  quota_metric: "generativelanguage.googleapis.com/generate_content_free_tier_input_token_count"
+  quota_id: "GenerateContentInputTokensPerModelPerMinute-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "gemini-3-pro"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+}
+, retry_delay {
+  seconds: 48
+}
+]
+[2026-03-01 14:44:11] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:44:21] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:44:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:44:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 20.77s ago] ('admin@163.com',)
+[2026-03-01 14:44:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT modules.id, modules.name, modules.description, modules.project_id, modules.parent_id, modules.created_at, modules.updated_at, modules.creator_id, modules.updater_id 
+FROM modules 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-01 14:44:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00012s] (100, 0)
+[2026-03-01 14:44:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 14:44:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00018s] (1,)
+[2026-03-01 14:44:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 14:44:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00028s] (1,)
+[2026-03-01 14:44:21] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:44:21] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:44:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:44:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 20.79s ago] ('admin@163.com',)
+[2026-03-01 14:44:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT pages.id, pages.name, pages.description, pages.module_id, pages.created_at, pages.updated_at, pages.creator_id, pages.updater_id 
+FROM pages 
+WHERE pages.module_id = $1::INTEGER
+[2026-03-01 14:44:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00011s] (1,)
+[2026-03-01 14:44:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 14:44:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00013s] (1,)
+[2026-03-01 14:44:21] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:44:21] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:44:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:44:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 20.81s ago] ('admin@163.com',)
+[2026-03-01 14:44:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id, test_cases.name, test_cases.description, test_cases.module_id, test_cases.priority, test_cases.status, test_cases.steps, test_cases.created_at, test_cases.updated_at, test_cases.creator_id, test_cases.updater_id 
+FROM test_cases 
+WHERE test_cases.module_id = $1::INTEGER 
+ LIMIT $2::INTEGER OFFSET $3::INTEGER
+[2026-03-01 14:44:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00012s] (1, 100, 0)
+[2026-03-01 14:44:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 14:44:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00037s] (1,)
+[2026-03-01 14:44:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 14:44:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00022s] (1,)
+[2026-03-01 14:44:21] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:47:15] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:47:15] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:47:15] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 194.5s ago] ('admin@163.com',)
+[2026-03-01 14:47:15] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:47:16] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:47:16] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:47:16] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 195.4s ago] ('admin@163.com',)
+[2026-03-01 14:47:18] [ERROR] [ui_auto] [ai_service.py:63]: Error generating steps with LLM: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. 
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-3-pro
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-3-pro
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-3-pro
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-3-pro
+Please retry in 41.890108935s. [links {
+  description: "Learn more about Gemini API quotas"
+  url: "https://ai.google.dev/gemini-api/docs/rate-limits"
+}
+, violations {
+  quota_metric: "generativelanguage.googleapis.com/generate_content_free_tier_input_token_count"
+  quota_id: "GenerateContentInputTokensPerModelPerDay-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "gemini-3-pro"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+}
+violations {
+  quota_metric: "generativelanguage.googleapis.com/generate_content_free_tier_input_token_count"
+  quota_id: "GenerateContentInputTokensPerModelPerMinute-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "gemini-3-pro"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+}
+violations {
+  quota_metric: "generativelanguage.googleapis.com/generate_content_free_tier_requests"
+  quota_id: "GenerateRequestsPerMinutePerProjectPerModel-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "gemini-3-pro"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+}
+violations {
+  quota_metric: "generativelanguage.googleapis.com/generate_content_free_tier_requests"
+  quota_id: "GenerateRequestsPerDayPerProjectPerModel-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "gemini-3-pro"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+}
+, retry_delay {
+  seconds: 41
+}
+]
+[2026-03-01 14:47:18] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:55:27] [INFO] [ui_auto] [ai_service.py:28]: AI Service initialized with model: MiniMax-M2.5 at https://api.minimaxi.com/v1
+[2026-03-01 14:55:27] [INFO] [ui_auto] [main.py:58]: UI Automation Platform API started successfully
+[2026-03-01 14:56:03] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: select pg_catalog.version()
+[2026-03-01 14:56:03] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [raw sql] ()
+[2026-03-01 14:56:03] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: select current_schema()
+[2026-03-01 14:56:03] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [raw sql] ()
+[2026-03-01 14:56:03] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: show standard_conforming_strings
+[2026-03-01 14:56:03] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [raw sql] ()
+[2026-03-01 14:56:03] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:56:03] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:56:03] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00026s] ('admin@163.com',)
+[2026-03-01 14:56:03] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.09799s ago] ('admin@163.com',)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT modules.id, modules.name, modules.description, modules.project_id, modules.parent_id, modules.created_at, modules.updated_at, modules.creator_id, modules.updater_id 
+FROM modules 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00023s] (100, 0)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00026s] (1,)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00027s] (1,)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.1255s ago] ('admin@163.com',)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT pages.id, pages.name, pages.description, pages.module_id, pages.created_at, pages.updated_at, pages.creator_id, pages.updater_id 
+FROM pages 
+WHERE pages.module_id = $1::INTEGER
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00022s] (1,)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00025s] (1,)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.1412s ago] ('admin@163.com',)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id, test_cases.name, test_cases.description, test_cases.module_id, test_cases.priority, test_cases.status, test_cases.steps, test_cases.created_at, test_cases.updated_at, test_cases.creator_id, test_cases.updater_id 
+FROM test_cases 
+WHERE test_cases.module_id = $1::INTEGER 
+ LIMIT $2::INTEGER OFFSET $3::INTEGER
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00028s] (1, 100, 0)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00041s] (1,)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00017s] (1,)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.6558s ago] ('admin@163.com',)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.7301s ago] ('admin@163.com',)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT modules.id, modules.name, modules.description, modules.project_id, modules.parent_id, modules.created_at, modules.updated_at, modules.creator_id, modules.updater_id 
+FROM modules 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.6293s ago] (100, 0)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.627s ago] (1,)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.6242s ago] (1,)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.7483s ago] ('admin@163.com',)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT pages.id, pages.name, pages.description, pages.module_id, pages.created_at, pages.updated_at, pages.creator_id, pages.updater_id 
+FROM pages 
+WHERE pages.module_id = $1::INTEGER
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.6211s ago] (1,)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.6192s ago] (1,)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.7632s ago] ('admin@163.com',)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id, test_cases.name, test_cases.description, test_cases.module_id, test_cases.priority, test_cases.status, test_cases.steps, test_cases.created_at, test_cases.updated_at, test_cases.creator_id, test_cases.updater_id 
+FROM test_cases 
+WHERE test_cases.module_id = $1::INTEGER 
+ LIMIT $2::INTEGER OFFSET $3::INTEGER
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.6199s ago] (1, 100, 0)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.6175s ago] (1,)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.6159s ago] (1,)
+[2026-03-01 14:56:04] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:56:06] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:56:06] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:56:06] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 2.944s ago] ('admin@163.com',)
+[2026-03-01 14:56:06] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT projects.id, projects.name, projects.description, projects.base_url, projects.owner_id, projects.created_at, projects.updated_at 
+FROM projects 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-01 14:56:06] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00011s] (100, 0)
+[2026-03-01 14:56:06] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:56:08] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:56:08] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(projects.id) AS count_1 
+FROM projects
+[2026-03-01 14:56:08] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00015s] ()
+[2026-03-01 14:56:08] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_cases.id) AS count_1 
+FROM test_cases
+[2026-03-01 14:56:08] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00010s] ()
+[2026-03-01 14:56:08] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_reports.id) AS count_1 
+FROM test_reports
+[2026-03-01 14:56:08] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00019s] ()
+[2026-03-01 14:56:08] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_reports.id) AS count_1 
+FROM test_reports 
+WHERE test_reports.status = $1::VARCHAR
+[2026-03-01 14:56:08] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00012s] ('success',)
+[2026-03-01 14:56:08] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:56:08] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:56:08] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_reports.id, test_reports.status, test_reports.created_at, test_reports.report_path, test_cases.name AS case_name 
+FROM test_reports LEFT OUTER JOIN test_cases ON test_reports.test_case_id = test_cases.id ORDER BY test_reports.created_at DESC 
+ LIMIT $1::INTEGER
+[2026-03-01 14:56:08] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00019s] (5,)
+[2026-03-01 14:56:08] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:56:14] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:56:14] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:56:14] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 10.92s ago] ('admin@163.com',)
+[2026-03-01 14:56:28] [INFO] [httpx] [_client.py:1740]: HTTP Request: POST https://api.minimaxi.com/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-03-01 14:56:28] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:56:59] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:56:59] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:56:59] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 55.98s ago] ('admin@163.com',)
+[2026-03-01 14:56:59] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:56:59] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:56:59] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(projects.id) AS count_1 
+FROM projects
+[2026-03-01 14:56:59] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 51.51s ago] ()
+[2026-03-01 14:56:59] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_cases.id) AS count_1 
+FROM test_cases
+[2026-03-01 14:56:59] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 51.51s ago] ()
+[2026-03-01 14:56:59] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_reports.id) AS count_1 
+FROM test_reports
+[2026-03-01 14:56:59] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 51.51s ago] ()
+[2026-03-01 14:56:59] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_reports.id) AS count_1 
+FROM test_reports 
+WHERE test_reports.status = $1::VARCHAR
+[2026-03-01 14:56:59] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 51.5s ago] ('success',)
+[2026-03-01 14:56:59] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:56:59] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:56:59] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_reports.id, test_reports.status, test_reports.created_at, test_reports.report_path, test_cases.name AS case_name 
+FROM test_reports LEFT OUTER JOIN test_cases ON test_reports.test_case_id = test_cases.id ORDER BY test_reports.created_at DESC 
+ LIMIT $1::INTEGER
+[2026-03-01 14:56:59] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 51.49s ago] (5,)
+[2026-03-01 14:56:59] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:57:06] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:57:06] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:57:06] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 62.77s ago] ('admin@163.com',)
+[2026-03-01 14:57:15] [INFO] [httpx] [_client.py:1740]: HTTP Request: POST https://api.minimaxi.com/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-03-01 14:57:15] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:57:32] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:57:32] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:57:32] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 88.21s ago] ('admin@163.com',)
+[2026-03-01 14:57:32] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT projects.id, projects.name, projects.description, projects.base_url, projects.owner_id, projects.created_at, projects.updated_at 
+FROM projects 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-01 14:57:32] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 85.26s ago] (100, 0)
+[2026-03-01 14:57:32] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:57:32] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:57:32] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:57:32] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 88.22s ago] ('admin@163.com',)
+[2026-03-01 14:57:32] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_suites.id, test_suites.name, test_suites.description, test_suites.project_id, test_suites.created_at, test_suites.updated_at, test_suites.creator_id, test_suites.updater_id 
+FROM test_suites 
+WHERE test_suites.project_id = $1::INTEGER 
+ LIMIT $2::INTEGER OFFSET $3::INTEGER
+[2026-03-01 14:57:32] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00014s] (2, 100, 0)
+[2026-03-01 14:57:32] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:57:33] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:57:33] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:57:33] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 90.03s ago] ('admin@163.com',)
+[2026-03-01 14:57:33] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT modules.id, modules.name, modules.description, modules.project_id, modules.parent_id, modules.created_at, modules.updated_at, modules.creator_id, modules.updater_id 
+FROM modules 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-01 14:57:33] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 89.93s ago] (100, 0)
+[2026-03-01 14:57:33] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 14:57:33] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 89.93s ago] (1,)
+[2026-03-01 14:57:33] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 14:57:33] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 89.93s ago] (1,)
+[2026-03-01 14:57:33] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:57:33] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:57:33] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:57:33] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 90.05s ago] ('admin@163.com',)
+[2026-03-01 14:57:33] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT pages.id, pages.name, pages.description, pages.module_id, pages.created_at, pages.updated_at, pages.creator_id, pages.updater_id 
+FROM pages 
+WHERE pages.module_id = $1::INTEGER
+[2026-03-01 14:57:33] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 89.93s ago] (1,)
+[2026-03-01 14:57:33] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 14:57:33] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 89.93s ago] (1,)
+[2026-03-01 14:57:33] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 14:57:33] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 14:57:33] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 14:57:33] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 90.07s ago] ('admin@163.com',)
+[2026-03-01 14:57:33] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id, test_cases.name, test_cases.description, test_cases.module_id, test_cases.priority, test_cases.status, test_cases.steps, test_cases.created_at, test_cases.updated_at, test_cases.creator_id, test_cases.updater_id 
+FROM test_cases 
+WHERE test_cases.module_id = $1::INTEGER 
+ LIMIT $2::INTEGER OFFSET $3::INTEGER
+[2026-03-01 14:57:33] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 89.93s ago] (1, 100, 0)
+[2026-03-01 14:57:33] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 14:57:33] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 89.92s ago] (1,)
+[2026-03-01 14:57:33] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 14:57:33] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 89.92s ago] (1,)
+[2026-03-01 14:57:33] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 238.4s ago] ('admin@163.com',)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 238.5s ago] ('admin@163.com',)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT modules.id, modules.name, modules.description, modules.project_id, modules.parent_id, modules.created_at, modules.updated_at, modules.creator_id, modules.updater_id 
+FROM modules 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 238.4s ago] (100, 0)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 238.4s ago] (1,)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 238.4s ago] (1,)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 238.5s ago] ('admin@163.com',)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT pages.id, pages.name, pages.description, pages.module_id, pages.created_at, pages.updated_at, pages.creator_id, pages.updater_id 
+FROM pages 
+WHERE pages.module_id = $1::INTEGER
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 238.4s ago] (1,)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 238.4s ago] (1,)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 238.5s ago] ('admin@163.com',)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id, test_cases.name, test_cases.description, test_cases.module_id, test_cases.priority, test_cases.status, test_cases.steps, test_cases.created_at, test_cases.updated_at, test_cases.creator_id, test_cases.updater_id 
+FROM test_cases 
+WHERE test_cases.module_id = $1::INTEGER 
+ LIMIT $2::INTEGER OFFSET $3::INTEGER
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 238.4s ago] (1, 100, 0)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 238.4s ago] (1,)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 238.4s ago] (1,)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 238.8s ago] ('admin@163.com',)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 238.9s ago] ('admin@163.com',)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT modules.id, modules.name, modules.description, modules.project_id, modules.parent_id, modules.created_at, modules.updated_at, modules.creator_id, modules.updater_id 
+FROM modules 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 238.8s ago] (100, 0)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 238.8s ago] (1,)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 238.8s ago] (1,)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 238.9s ago] ('admin@163.com',)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT pages.id, pages.name, pages.description, pages.module_id, pages.created_at, pages.updated_at, pages.creator_id, pages.updater_id 
+FROM pages 
+WHERE pages.module_id = $1::INTEGER
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 238.8s ago] (1,)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 238.8s ago] (1,)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 238.9s ago] ('admin@163.com',)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id, test_cases.name, test_cases.description, test_cases.module_id, test_cases.priority, test_cases.status, test_cases.steps, test_cases.created_at, test_cases.updated_at, test_cases.creator_id, test_cases.updater_id 
+FROM test_cases 
+WHERE test_cases.module_id = $1::INTEGER 
+ LIMIT $2::INTEGER OFFSET $3::INTEGER
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 238.8s ago] (1, 100, 0)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 238.8s ago] (1,)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 238.8s ago] (1,)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 239s ago] ('admin@163.com',)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 239.1s ago] ('admin@163.com',)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT modules.id, modules.name, modules.description, modules.project_id, modules.parent_id, modules.created_at, modules.updated_at, modules.creator_id, modules.updater_id 
+FROM modules 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 239s ago] (100, 0)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 238.9s ago] (1,)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 238.9s ago] (1,)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 239.1s ago] ('admin@163.com',)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT pages.id, pages.name, pages.description, pages.module_id, pages.created_at, pages.updated_at, pages.creator_id, pages.updater_id 
+FROM pages 
+WHERE pages.module_id = $1::INTEGER
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 238.9s ago] (1,)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 238.9s ago] (1,)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 239.1s ago] ('admin@163.com',)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id, test_cases.name, test_cases.description, test_cases.module_id, test_cases.priority, test_cases.status, test_cases.steps, test_cases.created_at, test_cases.updated_at, test_cases.creator_id, test_cases.updater_id 
+FROM test_cases 
+WHERE test_cases.module_id = $1::INTEGER 
+ LIMIT $2::INTEGER OFFSET $3::INTEGER
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 238.9s ago] (1, 100, 0)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 238.9s ago] (1,)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 238.9s ago] (1,)
+[2026-03-01 15:00:02] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 15:00:08] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 15:00:08] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 15:00:08] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 244.9s ago] ('admin@163.com',)
+[2026-03-01 15:00:08] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT modules.id, modules.name, modules.description, modules.project_id, modules.parent_id, modules.created_at, modules.updated_at, modules.creator_id, modules.updater_id 
+FROM modules 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-01 15:00:08] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 244.8s ago] (100, 0)
+[2026-03-01 15:00:08] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 15:00:08] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 244.8s ago] (1,)
+[2026-03-01 15:00:08] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 15:00:08] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 244.8s ago] (1,)
+[2026-03-01 15:00:08] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 15:00:08] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 15:00:08] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 15:00:08] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 244.9s ago] ('admin@163.com',)
+[2026-03-01 15:00:08] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT pages.id, pages.name, pages.description, pages.module_id, pages.created_at, pages.updated_at, pages.creator_id, pages.updater_id 
+FROM pages 
+WHERE pages.module_id = $1::INTEGER
+[2026-03-01 15:00:08] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 244.8s ago] (1,)
+[2026-03-01 15:00:08] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-01 15:00:08] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 244.7s ago] (1,)
+[2026-03-01 15:00:08] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 15:00:10] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 15:00:10] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 15:00:10] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 246.2s ago] ('admin@163.com',)
+[2026-03-01 15:00:10] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT projects.id, projects.name, projects.description, projects.base_url, projects.owner_id, projects.created_at, projects.updated_at 
+FROM projects 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-01 15:00:10] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 243.3s ago] (100, 0)
+[2026-03-01 15:00:10] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 15:00:12] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 15:00:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 15:00:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 248.2s ago] ('admin@163.com',)
+[2026-03-01 15:00:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT projects.id, projects.name, projects.description, projects.base_url, projects.owner_id, projects.created_at, projects.updated_at 
+FROM projects 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-01 15:00:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 245.3s ago] (100, 0)
+[2026-03-01 15:00:12] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 15:00:12] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 15:00:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 15:00:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 249s ago] ('admin@163.com',)
+[2026-03-01 15:00:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_reports.id, test_reports.test_case_id, test_reports.test_suite_id, test_reports.executor_id, test_reports.report_path, test_reports.status, test_reports.browser_type, test_reports.headless, test_reports.error_message, test_reports.created_at 
+FROM test_reports 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-01 15:00:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00017s] (100, 0)
+[2026-03-01 15:00:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id AS test_cases_id, test_cases.name AS test_cases_name, test_cases.description AS test_cases_description, test_cases.module_id AS test_cases_module_id, test_cases.priority AS test_cases_priority, test_cases.status AS test_cases_status, test_cases.steps AS test_cases_steps, test_cases.created_at AS test_cases_created_at, test_cases.updated_at AS test_cases_updated_at, test_cases.creator_id AS test_cases_creator_id, test_cases.updater_id AS test_cases_updater_id 
+FROM test_cases 
+WHERE test_cases.id = $1::INTEGER
+[2026-03-01 15:00:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00014s] (7,)
+[2026-03-01 15:00:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id AS test_cases_id, test_cases.name AS test_cases_name, test_cases.description AS test_cases_description, test_cases.module_id AS test_cases_module_id, test_cases.priority AS test_cases_priority, test_cases.status AS test_cases_status, test_cases.steps AS test_cases_steps, test_cases.created_at AS test_cases_created_at, test_cases.updated_at AS test_cases_updated_at, test_cases.creator_id AS test_cases_creator_id, test_cases.updater_id AS test_cases_updater_id 
+FROM test_cases 
+WHERE test_cases.id = $1::INTEGER
+[2026-03-01 15:00:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.001737s ago] (11,)
+[2026-03-01 15:00:12] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 15:00:14] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 15:00:14] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(projects.id) AS count_1 
+FROM projects
+[2026-03-01 15:00:14] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 245.7s ago] ()
+[2026-03-01 15:00:14] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_cases.id) AS count_1 
+FROM test_cases
+[2026-03-01 15:00:14] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 245.7s ago] ()
+[2026-03-01 15:00:14] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_reports.id) AS count_1 
+FROM test_reports
+[2026-03-01 15:00:14] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 245.7s ago] ()
+[2026-03-01 15:00:14] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_reports.id) AS count_1 
+FROM test_reports 
+WHERE test_reports.status = $1::VARCHAR
+[2026-03-01 15:00:14] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 245.7s ago] ('success',)
+[2026-03-01 15:00:14] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 15:00:14] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 15:00:14] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_reports.id, test_reports.status, test_reports.created_at, test_reports.report_path, test_cases.name AS case_name 
+FROM test_reports LEFT OUTER JOIN test_cases ON test_reports.test_case_id = test_cases.id ORDER BY test_reports.created_at DESC 
+ LIMIT $1::INTEGER
+[2026-03-01 15:00:14] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 245.7s ago] (5,)
+[2026-03-01 15:00:14] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 15:00:22] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 15:00:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 15:00:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 258.6s ago] ('admin@163.com',)
+[2026-03-01 15:00:35] [INFO] [httpx] [_client.py:1740]: HTTP Request: POST https://api.minimaxi.com/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-03-01 15:00:35] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 15:00:36] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 15:00:36] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 15:00:36] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 272.9s ago] ('admin@163.com',)
+[2026-03-01 15:00:36] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 15:00:36] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 15:00:36] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(projects.id) AS count_1 
+FROM projects
+[2026-03-01 15:00:36] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 268.4s ago] ()
+[2026-03-01 15:00:36] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_cases.id) AS count_1 
+FROM test_cases
+[2026-03-01 15:00:36] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 268.4s ago] ()
+[2026-03-01 15:00:36] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_reports.id) AS count_1 
+FROM test_reports
+[2026-03-01 15:00:36] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 268.4s ago] ()
+[2026-03-01 15:00:36] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_reports.id) AS count_1 
+FROM test_reports 
+WHERE test_reports.status = $1::VARCHAR
+[2026-03-01 15:00:36] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 268.4s ago] ('success',)
+[2026-03-01 15:00:36] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 15:00:36] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 15:00:36] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_reports.id, test_reports.status, test_reports.created_at, test_reports.report_path, test_cases.name AS case_name 
+FROM test_reports LEFT OUTER JOIN test_cases ON test_reports.test_case_id = test_cases.id ORDER BY test_reports.created_at DESC 
+ LIMIT $1::INTEGER
+[2026-03-01 15:00:36] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 268.4s ago] (5,)
+[2026-03-01 15:00:36] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 15:00:41] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 15:00:41] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 15:00:41] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 277.4s ago] ('admin@163.com',)
+[2026-03-01 15:00:54] [INFO] [httpx] [_client.py:1740]: HTTP Request: POST https://api.minimaxi.com/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-03-01 15:00:54] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 15:01:35] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 15:01:35] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 15:01:35] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 331.7s ago] ('admin@163.com',)
+[2026-03-01 15:01:35] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 15:01:36] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-01 15:01:36] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-01 15:01:36] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 332.4s ago] ('admin@163.com',)
+[2026-03-01 15:01:43] [INFO] [httpx] [_client.py:1740]: HTTP Request: POST https://api.minimaxi.com/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-03-01 15:01:43] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-01 15:02:07] [INFO] [ui_auto] [ai_service.py:28]: AI Service initialized with model: MiniMax-M2.5 at https://api.minimaxi.com/v1
+[2026-03-01 15:02:07] [INFO] [ui_auto] [main.py:58]: UI Automation Platform API started successfully

@@ -73,13 +73,23 @@
                 <n-timeline-item
                   v-for="(event, index) in events"
                   :key="index"
-                  type="info"
-                  :title="event.action === 'click' ? '🖱️ 点击操作' : '⌨️ 输入操作'"
+                  :type="getEventColor(event.action)"
+                  :title="getEventTitle(event.action)"
                   :time="event.recordedAt || ''"
                 >
                   <div class="event-payload">
-                    <span class="payload-target">{{ event.selector }}</span>
-                    <span v-if="event.value" class="payload-val">➔ {{ event.value }}</span>
+                    <template v-if="event.action === 'goto'">
+                      <span class="payload-label">网址:</span>
+                      <span class="payload-val">{{ event.value }}</span>
+                    </template>
+                    <template v-else-if="event.action === 'wait'">
+                      <span class="payload-label">时长:</span>
+                      <span class="payload-val">{{ (parseInt(event.value) / 1000).toFixed(1) }}s</span>
+                    </template>
+                    <template v-else>
+                      <span class="payload-target">{{ event.selector }}</span>
+                      <span v-if="event.value" class="payload-val">➔ {{ event.value }}</span>
+                    </template>
                   </div>
                 </n-timeline-item>
               </n-timeline>
@@ -150,8 +160,10 @@
 import { ref, onUnmounted, onMounted, watch } from 'vue'
 import { useMessage, NCard, NInputGroup, NInput, NButton, NScrollbar, NTimeline, NTimelineItem, NGrid, NGridItem, NTag, NModal, NForm, NFormItem, NSelect, type FormRules } from 'naive-ui'
 import api from '@/api'
+import { useRecordingStore } from '@/stores/recording'
 
 const message = useMessage()
+const recordingStore = useRecordingStore()
 const url = ref('')
 const isRecording = ref(false)
 const events = ref<any[]>([])
@@ -217,7 +229,8 @@ const handleSave = async () => {
           action: e.action,
           selector: e.selector,
           value: e.value || '',
-          element_id: null
+          element_id: null,
+          metadata_json: e.metadata || null
         }))
         if (steps.length === 0) { message.warning('没有可保存的步骤'); return }
 
@@ -254,7 +267,11 @@ const connectWebSocket = () => {
       isRecording.value = false
       message.error(`引擎异常: ${data.message}`)
     } else if (data.action) {
-      events.value.push({ ...data, recordedAt: new Date().toLocaleTimeString() })
+      events.value.push({ 
+        ...data, 
+        recordedAt: new Date().toLocaleTimeString(),
+        metadata: data.metadata || null
+      })
     }
   }
   ws.onerror = () => { message.error('服务连接断开'); isRecording.value = false }
@@ -284,8 +301,54 @@ const toggleRecording = () => {
   }
 }
 
-onMounted(() => fetchProjects())
-onUnmounted(() => { if (ws) ws.close() })
+onMounted(() => {
+  fetchProjects()
+  window.addEventListener('ai-use-steps', handleAISteps as any)
+  
+  // Check for pending AI steps from other pages
+  if (recordingStore.pendingSteps.length > 0) {
+    handleAISteps({ detail: recordingStore.pendingSteps } as any)
+    recordingStore.clearPendingSteps()
+  }
+})
+onUnmounted(() => {
+  if (ws) ws.close()
+  window.removeEventListener('ai-use-steps', handleAISteps as any)
+})
+
+const handleAISteps = (e: CustomEvent) => {
+  const steps = e.detail
+  steps.forEach((s: any) => {
+    events.value.push({
+      action: s.action,
+      selector: s.target || '',
+      value: s.value || '',
+      recordedAt: new Date().toLocaleTimeString(),
+      metadata: null // AI generated steps might not have metadata initially
+    })
+  })
+}
+const getEventColor = (action: string) => {
+  const map: any = {
+    'goto': 'info',
+    'click': 'primary',
+    'fill': 'warning',
+    'wait': 'default',
+    'hover': 'secondary'
+  }
+  return map[action] || 'info'
+}
+
+const getEventTitle = (action: string) => {
+  const map: any = {
+    'goto': '🌐 访问页面',
+    'click': '🖱️ 点击操作',
+    'fill': '⌨️ 输入操作',
+    'wait': '⏳ 等待时长',
+    'hover': '🕒 悬停操作'
+  }
+  return map[action] || '🖱️ 动作'
+}
 </script>
 
 <style scoped>

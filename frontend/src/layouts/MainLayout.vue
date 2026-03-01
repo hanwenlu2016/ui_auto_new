@@ -90,6 +90,9 @@
         </router-view>
       </n-layout-content>
     </n-layout>
+    
+    <!-- Global AI Console -->
+    <AIChatConsole />
   </n-layout>
 </template>
 
@@ -123,6 +126,7 @@ import {
   CodeSlashOutline as ElementIcon,
 } from '@vicons/ionicons5'
 import { useUserStore } from '@/stores/user'
+import AIChatConsole from '@/components/AIChatConsole.vue'
 
 const collapsed = ref(false)
 const router = useRouter()

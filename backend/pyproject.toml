@@ -22,6 +22,7 @@ dependencies = [
     "email-validator>=2.3.0",
     "celery[redis]>=5.3.6",
     "nest-asyncio>=1.6.0",
+    "openai>=2.24.0",
 ]
 
 [build-system]

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Any, Dict
 from pydantic import BaseModel
 from datetime import datetime
 
@@ -7,6 +7,7 @@ class PageElementBase(BaseModel):
     description: Optional[str] = None
     locator_type: str
     locator_value: str
+    metadata_json: Optional[Dict[str, Any]] = None
 
 class PageElementCreate(PageElementBase):
     page_id: int

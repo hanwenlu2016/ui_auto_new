@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Text, DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, Text, DateTime, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.db.session import Base
@@ -14,6 +14,7 @@ class PageElement(Base):
     page_id = Column(Integer, ForeignKey("pages.id"), nullable=False)
     locator_type = Column(String, nullable=False)  # xpath, css, id, name, etc.
     locator_value = Column(String, nullable=False)
+    metadata_json = Column(JSON, nullable=True) # AI self-healing metadata (DOM context, text, etc.)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     creator_id = Column(Integer, ForeignKey("users.id"), nullable=True)

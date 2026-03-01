@@ -21,18 +21,26 @@ from app.core.logger import logger
 # Simple JS to capture events
 
 RECORDER_SCRIPT = """
+function getElementMetadata(el) {
+    return {
+        tagName: el.tagName,
+        id: el.id || '',
+        className: el.className || '',
+        innerText: el.innerText ? el.innerText.substring(0, 100) : '',
+        ariaLabel: el.getAttribute('aria-label') || '',
+        placeholder: el.getAttribute('placeholder') || '',
+        name: el.getAttribute('name') || '',
+        outerHTML: el.outerHTML ? el.outerHTML.substring(0, 500) : ''
+    };
+}
+
 document.addEventListener('click', (e) => {
     let target = e.target;
-    // Don't record clicks on input elements to avoid duplicate actions with 'change' or 'fill'
-    // But sometimes we need to click inputs (e.g. checkboxes).
-    // Let's filter out text inputs from click events if they will be handled by change.
     if (target.tagName === 'INPUT' && (target.type === 'text' || target.type === 'password' || target.type === 'email')) {
         return;
     }
 
     let selector = '';
-    
-    // Improved Selector Logic
     if (target.id) {
         selector = '#' + target.id;
     } else if (target.className && typeof target.className === 'string' && target.className.trim() !== '') {
@@ -69,11 +77,11 @@ document.addEventListener('click', (e) => {
     window.recordEvent({
         action: 'click',
         selector: selector,
-        value: ''
+        value: '',
+        metadata: getElementMetadata(target)
     });
 }, true);
 
-// Use 'change' event instead of 'input' to capture final value only
 document.addEventListener('change', (e) => {
     let target = e.target;
     if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') {
@@ -81,15 +89,14 @@ document.addEventListener('change', (e) => {
         if (target.id) {
             selector = '#' + target.id;
         } else {
-             // Re-use logic or simplistic fallback for now
              selector = target.tagName.toLowerCase(); 
-             // Ideally we should use the same robust selector generator function
         }
         
         window.recordEvent({
             action: 'fill',
             selector: selector,
-            value: target.value
+            value: target.value,
+            metadata: getElementMetadata(target)
         });
     }
 }, true);
