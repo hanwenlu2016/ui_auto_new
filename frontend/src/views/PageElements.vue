@@ -8,10 +8,18 @@
       </div>
       <div style="display: flex; gap: 12px; align-items: center;">
         <n-select
+          v-model:value="selectedProjectId"
+          :options="projectOptions"
+          placeholder="项目"
+          style="width: 140px"
+          @update:value="handleProjectChange"
+        />
+        <n-select
           v-model:value="selectedModuleId"
           :options="moduleOptions"
-          placeholder="过滤: 选择所属模块"
-          style="width: 160px"
+          placeholder="模块"
+          style="width: 140px"
+          @update:value="handleModuleChange"
           clearable
         />
         <n-select
@@ -103,6 +111,9 @@
 import { ref, onMounted, h, watch } from 'vue'
 import { NButton, NSpace, useMessage, type DataTableColumns, type FormInst, NCard, NDataTable, NModal, NForm, NFormItem, NInput, NSelect, NTag } from 'naive-ui'
 import api from '@/api'
+import { useAppStore } from '@/stores/app'
+
+const appStore = useAppStore()
 
 interface PageElement {
   id: number
@@ -120,11 +131,14 @@ interface PageElement {
 const message = useMessage()
 const loading = ref(false)
 const elements = ref<PageElement[]>([])
+const projects = ref<any[]>([])
 const modules = ref<any[]>([])
 const pages = ref<any[]>([])
+const projectOptions = ref<{ label: string; value: number }[]>([])
 const moduleOptions = ref<{ label: string; value: number }[]>([])
 const pageOptions = ref<{ label: string; value: number }[]>([])
-const selectedModuleId = ref<number | null>(null)
+const selectedProjectId = ref<number | null>(appStore.selectedProjectId)
+const selectedModuleId = ref<number | null>(appStore.selectedModuleId)
 const selectedPageId = ref<number | null>(null)
 const showCreateModal = ref(false)
 const formRef = ref<FormInst | null>(null)
@@ -191,17 +205,59 @@ const columns: DataTableColumns<PageElement> = [
 
 const pagination = { pageSize: 15 }
 
-const fetchModules = async () => {
+const fetchProjects = async () => {
   try {
-    const response = await api.get('/modules/')
+    const response = await api.get('/projects/')
+    projects.value = response.data
+    projectOptions.value = projects.value.map(p => ({ label: p.name, value: p.id }))
+    if (projects.value.length > 0 && !selectedProjectId.value) {
+      selectedProjectId.value = projects.value[0].id
+      appStore.setProjectId(selectedProjectId.value)
+    }
+    if (selectedProjectId.value) await fetchModules(selectedProjectId.value)
+  } catch (error) {
+    message.error('获取项目列表失败')
+  }
+}
+
+const fetchModules = async (projectId: number | null) => {
+  if (!projectId) {
+    moduleOptions.value = []
+    return
+  }
+  try {
+    const response = await api.get(`/modules/?project_id=${projectId}`)
     modules.value = response.data
     moduleOptions.value = modules.value.map(m => ({ label: m.name, value: m.id }))
-    if (modules.value.length > 0 && !selectedModuleId.value) {
-      selectedModuleId.value = modules.value[0].id
+    
+    // Check if current module belongs here
+    if (moduleOptions.value.length > 0) {
+      if (!selectedModuleId.value || !moduleOptions.value.find(m => m.value === selectedModuleId.value)) {
+        selectedModuleId.value = moduleOptions.value[0].value
+        appStore.setModuleId(selectedModuleId.value)
+      }
+    } else {
+      selectedModuleId.value = null
+      appStore.setModuleId(null)
     }
+    fetchPages()
   } catch (error) {
     message.error('获取模块列表失败')
   }
+}
+
+const handleProjectChange = (val: number | null) => {
+  selectedProjectId.value = val
+  appStore.setProjectId(val)
+  selectedModuleId.value = null
+  appStore.setModuleId(null)
+  fetchModules(val)
+}
+
+const handleModuleChange = (val: number | null) => {
+  selectedModuleId.value = val
+  appStore.setModuleId(val)
+  fetchPages()
 }
 
 const fetchPages = async () => {
@@ -238,7 +294,10 @@ const fetchElements = async () => {
   }
 }
 
-watch(selectedModuleId, () => fetchPages())
+watch(selectedModuleId, (val) => {
+  appStore.setModuleId(val)
+  fetchPages()
+})
 watch(selectedPageId, () => fetchElements())
 
 const handleOpenCreate = () => showCreateModal.value = true
@@ -289,7 +348,7 @@ const handleDelete = async (row: PageElement) => {
   } catch (error) {}
 }
 
-onMounted(() => fetchModules())
+onMounted(() => fetchProjects())
 </script>
 
 <style scoped>

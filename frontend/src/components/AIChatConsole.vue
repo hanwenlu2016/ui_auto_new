@@ -1,10 +1,13 @@
 <template>
   <div class="ai-console" :class="{ 'is-open': isOpen }">
-    <!-- Trigger Button -->
-    <div class="ai-trigger" @click="isOpen = !isOpen">
+    <!-- Trigger Button - Only visible when closed -->
+    <div class="ai-trigger" v-if="!isOpen" @click="isOpen = true">
       <div class="trigger-inner">
         <n-icon size="24"><sparkles-icon /></n-icon>
-        <span v-if="!isOpen" class="trigger-label">AI 助手</span>
+        <span class="trigger-label">
+          <span>AI</span>
+          <span>助手</span>
+        </span>
       </div>
     </div>
 
@@ -47,7 +50,7 @@
                   </div>
                 </div>
                 <n-button type="primary" secondary block size="small" @click="useSteps(msg.steps)" style="margin-top: 12px">
-                  使用这些步骤
+                  🚀 立即导入步骤并开始
                 </n-button>
               </div>
             </div>
@@ -142,17 +145,26 @@ const getActionType = (action: string) => {
 }
 
 const useSteps = (steps: any[]) => {
-  // 1. Save to global store for late pickup
-  recordingStore.setPendingSteps(steps)
-  
-  // 2. Broadcast event for immediate pickup if on Recording page
-  window.dispatchEvent(new CustomEvent('ai-use-steps', { detail: steps }))
-  
-  message.success(`成功规划 ${steps.length} 个步骤，正在前往录制页面...`)
-  
-  // 3. Close console and navigate
+  console.log('AI useSteps triggered:', steps)
   isOpen.value = false
-  router.push('/recording')
+  
+  try {
+    // 1. Save to global store for late pickup
+    recordingStore.setPendingSteps(steps)
+    
+    // 2. Broadcast event for immediate pickup if on Recording page
+    window.dispatchEvent(new CustomEvent('ai-use-steps', { detail: steps }))
+    
+    message.success(`成功规划 ${steps.length} 个步骤，正在前往录制页面...`)
+  } catch (err) {
+    console.warn('Store or message provider failed, but continuing to navigate:', err)
+  }
+  
+  // 3. Navigate
+  router.push('/recording').catch(err => {
+    console.error('Navigation failed:', err)
+    message.error('无法自动跳转到录制页面，请手动点击侧边栏“录制”')
+  })
 }
 
 const scrollToBottom = async () => {
@@ -171,7 +183,7 @@ watch(isOpen, (val) => {
 .ai-console {
   position: fixed;
   right: 0;
-  top: 100px;
+  top: 60px; /* 避开 Header */
   bottom: 0;
   z-index: 1000;
   display: flex;
@@ -179,34 +191,46 @@ watch(isOpen, (val) => {
 }
 
 .ai-trigger {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
   pointer-events: auto;
-  align-self: flex-start;
-  margin-right: -2px;
   background: white;
-  padding: 12px;
-  border-radius: 20px 0 0 20px;
+  padding: 12px 8px;
+  border-radius: 12px 0 0 12px;
   box-shadow: -4px 0 15px rgba(0,0,0,0.08);
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 1px solid var(--color-border);
   border-right: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
 }
 
 .ai-trigger:hover {
-  transform: translateX(-5px);
+  padding-right: 12px;
   color: var(--color-primary);
+  background: #f8faff;
 }
 
 .trigger-inner {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
 }
 
 .trigger-label {
   font-weight: 600;
-  font-size: 14px;
-  white-space: nowrap;
+  font-size: 13px;
+  line-height: 1.2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .ai-panel {

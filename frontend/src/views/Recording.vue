@@ -161,9 +161,12 @@ import { ref, onUnmounted, onMounted, watch } from 'vue'
 import { useMessage, NCard, NInputGroup, NInput, NButton, NScrollbar, NTimeline, NTimelineItem, NGrid, NGridItem, NTag, NModal, NForm, NFormItem, NSelect, type FormRules } from 'naive-ui'
 import api from '@/api'
 import { useRecordingStore } from '@/stores/recording'
+import { useAppStore } from '@/stores/app'
 
 const message = useMessage()
 const recordingStore = useRecordingStore()
+const appStore = useAppStore()
+
 const url = ref('')
 const isRecording = ref(false)
 const events = ref<any[]>([])
@@ -171,14 +174,14 @@ let ws: WebSocket | null = null
 
 const projects = ref<any[]>([])
 const projectOptions = ref<{ label: string; value: number }[]>([])
-const selectedProjectId = ref<number | null>(null)
+const selectedProjectId = ref<number | null>(appStore.selectedProjectId)
 
 const showSaveModal = ref(false)
 const formRef = ref(null)
 const moduleOptions = ref<{ label: string; value: number }[]>([])
 const formValue = ref({
   name: '',
-  module_id: null as number | null,
+  module_id: appStore.selectedModuleId as number | null,
   priority: 'P1',
   description: ''
 })
@@ -198,12 +201,19 @@ const fetchProjects = async () => {
 }
 
 watch(selectedProjectId, (newId) => {
+  appStore.setProjectId(newId)
   if (newId) {
     const project = projects.value.find(p => p.id === newId)
     url.value = project && project.base_url ? project.base_url : ''
+    fetchModules(newId)
   } else {
     url.value = ''
+    moduleOptions.value = []
   }
+})
+
+watch(() => formValue.value.module_id, (newId) => {
+  appStore.setModuleId(newId)
 })
 
 const fetchModules = async (projectId: number | null) => {
@@ -211,8 +221,9 @@ const fetchModules = async (projectId: number | null) => {
   try {
     const response = await api.get(`/modules/?project_id=${projectId}`)
     moduleOptions.value = response.data.map((m: any) => ({ label: m.name, value: m.id }))
-    if (moduleOptions.value.length > 0) formValue.value.module_id = moduleOptions.value[0].value
-    else formValue.value.module_id = null
+    if (moduleOptions.value.length > 0 && !formValue.value.module_id) {
+       formValue.value.module_id = moduleOptions.value[0].value
+    }
   } catch (error) {}
 }
 

@@ -1,5 +1,6 @@
 <template>
-  <n-layout has-sider style="height: 100vh; background: var(--color-bg)">
+  <div class="layout-wrapper">
+    <n-layout has-sider style="height: 100vh; background: var(--color-bg)">
     <!-- Sidebar -->
     <n-layout-sider
       collapse-mode="width"
@@ -91,9 +92,11 @@
       </n-layout-content>
     </n-layout>
     
-    <!-- Global AI Console -->
+    </n-layout>
+    
+    <!-- Global AI Console - Moved out of n-layout to ensure global fixed positioning -->
     <AIChatConsole />
-  </n-layout>
+  </div>
 </template>
 
 <script setup lang="ts">

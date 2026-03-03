@@ -4,7 +4,35 @@
 
 ## 🏗 架构设计图
 
-![架构设计图](https://mermaid.ink/img/CmdyYXBoIFRECiAgICBDbGllbnRb55So5oi35rWP6KeI5ZmoIChGcm9udGVuZCldIC0tPnxIVFRQL1JFU1R8IEFQSVvlkI7nq68gQVBJIChGYXN0QVBJKV0KICAgIAogICAgc3ViZ3JhcGggIuWQjuerr-acjeWKoSAoQmFja2VuZCkiCiAgICAgICAgQVBJIC0tPnxDUlVEfCBEQlso5pWw5o2u5bqTIFBvc3RncmVTUUwvU1FMaXRlKV0KICAgICAgICBBUEkgLS0-fOino-aekOaMh-S7pHwgQUlbQUkg5pyN5YqhIChIZXVyaXN0aWMvTExNKV0KICAgICAgICBBUEkgLS0-fOWIhuWPkeS7u-WKoXwgUmVkaXNbKFJlZGlzIOa2iOaBr-mYn-WIlyldCiAgICBlbmQKICAgIAogICAgc3ViZ3JhcGggIuaJp-ihjOW8leaTjiAoV29ya2VyKSIKICAgICAgICBXb3JrZXJbQ2VsZXJ5IFdvcmtlcl0gLS0-fOa2iOi0ueS7u-WKoXwgUmVkaXMKICAgICAgICBXb3JrZXIgLS0-fOaOp-WItnwgUFdbUGxheXdyaWdodCDmtY_op4jlmahdCiAgICAgICAgUFcgLS0-fOiHquWKqOWMluaTjeS9nHwgVGFyZ2V0W-ebruagh-e9keermV0KICAgICAgICBXb3JrZXIgLS0-fOeUn-aIkHwgUmVwb3J0W0FsbHVyZSDmiqXlkYpdCiAgICAgICAgUmVwb3J0IC0tPnzlrZjlgqh8IERpc2tb5paH5Lu257O757ufXQogICAgZW5kCiAgICAKICAgIENsaWVudCAtLT585p-l55yLfCBSZXBvcnQK)
+![架构设计图](./assets/architecture_diagram.png)
+
+<details>
+<summary>点击展开查看 Mermaid 技术逻辑图</summary>
+
+```mermaid
+graph TD
+    Client[用户浏览器 (Vue 3/TypeScript)] -->|HTTP/REST| API[后端 API (FastAPI)]
+    
+    subgraph "后端服务 (Backend)"
+        API -->|ORM| DB[(PostgreSQL/SQLite)]
+        API -->|分析指令| AI[AI 引擎 (MiniMax M2.5)]
+        API -->|异步分发| Redis[(Redis 消息队列)]
+    end
+    
+    subgraph "执行引擎 (Worker/Runner)"
+        Worker[Celery Worker] -->|消费任务| Redis
+        Worker -->|运行 Playwright| PW[浏览器自动化引擎]
+        PW -->|自动化操作| Target[被测目标应用]
+        Worker -->|生成| Allure[Allure 交互式报告]
+        Allure -->|持久化| Disk[文件存储]
+    end
+    
+    Client -->|录制用例| API
+    Client -->|查看进度| Allure
+```
+
+</details>
+
 
 ## ✨ 核心功能
 
