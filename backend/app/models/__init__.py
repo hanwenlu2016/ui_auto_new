@@ -11,6 +11,8 @@ from app.models.case import TestCase
 from app.models.suite import TestSuite
 from app.models.report import TestReport
 from app.models.associations import test_suite_cases
+from app.models.heal_log import HealLog
+from app.models.feedback import StepFeedback
 
 __all__ = [
     "User",
@@ -22,4 +24,6 @@ __all__ = [
     "TestSuite",
     "TestReport",
     "test_suite_cases",
+    "HealLog",
+    "StepFeedback",
 ]

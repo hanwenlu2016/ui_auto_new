@@ -62,4 +62,20 @@ class CaseService(CRUDBase[TestCase, TestCaseCreate, TestCaseUpdate]):
                 
         return cases
 
+    async def remove(self, db: AsyncSession, *, id: int) -> TestCase:
+        from app.models.heal_log import HealLog
+        from app.models.report import TestReport
+        from sqlalchemy import delete
+        
+        result = await db.execute(select(self.model).where(self.model.id == id))
+        obj = result.scalars().first()
+        if obj:
+            # Delete dependent records first to prevent foreign key constraint violations
+            await db.execute(delete(HealLog).where(HealLog.case_id == id))
+            await db.execute(delete(TestReport).where(TestReport.test_case_id == id))
+            
+            await db.delete(obj)
+            await db.commit()
+        return obj
+
 case_service = CaseService(TestCase)

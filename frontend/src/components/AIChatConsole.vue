@@ -38,20 +38,83 @@
             <div class="message-bubble">
               <div class="message-text">{{ msg.text }}</div>
               
-              <!-- Generated Steps Preview -->
-              <div v-if="msg.steps && msg.steps.length > 0" class="steps-preview">
-                <div class="steps-header">规划了 {{ msg.steps.length }} 个自动化动作</div>
-                <div class="steps-list">
-                  <div v-for="(step, si) in msg.steps" :key="si" class="step-mini-card">
-                    <n-tag :type="getActionType(step.action)" size="small" class="action-tag">
-                      {{ step.action }}
-                    </n-tag>
-                    <span class="step-desc">{{ step.description || step.target }}</span>
-                  </div>
+              <!-- Generated Steps Preview (Support both Array and Scenario Object formats) -->
+              <div v-if="msg.steps || (msg.scenarios && Object.keys(msg.scenarios).length > 0)" class="steps-preview">
+                
+                <!-- If it's the new scenario format -->
+                <div v-if="msg.scenarios">
+                  <n-tabs type="segment" animated>
+                    <n-tab-pane name="happy" tab="常规路径" v-if="msg.scenarios.happy_path && msg.scenarios.happy_path.length > 0">
+                      <div class="steps-list">
+                        <div v-for="(step, si) in msg.scenarios.happy_path" :key="si" class="step-mini-card">
+                          <div class="step-main">
+                            <n-tag :type="getActionType(step.action)" size="small" class="action-tag">{{ step.action }}</n-tag>
+                            <span class="step-desc">{{ step.description || step.target }}</span>
+                          </div>
+                          <div class="step-actions">
+                            <n-button text circle @click="submitFeedback(msg, step, si, 'thumbs_up')" title="赞同此步骤">👍</n-button>
+                            <n-button text circle @click="submitFeedback(msg, step, si, 'thumbs_down')" title="此步骤有误">👎</n-button>
+                          </div>
+                        </div>
+                      </div>
+                      <n-button type="primary" secondary block size="small" @click="useSteps(msg.scenarios.happy_path)" style="margin-top: 12px">🚀 导入常规路径</n-button>
+                    </n-tab-pane>
+
+                    <n-tab-pane name="boundary" tab="边界测试" v-if="msg.scenarios.boundary && msg.scenarios.boundary.length > 0">
+                       <div class="steps-list">
+                        <div v-for="(step, si) in msg.scenarios.boundary" :key="si" class="step-mini-card">
+                           <div class="step-main">
+                            <n-tag :type="getActionType(step.action)" size="small" class="action-tag">{{ step.action }}</n-tag>
+                            <span class="step-desc">{{ step.description || step.target }}</span>
+                          </div>
+                          <div class="step-actions">
+                            <n-button text circle @click="submitFeedback(msg, step, si, 'thumbs_up')">👍</n-button>
+                            <n-button text circle @click="submitFeedback(msg, step, si, 'thumbs_down')">👎</n-button>
+                          </div>
+                        </div>
+                      </div>
+                      <n-button type="info" secondary block size="small" @click="useSteps(msg.scenarios.boundary)" style="margin-top: 12px">🧪 导入边界测试</n-button>
+                    </n-tab-pane>
+
+                    <n-tab-pane name="negative" tab="异常测试" v-if="msg.scenarios.negative && msg.scenarios.negative.length > 0">
+                       <div class="steps-list">
+                        <div v-for="(step, si) in msg.scenarios.negative" :key="si" class="step-mini-card">
+                           <div class="step-main">
+                            <n-tag :type="getActionType(step.action)" size="small" class="action-tag">{{ step.action }}</n-tag>
+                            <span class="step-desc">{{ step.description || step.target }}</span>
+                           </div>
+                           <div class="step-actions">
+                            <n-button text circle @click="submitFeedback(msg, step, si, 'thumbs_up')">👍</n-button>
+                            <n-button text circle @click="submitFeedback(msg, step, si, 'thumbs_down')">👎</n-button>
+                          </div>
+                        </div>
+                      </div>
+                      <n-button type="error" secondary block size="small" @click="useSteps(msg.scenarios.negative)" style="margin-top: 12px">⚠️ 导入异常测试</n-button>
+                    </n-tab-pane>
+                  </n-tabs>
                 </div>
-                <n-button type="primary" secondary block size="small" @click="useSteps(msg.steps)" style="margin-top: 12px">
-                  🚀 立即导入步骤并开始
-                </n-button>
+
+                <!-- Fallback for array format (old generate_steps) -->
+                <div v-else-if="msg.steps && Array.isArray(msg.steps) && msg.steps.length > 0">
+                  <div class="steps-header">规划了 {{ msg.steps.length }} 个自动化动作</div>
+                  <div class="steps-list">
+                    <div v-for="(step, si) in msg.steps" :key="si" class="step-mini-card">
+                      <div class="step-main">
+                        <n-tag :type="getActionType(step.action)" size="small" class="action-tag">
+                          {{ step.action }}
+                        </n-tag>
+                        <span class="step-desc">{{ step.description || step.target }}</span>
+                      </div>
+                      <div class="step-actions">
+                         <n-button text circle @click="submitFeedback(msg, step, si, 'thumbs_up')" title="赞同此步骤">👍</n-button>
+                         <n-button text circle @click="submitFeedback(msg, step, si, 'thumbs_down')" title="此步骤有误">👎</n-button>
+                      </div>
+                    </div>
+                  </div>
+                  <n-button type="primary" secondary block size="small" @click="useSteps(msg.steps)" style="margin-top: 12px">
+                    🚀 立即导入步骤并开始
+                  </n-button>
+                </div>
               </div>
             </div>
           </div>
@@ -84,7 +147,7 @@
 <script setup lang="ts">
 import { ref, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import { NIcon, NButton, NInput, NSpin, NTag, useMessage } from 'naive-ui'
+import { NIcon, NButton, NInput, NSpin, NTag, NTabs, NTabPane, useMessage } from 'naive-ui'
 import { 
   SparklesOutline as SparklesIcon, 
   CloseOutline as CloseIcon,
@@ -114,16 +177,24 @@ const handleSend = async () => {
   await scrollToBottom()
   
   try {
-    const res = await api.post('/ai/generate', { prompt: userText })
+    // 调用新的 generate 端点，或者 scenarios 端点以获得完整策略
+    // 去掉开头的 / 以正确拼接到 Axios 的 baseURL (/api/v1) 上
+    const res = await api.post('ai/scenarios', { prompt: userText })
     messages.value.push({
       role: 'ai',
       text: res.data.message,
-      steps: res.data.steps
+      scenarios: {
+        happy_path: res.data.happy_path || [],
+        boundary: res.data.boundary || [],
+        negative: res.data.negative || []
+      }
     })
-  } catch (err) {
+  } catch (err: any) {
+    console.error('[AI Chat Error]:', err)
+    const detail = err.response?.data?.detail || err.message || '未知错误'
     messages.value.push({
       role: 'ai',
-      text: '抱歉，我现在无法处理您的请求，请检查后端 AI 配置。'
+      text: `抱歉，请求失败: ${detail}。请检查后端输出或配置。`
     })
   } finally {
     loading.value = false
@@ -148,14 +219,44 @@ const useSteps = (steps: any[]) => {
   console.log('AI useSteps triggered:', steps)
   isOpen.value = false
   
+  const mapAction = (action: string) => {
+    const a = (action || '').toLowerCase()
+    if (a.includes('click') || a.includes('press') || a.includes('点击') || a.includes('按')) return 'click'
+    if (a.includes('fill') || a.includes('type') || a.includes('input') || a.includes('输入') || a.includes('填写')) return 'fill'
+    if (a.includes('goto') || a.includes('visit') || a.includes('open') || a.includes('navigate') || a.includes('跳转') || a.includes('访问') || a.includes('打开')) return 'goto'
+    if (a.includes('assert') || a.includes('verify') || a.includes('check') || a.includes('断言') || a.includes('验证') || a.includes('检查')) return 'assert_text'
+    if (a.includes('wait') || a.includes('sleep') || a.includes('等待')) return 'wait'
+    return a
+  }
+  
+  const clean = (str: string) => (str || '').replace(/(\d+ms|\d+s|\d+ms\)?)$/gi, '').trim()
+
+  const normalizedSteps = steps.map(s => {
+    const action = mapAction(s.action)
+    let val = s.value || ''
+    let tar = s.target || s.selector || ''
+    
+    if (action === 'goto' && !val && tar) {
+      val = tar
+      tar = ''
+    }
+    
+    return {
+      ...s,
+      action: action,
+      target: clean(tar),
+      value: clean(val)
+    }
+  })
+
   try {
     // 1. Save to global store for late pickup
-    recordingStore.setPendingSteps(steps)
+    recordingStore.setPendingSteps(normalizedSteps)
     
     // 2. Broadcast event for immediate pickup if on Recording page
-    window.dispatchEvent(new CustomEvent('ai-use-steps', { detail: steps }))
+    window.dispatchEvent(new CustomEvent('ai-use-steps', { detail: normalizedSteps }))
     
-    message.success(`成功规划 ${steps.length} 个步骤，正在前往录制页面...`)
+    message.success(`成功导入 ${normalizedSteps.length} 个步骤，请前往录制页面查看。`)
   } catch (err) {
     console.warn('Store or message provider failed, but continuing to navigate:', err)
   }
@@ -165,6 +266,20 @@ const useSteps = (steps: any[]) => {
     console.error('Navigation failed:', err)
     message.error('无法自动跳转到录制页面，请手动点击侧边栏“录制”')
   })
+}
+
+const submitFeedback = async (_msg: any, step: any, index: number | string, type: string) => {
+  try {
+    // 使用相对路径 'ai/feedback' 确保拼接 baseURL
+    await api.post('ai/feedback', {
+      step_index: Number(index),
+      feedback_type: type,
+      original_step: step
+    })
+    message.success(type === 'thumbs_up' ? '感谢赞同！已加入 AI 记忆池。' : '感谢反馈！AI 将在未来改进此类选择器。')
+  } catch (err) {
+    message.error('反馈送达失败')
+  }
 }
 
 const scrollToBottom = async () => {

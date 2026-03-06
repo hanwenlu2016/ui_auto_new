@@ -65,6 +65,9 @@
             <n-tag type="info" size="small" :bordered="false" round v-if="events.length > 0">
               共 {{ events.length }} 个动作
             </n-tag>
+            <n-tag v-if="isRecording" type="warning" size="small" :bordered="false" round ghost>
+              ✨ AI 增强录制已启用
+            </n-tag>
           </div>
           
           <div class="events-container">
@@ -87,8 +90,24 @@
                       <span class="payload-val">{{ (parseInt(event.value) / 1000).toFixed(1) }}s</span>
                     </template>
                     <template v-else>
-                      <span class="payload-target">{{ event.selector }}</span>
-                      <span v-if="event.value" class="payload-val">➔ {{ event.value }}</span>
+                      <div class="payload-row">
+                        <span class="payload-target">{{ event.selector }}</span>
+                        <n-tooltip trigger="hover" v-if="event.ai_reinforced">
+                          <template #trigger>
+                            <span class="ai-badge">✨ AI Reinforced</span>
+                          </template>
+                          <div class="ai-reasoning">
+                            <div style="font-weight: bold; margin-bottom: 4px;">多级自愈定位链:</div>
+                            <div v-for="(val, key) in event.locator_chain" :key="key" v-show="val">
+                              <span style="opacity: 0.6">{{ key }}:</span> {{ val }}
+                            </div>
+                            <div v-if="event.confidence" style="margin-top: 4px; color: var(--color-primary);">
+                              信心值: {{ (event.confidence * 100).toFixed(1) }}%
+                            </div>
+                          </div>
+                        </n-tooltip>
+                      </div>
+                      <span v-if="event.value" class="payload-val" style="margin-top: 4px; display: block;">➔ {{ event.value }}</span>
                     </template>
                   </div>
                 </n-timeline-item>
@@ -241,7 +260,8 @@ const handleSave = async () => {
           selector: e.selector,
           value: e.value || '',
           element_id: null,
-          metadata_json: e.metadata || null
+          metadata_json: e.metadata || null,
+          locator_chain: e.locator_chain || null
         }))
         if (steps.length === 0) { message.warning('没有可保存的步骤'); return }
 
@@ -406,6 +426,30 @@ const getEventTitle = (action: string) => {
 .payload-val {
   color: var(--color-primary);
   font-weight: 500;
+}
+
+.payload-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.ai-badge {
+  font-size: 10px;
+  background: linear-gradient(135deg, #6e8efb, #a777e3);
+  color: white;
+  padding: 1px 6px;
+  border-radius: 10px;
+  cursor: help;
+  user-select: none;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.ai-reasoning {
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 /* Animations */

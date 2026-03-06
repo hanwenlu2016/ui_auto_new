@@ -23,6 +23,7 @@ from sqlalchemy import select
 from app.models.case import TestCase
 from app.models.element import PageElement
 from app.tools.playwright_tool import PlaywrightTool
+from app.services.ai_service import ai_service
 import allure_commons
 from allure_commons.types import LabelType, AttachmentType
 from allure_commons.model2 import TestResult, TestStepResult, Status, StatusDetails, Label, Parameter
@@ -124,6 +125,10 @@ class TestRunner:
                     step_uuid = str(uuid.uuid4())
                     step_res_obj = TestStepResult(name=f"{step.get('action')} {step.get('value') or ''}", start=step_start)
                     
+                    # Inject context for self-healing identification
+                    step["_step_index"] = step_index
+                    step["_case_id"] = test_case_id
+                    
                     try:
                         step_result = await self._execute_step(tool, step)
                         result["steps"].append(step_result)
@@ -211,48 +216,184 @@ class TestRunner:
         return result
 
     async def _execute_step(self, tool: PlaywrightTool, step: Dict[str, Any]) -> Dict[str, Any]:
-        action = step.get("action")
+        action_raw = step.get("action") or ""
+        action = action_raw.strip().lower()
         value = step.get("value")
         element_id = step.get("element_id")
-        
+        step_index = step.get("_step_index", 0)   # injected by caller
+        case_id = step.get("_case_id", None)       # injected by caller
+
         step_res = {
             "action": action,
             "success": False,
             "error": None
         }
-        
+
+        logger.info(f"[Runner V2.11] Case {case_id} Step {step_index} executing: action='{action}' (raw='{action_raw}'), value='{value}'")
         try:
-            # For actions that need element selector, fetch the element
-            selector = step.get("target") or step.get("selector")
-            
-            if element_id and action not in ["goto", "wait"]:
+            # ── 1. Handle Global Actions (No element needed) ────────────────
+            if action in ["goto", "wait", "跳转", "访问", "打开", "等待"]:
+                effective_value = value or (step.get("target") if action == "goto" else None)
+                logger.info(f"[Runner] Global action detected: {action}, effective_value='{effective_value}'")
+                result = await tool.execute_action(action=action, selector=None, value=effective_value)
+                step_res["success"] = result["success"]
+                step_res["error"] = result.get("error")
+                return step_res
+
+            # ── 2. Resolve primary selector for element actions ──────────────
+            primary_selector = step.get("target") or step.get("selector")
+            element = None
+
+            if element_id:
                 stmt = select(PageElement).where(PageElement.id == element_id)
                 res = await self.db.execute(stmt)
                 element = res.scalars().first()
-                
                 if element:
-                    selector = element.locator_value
-                # If element not found but we have element_id, ideally we should fail? 
-                # Or fallback to raw selector if provided? 
-                # Let's enforce element existence if ID provided to avoid ambiguity.
-                elif not selector: 
+                    primary_selector = element.locator_value
+                elif not primary_selector:
                     raise Exception(f"Element {element_id} not found")
-            
-            # If no element_id, we use the raw selector (common for recorded steps)
-            
-            # Execute action using PlaywrightTool
-            result = await tool.execute_action(
-                action=action,
-                selector=selector,
-                value=value
-            )
-            
-            step_res["success"] = result["success"]
-            step_res["error"] = result.get("error")
-            if result.get("output"):
-                step_res["output"] = result["output"]
+
+            # ── 3. Build locator chain from step or element ───────────────────
+            chain_dict = step.get("locator_chain") or {}
+            if element and element.metadata_json:
+                chain_dict = element.metadata_json.get("locator_chain") or chain_dict
+
+            selectors_to_try: List[str] = []
+            if primary_selector:
+                selectors_to_try.append(primary_selector)
+            for key in ("primary", "fallback_1", "fallback_2", "fallback_3"):
+                val = chain_dict.get(key)
+                if val and val not in selectors_to_try:
+                    selectors_to_try.append(val)
+
+            if not selectors_to_try:
+                selectors_to_try = [primary_selector] if primary_selector else []
+
+            # ── 4. Try selectors in priority order ──────────────────────────
+            last_error: str = ""
+            total_selectors = len(selectors_to_try)
+            for attempt_idx, selector in enumerate(selectors_to_try):
+                if not selector: continue
                 
+                # 如果不是最后一个候选选择器，设置 5s 短超时以实现快速故障转移 (Fail-Fast)
+                action_kwargs = {}
+                if attempt_idx < total_selectors - 1:
+                    action_kwargs["timeout"] = 5000
+                    
+                try:
+                    result = await tool.execute_action(action=action, selector=selector, value=value, **action_kwargs)
+                    if result["success"]:
+                        step_res["success"] = True
+                        step_res["error"] = None
+                        if result.get("output"): step_res["output"] = result["output"]
+
+                        # Self-healing logic
+                        if attempt_idx > 0:
+                            await self._write_heal_log(
+                                case_id=case_id, element_id=element_id, step_index=step_index,
+                                original_selector=primary_selector or "", healed_selector=selector,
+                                heal_method=f"fallback_{attempt_idx}", status="auto_healed"
+                            )
+                        break
+                    else:
+                        last_error = result.get("error") or "unknown"
+                except Exception as exc:
+                    last_error = str(exc)
+
+            if not step_res["success"]:
+                # ── 5. TRUE AI Dynamic Healing (Last Resort) ─────────────────
+                logger.info(f"[Runner V2.13] All static selectors failed. Triggering True AI Dynamic Healing for Case {case_id} Step {step_index}")
+                try:
+                    page_source = await tool.get_text("html") or ""
+                    # We might not have full metadata for an imaginary element, but we pass what we have
+                    element_metadata = {
+                        "action": action,
+                        "intended_value": value,
+                        "failed_selectors": selectors_to_try
+                    }
+                    
+                    heal_result = await ai_service.heal_element(
+                        element_metadata=element_metadata,
+                        page_source=page_source,
+                        screenshot_description=f"Action '{action}' failed on all known selectors"
+                    )
+                    
+                    new_locator_chain = heal_result.get("locator_chain", {})
+                    new_selectors = [new_locator_chain.get(k) for k in ["primary", "fallback_1", "fallback_2", "fallback_3"] if new_locator_chain.get(k)]
+                    
+                    dynamic_success = False
+                    for ai_selector in new_selectors:
+                        if not ai_selector: continue
+                        logger.info(f"[Runner V2.13] Trying AI-Healed Dynamic Selector: {ai_selector}")
+                        try:
+                            result = await tool.execute_action(action=action, selector=ai_selector, value=value, timeout=10000)
+                            if result["success"]:
+                                step_res["success"] = True
+                                step_res["error"] = None
+                                if result.get("output"): step_res["output"] = result["output"]
+                                
+                                await self._write_heal_log(
+                                    case_id=case_id, element_id=element_id, step_index=step_index,
+                                    original_selector=primary_selector or "", healed_selector=ai_selector,
+                                    heal_method="dynamic_ai_dom_healing", status="auto_healed"
+                                )
+                                dynamic_success = True
+                                break
+                            else:
+                                last_error = result.get("error") or "dynamic ai selector failed"
+                        except Exception as exc:
+                            last_error = str(exc)
+                            
+                    if not dynamic_success:
+                        if selectors_to_try:
+                            await self._write_heal_log(
+                                case_id=case_id, element_id=element_id, step_index=step_index,
+                                original_selector=primary_selector or "", healed_selector=None,
+                                heal_method="all_failed_including_ai", status="manual_review"
+                            )
+                        step_res["error"] = last_error or "All locator chain selectors exhausted including AI dynamic healing"
+                except Exception as ai_exc:
+                    logger.error(f"[Runner V2.13] True AI Healing failed: {ai_exc}", exc_info=True)
+                    if selectors_to_try:
+                        await self._write_heal_log(
+                            case_id=case_id, element_id=element_id, step_index=step_index,
+                            original_selector=primary_selector or "", healed_selector=None,
+                            heal_method="all_failed", status="manual_review"
+                        )
+                    step_res["error"] = last_error or f"All locator chain selectors exhausted. Realtime AI heal also failed: {ai_exc}"
+
         except Exception as e:
             step_res["error"] = str(e)
-            
+
         return step_res
+
+    # ─── Heal Log Helper ──────────────────────────────────────────────────────
+
+    async def _write_heal_log(
+        self,
+        case_id: int | None,
+        element_id: int | None,
+        step_index: int,
+        original_selector: str,
+        healed_selector: str | None,
+        heal_method: str,
+        status: str,
+    ) -> None:
+        """Persist a HealLog entry. Swallows exceptions so as not to interrupt runner flow."""
+        try:
+            from app.models.heal_log import HealLog
+            log = HealLog(
+                case_id=case_id,
+                element_id=element_id,
+                step_index=step_index,
+                original_selector=original_selector,
+                healed_selector=healed_selector,
+                heal_method=heal_method,
+                confidence=1.0 if healed_selector else 0.0,
+                change_summary=f"Runner locator-chain attempt: {heal_method}",
+                status=status,
+            )
+            self.db.add(log)
+            await self.db.commit()
+        except Exception as e:
+            logger.error(f"Failed to write HealLog: {e}")

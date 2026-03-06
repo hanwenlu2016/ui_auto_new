@@ -132,7 +132,7 @@ const fetchDashboardData = async () => {
 }
 
 const openReport = (url: string) => {
-  window.open(`http://localhost:8000${url}`, '_blank')
+  window.open(url, '_blank')
 }
 
 onMounted(() => {

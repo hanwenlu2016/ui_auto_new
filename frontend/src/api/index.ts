@@ -5,7 +5,7 @@ const { message } = createDiscreteApi(['message'])
 
 const api = axios.create({
   baseURL: '/api/v1',
-  timeout: 10000,
+  timeout: 90000, // 增加到 90 秒以适配 MiniMax-M2.5 的推理耗时
   headers: {
     'Content-Type': 'application/json'
   }

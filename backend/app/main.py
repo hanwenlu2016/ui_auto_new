@@ -22,8 +22,9 @@ app = FastAPI(title="UI Automation Platform API")
 
 # CORS 配置 - 允许前端跨域访问
 origins = [
-    "http://localhost:5173",  # Vite 默认端口
-    "http://localhost:3000",  # 备用开发端口
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
 ]
 
 app.add_middleware(
@@ -33,6 +34,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+from starlette.requests import Request
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    logger.info(f">>> Incoming Request: {request.method} {request.url}")
+    response = await call_next(request)
+    logger.info(f"<<< Response Status: {response.status_code}")
+    return response
 
 @app.get("/")
 async def root():

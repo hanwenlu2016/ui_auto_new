@@ -49,14 +49,20 @@ async def get_recent_activities(db: AsyncSession = Depends(deps.get_db), limit: 
     result = await db.execute(query)
     rows = result.all()
     
+    import os
     activities = []
     for row in rows:
+        report_url = None
+        if row.report_path and "allure-reports" in row.report_path:
+            folder_name = os.path.basename(row.report_path)
+            report_url = f"/reports/{folder_name}/index.html"
+            
         activities.append({
             "id": row.id,
             "desc": f"执行了测试用例: {row.case_name if row.case_name else '未知'}",
             "status": row.status,
             "time": row.created_at.isoformat() if row.created_at else None,
-            "url": row.report_path
+            "url": report_url
         })
         
     return activities

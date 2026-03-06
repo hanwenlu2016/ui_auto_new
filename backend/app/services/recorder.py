@@ -17,6 +17,7 @@ from app.tools.playwright_tool import PlaywrightTool
 
 # 使用全局日志系统
 from app.core.logger import logger
+from app.services.ai_service import ai_service
 
 # Simple JS to capture events
 
@@ -126,6 +127,35 @@ class RecorderService:
 
     async def _handle_event(self, source, event):
         logger.info(f"Recorded event: {event}")
+        
+        # ─── AI Reinforcement (V3.0) ────────────────────────────────────────
+        # If it's an interactive action, we reinforce it with AI locator_chain immediately
+        if event.get("action") in ["click", "fill"] and self.page:
+            try:
+                logger.info(f"[Recorder V3.0] Reinforcing {event['action']} event with AI...")
+                page_source = await self.page.content()
+                
+                # Call AI to generate a robust locator_chain based on pure metadata and current DOM
+                heal_result = await ai_service.heal_element(
+                    element_metadata=event.get("metadata", {}),
+                    page_source=page_source,
+                    screenshot_description=f"User performed {event['action']} during recording."
+                )
+                
+                # Merge AI reinforcement results
+                event["locator_chain"] = heal_result.get("locator_chain")
+                event["ai_reinforced"] = True
+                event["confidence"] = heal_result.get("confidence", 0.0)
+                
+                # If AI found a better primary selector than our basic JS guess, use it
+                if event["locator_chain"] and event["locator_chain"].get("primary"):
+                    event["selector"] = event["locator_chain"]["primary"]
+                
+                logger.info(f"[Recorder V3.0] AI reinforced successfully: {event['selector']}")
+            except Exception as e:
+                logger.error(f"[Recorder V3.0] AI reinforcement failed: {e}")
+                event["ai_reinforced"] = False
+
         if self.event_callback:
             await self.event_callback(event)
 

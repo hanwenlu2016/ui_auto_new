@@ -40,12 +40,15 @@
     </div>
 
     <!-- Elements Table -->
-    <div class="card-wrap shadow-sm animate-fade-up" style="animation-delay: 0.1s">
+    <div class="card-wrap shadow-sm animate-fade-up" style="animation-delay: 0.1s; padding: 0;">
       <n-data-table
         :columns="columns"
         :data="elements"
         :loading="loading"
         :pagination="pagination"
+        size="small"
+        :bordered="false"
+        class="custom-table"
       />
     </div>
 
@@ -193,10 +196,10 @@ const columns: DataTableColumns<PageElement> = [
     width: 160,
     fixed: 'right' as const,
     render(row) {
-      return h(NSpace, { align: 'center', wrap: false }, {
+      return h(NSpace, { align: 'center', wrap: false, size: 8 }, {
         default: () => [
-          h(NButton, { size: 'small', tertiary: true, type: 'primary', onClick: () => handleEdit(row) }, { default: () => '编辑' }),
-          h(NButton, { size: 'small', tertiary: true, type: 'error', onClick: () => handleDelete(row) }, { default: () => '删除' })
+          h(NButton, { size: 'small', quaternary: true, type: 'primary', onClick: () => handleEdit(row) }, { default: () => '编辑' }),
+          h(NButton, { size: 'small', quaternary: true, type: 'error', onClick: () => handleDelete(row) }, { default: () => '删除' })
         ]
       })
     }
@@ -354,9 +357,20 @@ onMounted(() => fetchProjects())
 <style scoped>
 .card-wrap {
   background: var(--color-card);
-  border-radius: 16px;
+  border-radius: 8px;
   border: 1px solid var(--color-divider);
-  padding: 4px;
   overflow: hidden;
+}
+
+.custom-table :deep(.n-data-table-td) {
+  padding: 6px 16px;
+  font-size: 13px;
+}
+
+.custom-table :deep(.n-data-table-th) {
+  padding: 8px 16px;
+  background-color: #fafbfc;
+  font-weight: 600;
+  font-size: 13px;
 }
 </style>

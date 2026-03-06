@@ -1,14 +1,29 @@
 <template>
-  <div class="reports-page">
-    <n-card title="报告管理" style="margin: 20px;">
-      <n-data-table :columns="columns" :data="reports" :loading="loading" />
-    </n-card>
+  <div class="page-container animate-fade-up">
+    <!-- Page Header -->
+    <div class="page-header">
+      <div>
+        <h1>报告管理</h1>
+        <p>查看历史测试执行结果与生成的 Allure 测试报告</p>
+      </div>
+    </div>
+
+    <div class="card-wrap shadow-sm animate-fade-up" style="animation-delay: 0.1s; padding: 0;">
+      <n-data-table 
+        :columns="columns" 
+        :data="reports" 
+        :loading="loading" 
+        size="small"
+        :bordered="false"
+        class="custom-table"
+      />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, h } from 'vue'
-import { useMessage, NCard, NDataTable, NButton, NSpace, NTag, type DataTableColumns } from 'naive-ui'
+import { useMessage, NDataTable, NButton, NSpace, NTag, type DataTableColumns } from 'naive-ui'
 import api from '@/api'
 
 interface Report {
@@ -41,23 +56,26 @@ const formatDate = (dateStr: string) => {
 
 const columns: DataTableColumns<Report> = [
   { title: '报告 ID', key: 'id', width: 80 },
-  { title: '用例名称', key: 'test_case_name', width: 200 },
-  { title: '执行人', key: 'executor_name', width: 150 },
+  { title: '用例名称', key: 'test_case_name', minWidth: 250 },
+  { title: '执行人', key: 'executor_name', width: 140 },
   { 
     title: '状态', 
     key: 'status', 
-    width: 100,
+    width: 90,
     render(row: Report) {
       return h(NTag, {
         type: row.status === 'success' ? 'success' : 'error',
-        bordered: false
-      }, { default: () => row.status })
+        bordered: false,
+        size: 'small',
+        round: true,
+        style: 'font-size: 11px; height: 20px; line-height: 20px;'
+      }, { default: () => row.status === 'success' ? '通过' : '失败' })
     }
   },
   { 
     title: '创建时间', 
     key: 'created_at', 
-    width: 180,
+    width: 170,
     render(row: Report) {
       return formatDate(row.created_at)
     }
@@ -65,26 +83,30 @@ const columns: DataTableColumns<Report> = [
   {
     title: '操作',
     key: 'actions',
+    width: 150,
+    fixed: 'right',
     render(row: Report) {
-      return h(NSpace, null, {
+      return h(NSpace, { align: 'center', size: 12 }, {
         default: () => [
           h(NButton, {
             size: 'small',
             type: 'primary',
+            quaternary: true,
             disabled: !row.report_url,
+            style: 'font-size: 12px; padding: 0 4px;',
             onClick: () => {
               if (row.report_url) {
-                // Use backend URL + report_url
-                const url = `http://localhost:8000${row.report_url}`
-                window.open(url, '_blank')
+                window.open(row.report_url, '_blank')
               } else {
                 message.warning('报告文件不存在')
               }
             }
-          }, { default: () => '查看' }),
+          }, { default: () => '查看详情' }),
           h(NButton, {
             size: 'small',
             type: 'error',
+            quaternary: true,
+            style: 'font-size: 12px; padding: 0 4px;',
             onClick: () => deleteReport(row.id)
           }, { default: () => '删除' })
         ]
@@ -121,7 +143,22 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.reports-page {
-  padding: 20px;
+.card-wrap {
+  background: var(--color-card);
+  border-radius: 8px;
+  border: 1px solid var(--color-divider);
+  overflow: hidden;
+}
+
+.custom-table :deep(.n-data-table-td) {
+  padding: 6px 16px;
+  font-size: 13px;
+}
+
+.custom-table :deep(.n-data-table-th) {
+  padding: 8px 16px;
+  background-color: #fafbfc;
+  font-weight: 600;
+  font-size: 13px;
 }
 </style>

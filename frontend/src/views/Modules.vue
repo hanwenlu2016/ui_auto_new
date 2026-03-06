@@ -25,31 +25,34 @@
     </div>
 
     <!-- Search / Filter Area -->
-    <div class="card-wrap shadow-sm animate-fade-up" style="animation-delay: 0.1s; margin-bottom: 20px; padding: 20px;">
-      <n-form inline label-placement="left" :show-feedback="false" size="medium" style="display: flex; flex-wrap: wrap; gap: 16px;">
+    <div class="card-wrap shadow-sm animate-fade-up" style="animation-delay: 0.1s; margin-bottom: 20px; padding: 16px;">
+      <n-form inline label-placement="left" :show-feedback="false" size="small" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
         <n-form-item label="模块名称">
-          <n-input v-model:value="searchForm.name" placeholder="请输入名称" clearable style="width: 180px;" />
+          <n-input v-model:value="searchForm.name" placeholder="请输入名称" clearable style="width: 160px;" />
         </n-form-item>
         <n-form-item label="创建时间">
-          <n-date-picker v-model:value="searchForm.dateRange" type="daterange" clearable style="width: 260px;" />
+          <n-date-picker v-model:value="searchForm.dateRange" type="daterange" clearable style="width: 240px;" />
         </n-form-item>
         <n-form-item label="创建人">
-          <n-input v-model:value="searchForm.creator" placeholder="创建人姓名" clearable style="width: 130px;" />
+          <n-input v-model:value="searchForm.creator" placeholder="创建人姓名" clearable style="width: 120px;" />
         </n-form-item>
         <div style="display: flex; gap: 12px; margin-left: auto;">
-          <n-button @click="handleReset" secondary>重置</n-button>
-          <n-button type="primary" @click="handleSearch">搜索匹配</n-button>
+          <n-button @click="handleReset" secondary size="small">重置</n-button>
+          <n-button type="primary" @click="handleSearch" size="small">搜索匹配</n-button>
         </div>
       </n-form>
     </div>
 
     <!-- Modules Table -->
-    <div class="card-wrap shadow-sm animate-fade-up" style="animation-delay: 0.2s">
+    <div class="card-wrap shadow-sm animate-fade-up" style="animation-delay: 0.2s; padding: 0;">
       <n-data-table
         :columns="columns"
         :data="modules"
         :loading="loading"
         :pagination="pagination"
+        size="small"
+        :bordered="false"
+        class="custom-table"
       />
     </div>
 
@@ -137,31 +140,25 @@ const rules = {
 }
 
 const columns: DataTableColumns<Module> = [
-  { title: '模块名称', key: 'name', minWidth: 150 },
+  { title: '模块名称', key: 'name', minWidth: 200, fixed: 'left' },
   { title: '业务描述', key: 'description' },
   { 
     title: '创建时间', 
     key: 'created_at',
     width: 170,
-    render: (row) => row.created_at ? new Date(row.created_at).toLocaleString() : '-'
-  },
-  { 
-    title: '更新时间', 
-    key: 'updated_at',
-    width: 170,
-    render: (row) => row.updated_at ? new Date(row.updated_at).toLocaleString() : '-'
+    render: (row) => row.created_at ? new Date(row.created_at).toLocaleString('zh-CN', { hour12: false }) : '-'
   },
   { title: '维护人', key: 'updater_name', width: 120, render: (row) => row.updater_name || row.creator_name || '-' },
   {
     title: '操作',
     key: 'actions',
-    width: 160,
+    width: 120,
     fixed: 'right' as const,
     render(row) {
-      return h(NSpace, { align: 'center', wrap: false }, {
+      return h(NSpace, { align: 'center', wrap: false, size: 8 }, {
         default: () => [
-          h(NButton, { size: 'small', tertiary: true, type: 'primary', onClick: () => handleEdit(row) }, { default: () => '编辑' }),
-          h(NButton, { size: 'small', tertiary: true, type: 'error', onClick: () => handleDelete(row) }, { default: () => '删除' })
+          h(NButton, { size: 'small', quaternary: true, type: 'primary', onClick: () => handleEdit(row) }, { default: () => '编辑' }),
+          h(NButton, { size: 'small', quaternary: true, type: 'error', onClick: () => handleDelete(row) }, { default: () => '删除' })
         ]
       })
     }
@@ -259,9 +256,20 @@ onMounted(() => fetchProjects())
 <style scoped>
 .card-wrap {
   background: var(--color-card);
-  border-radius: 16px;
+  border-radius: 8px;
   border: 1px solid var(--color-divider);
-  padding: 4px;
   overflow: hidden;
+}
+
+.custom-table :deep(.n-data-table-td) {
+  padding: 6px 16px;
+  font-size: 13px;
+}
+
+.custom-table :deep(.n-data-table-th) {
+  padding: 8px 16px;
+  background-color: #fafbfc;
+  font-weight: 600;
+  font-size: 13px;
 }
 </style>

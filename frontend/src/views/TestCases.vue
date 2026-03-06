@@ -32,12 +32,15 @@
     </div>
 
     <!-- Test Cases Table -->
-    <div class="card-wrap shadow-sm animate-fade-up" style="animation-delay: 0.1s">
+    <div class="card-wrap shadow-sm animate-fade-up" style="animation-delay: 0.1s; padding: 0;">
       <n-data-table
         :columns="columns"
         :data="testCases"
         :loading="loading"
         :pagination="pagination"
+        size="small"
+        :bordered="false"
+        class="custom-table"
       />
     </div>
 
@@ -284,11 +287,11 @@ const columns: DataTableColumns<TestCase> = [
     width: 220,
     fixed: 'right' as const,
     render(row) {
-      return h(NSpace, { align: 'center', wrap: false }, {
+      return h(NSpace, { align: 'center', wrap: false, size: 8 }, {
         default: () => [
-          h(NButton, { size: 'small', type: 'primary', onClick: () => handleRun(row) }, { default: () => '执行' }),
-          h(NButton, { size: 'small', tertiary: true, onClick: () => handleEdit(row) }, { default: () => '编辑' }),
-          h(NButton, { size: 'small', tertiary: true, type: 'error', onClick: () => handleDelete(row) }, { default: () => '删除' })
+          h(NButton, { size: 'small', quaternary: true, type: 'primary', onClick: () => handleRun(row) }, { default: () => '执行' }),
+          h(NButton, { size: 'small', quaternary: true, onClick: () => handleEdit(row) }, { default: () => '编辑' }),
+          h(NButton, { size: 'small', quaternary: true, type: 'error', onClick: () => handleDelete(row) }, { default: () => '删除' })
         ]
       })
     }
@@ -469,13 +472,37 @@ const handleGenerateSteps = async () => {
     const response = await api.post('/ai/generate', { prompt: aiPrompt.value })
     const generatedSteps = response.data.steps
     if (generatedSteps && generatedSteps.length > 0) {
-      const newSteps = generatedSteps.map((s: any) => ({
-        action: s.action,
-        target: s.target || s.selector || '', 
-        value: s.value || '',
-        page_id: null,
-        element_id: null
-      }))
+      const mapAction = (action: string) => {
+        const a = (action || '').toLowerCase()
+        if (a.includes('click') || a.includes('press') || a.includes('点击') || a.includes('按')) return 'click'
+        if (a.includes('fill') || a.includes('type') || a.includes('input') || a.includes('输入') || a.includes('填写')) return 'fill'
+        if (a.includes('goto') || a.includes('visit') || a.includes('open') || a.includes('navigate') || a.includes('跳转') || a.includes('访问') || a.includes('打开')) return 'goto'
+        if (a.includes('assert') || a.includes('verify') || a.includes('check') || a.includes('断言') || a.includes('验证') || a.includes('检查')) return 'assert_text'
+        if (a.includes('wait') || a.includes('sleep') || a.includes('等待')) return 'wait'
+        return a
+      }
+      const newSteps = generatedSteps.map((s: any) => {
+        const action = mapAction(s.action)
+        let val = s.value || ''
+        let tar = s.target || s.selector || ''
+        
+        // 自动搬运 URL: 如果是跳转且 value 为空但 target 有内容，说明 AI 写反了
+        if (action === 'goto' && !val && tar) {
+          val = tar
+          tar = ''
+        }
+        
+        // 清理脏数据后缀 (61ms 等)
+        const clean = (str: string) => (str || '').replace(/(\d+ms|\d+s|\d+ms\)?)$/gi, '').trim()
+        
+        return {
+          action: action,
+          target: clean(tar),
+          value: clean(val),
+          page_id: null,
+          element_id: null
+        }
+      })
       formValue.value.steps = [...formValue.value.steps, ...newSteps]
       message.success(`成功解析并添加 ${newSteps.length} 个步骤`)
       showAIModal.value = false
@@ -496,9 +523,20 @@ onMounted(() => fetchProjects())
 <style scoped>
 .card-wrap {
   background: var(--color-card);
-  border-radius: 16px;
+  border-radius: 8px;
   border: 1px solid var(--color-divider);
-  padding: 4px; /* DataTable component natively provides padding */
   overflow: hidden;
+}
+
+.custom-table :deep(.n-data-table-td) {
+  padding: 6px 16px;
+  font-size: 13px;
+}
+
+.custom-table :deep(.n-data-table-th) {
+  padding: 8px 16px;
+  background-color: #fafbfc;
+  font-weight: 600;
+  font-size: 13px;
 }
 </style>
