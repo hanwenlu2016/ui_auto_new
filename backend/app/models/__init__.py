@@ -13,6 +13,7 @@ from app.models.report import TestReport
 from app.models.associations import test_suite_cases
 from app.models.heal_log import HealLog
 from app.models.feedback import StepFeedback
+from app.models.ai_model import AIModel
 
 __all__ = [
     "User",
@@ -26,4 +27,5 @@ __all__ = [
     "test_suite_cases",
     "HealLog",
     "StepFeedback",
+    "AIModel",
 ]

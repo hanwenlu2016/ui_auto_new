@@ -44,10 +44,9 @@
       />
     </div>
 
-    <!-- Create/Edit Modal -->
     <n-modal v-model:show="showCreateModal">
       <n-card
-        style="width: 800px; max-width: 90vw;"
+        style="width: 1100px; max-width: 95vw;"
         :title="editingId ? '✏️ 编辑测试用例' : '➕ 创建测试用例'"
         :bordered="false"
         size="huge"
@@ -96,39 +95,73 @@
             <n-dynamic-input
               v-model:value="formValue.steps"
               :on-create="onCreateStep"
-              #="{ index, value }"
+              show-sort-button
             >
-              <div style="display: flex; gap: 10px; width: 100%; align-items: center;">
-                <n-tag type="info" size="small" :bordered="false" style="width: 24px; justify-content: center; font-weight: 600;">{{ index + 1 }}</n-tag>
-                <n-select
-                  v-model:value="value.page_id"
-                  :options="pageOptions"
-                  placeholder="页面上下文"
-                  style="width: 140px"
-                  @update:value="(val) => fetchElementsForPage(val)"
-                />
-                <n-select
-                  v-model:value="value.element_id"
-                  :options="elementOptions.filter(e => e.page_id === value.page_id)"
-                  placeholder="目标元素"
-                  style="width: 150px"
-                  :disabled="!value.page_id"
-                  clearable
-                />
-                <n-select
-                  v-model:value="value.action"
-                  :options="[
-                    { label: '🖱️ 点击', value: 'click' },
-                    { label: '⌨️ 输入', value: 'fill' },
-                    { label: '🔗 跳转', value: 'goto' },
-                    { label: '✅ 断言', value: 'assert_text' },
-                    { label: '⏳ 等待', value: 'wait' }
-                  ]"
-                  placeholder="操作"
-                  style="width: 130px"
-                />
-                <n-input v-model:value="value.value" placeholder="参数 (Value)" style="flex: 1" />
-              </div>
+              <template #default="{ index, value }">
+                <div style="display: flex; gap: 8px; width: 100%; align-items: center;">
+                  <n-tag :bordered="false" type="info" size="small" style="width: 28px; justify-content: center; font-weight: 700; background: rgba(var(--color-primary-rgb), 0.1);">
+                    {{ index + 1 }}
+                  </n-tag>
+                  
+                  <!-- Page & Element context (Compact) -->
+                  <n-select
+                    v-model:value="value.page_id"
+                    :options="pageOptions"
+                    placeholder="页面"
+                    style="width: 100px"
+                    @update:value="(val) => fetchElementsForPage(val)"
+                  />
+                  <n-select
+                    v-model:value="value.element_id"
+                    :options="elementOptions.filter(e => e.page_id === value.page_id)"
+                    placeholder="目标元素"
+                    style="width: 120px"
+                    :disabled="!value.page_id"
+                    clearable
+                  />
+                  
+                  <!-- Action & Value -->
+                  <n-select
+                    v-model:value="value.action"
+                    :options="[
+                      { label: '🖱️ 点击', value: 'click' },
+                      { label: '⌨️ 输入', value: 'fill' },
+                      { label: '🔗 跳转', value: 'goto' },
+                      { label: '✅ 断言', value: 'assert_text' },
+                      { label: '⏳ 等待', value: 'wait' },
+                      { label: '📋 提取文本', value: 'get_text' },
+                      { label: '🆔 提取属性', value: 'get_attribute' },
+                      { label: '⚙️ 设置变量', value: 'set_variable' }
+                    ]"
+                    placeholder="动作"
+                    style="width: 110px"
+                  />
+                  
+                  <n-input v-model:value="value.value" placeholder="参数 / 表达式" style="flex: 1" />
+                  
+                  <!-- Variable Output -->
+                  <n-input 
+                    v-model:value="value.variable_name" 
+                    placeholder="变量名 $" 
+                    style="width: 100px"
+                  >
+                    <template #prefix>
+                      <span style="font-size: 11px; color: var(--color-primary); font-weight: 700;">$</span>
+                    </template>
+                  </n-input>
+                </div>
+              </template>
+              
+              <template #action="{ index, create, remove }">
+                <div style="display: flex; gap: 4px; margin-left: 8px;">
+                  <n-button quaternary circle size="small" type="error" @click="remove(index)">
+                    <template #icon><span>🗑️</span></template>
+                  </n-button>
+                  <n-button quaternary circle size="small" type="primary" @click="create(index)">
+                    <template #icon><span>➕</span></template>
+                  </n-button>
+                </div>
+              </template>
             </n-dynamic-input>
             <div v-if="formValue.steps.length === 0" style="text-align: center; color: var(--color-text-3); padding: 12px 0; font-size: 13px;">
               暂无步骤，点击右侧添加按钮或使用AI生成
@@ -157,10 +190,22 @@
         style="width: 500px;"
       >
         <div style="margin-bottom: 20px;">
-           <p style="color: var(--color-text-2); font-size: 13px; line-height: 1.6; margin-bottom: 16px;">
+           <p style="color: var(--color-text-2); font-size: 13px; line-height: 1.6; margin-bottom: 12px;">
              使用自然语言描述连续动作，AI 将自动将其转化为标准化的执行步骤。<br/>
              <span style="color: var(--color-text-3); font-size: 12px;">💡 提示：描述越明确（包含页面元素名称和输入值），生成的质量越高。</span>
            </p>
+           
+           <div style="display: flex; gap: 12px; margin-bottom: 12px; align-items: center;">
+             <span style="font-size: 13px; color: var(--color-text-2); font-weight: 500;">引擎选择:</span>
+             <n-select
+               v-model:value="selectedAIModel"
+               :options="aiModelOptions"
+               style="width: 200px"
+               size="small"
+               placeholder="加载模型中..."
+             />
+           </div>
+
            <n-input
              v-model:value="aiPrompt"
              type="textarea"
@@ -243,6 +288,8 @@ const formValue = ref({
 const showAIModal = ref(false)
 const aiPrompt = ref('')
 const aiLoading = ref(false)
+const aiModelOptions = ref<any[]>([])
+const selectedAIModel = ref<string | null>(null)
 
 const rules = {
   name: { required: true, message: '请输入用例名称', trigger: 'blur' }
@@ -254,7 +301,8 @@ const onCreateStep = () => {
     target: '',
     value: '',
     page_id: null,
-    element_id: null
+    element_id: null,
+    variable_name: ''
   }
 }
 
@@ -382,6 +430,27 @@ const updateElementOptions = () => {
   }))
 }
 
+const fetchAIModels = async () => {
+  try {
+    const res = await api.get('/ai-models/')
+    const activeModels = res.data.filter((m: any) => m.is_active)
+    aiModelOptions.value = activeModels.map((m: any) => ({
+      label: m.is_default ? `${m.name} (默认)` : m.name,
+      value: String(m.id)  // Pass ID as string to backend request
+    }))
+    
+    // Set default model
+    const defaultModel = activeModels.find((m: any) => m.is_default)
+    if (defaultModel) {
+      selectedAIModel.value = String(defaultModel.id)
+    } else if (activeModels.length > 0) {
+      selectedAIModel.value = String(activeModels[0].id)
+    }
+  } catch (error) {
+    console.error('Failed to fetch AI models', error)
+  }
+}
+
 const fetchTestCases = async () => {
   loading.value = true
   try {
@@ -466,10 +535,12 @@ const handleDelete = async (row: TestCase) => {
 }
 
 const handleGenerateSteps = async () => {
-  if (!aiPrompt.value) return
   aiLoading.value = true
   try {
-    const response = await api.post('/ai/generate', { prompt: aiPrompt.value })
+    const response = await api.post('/ai/generate', { 
+      prompt: aiPrompt.value,
+      model_id: selectedAIModel.value
+    })
     const generatedSteps = response.data.steps
     if (generatedSteps && generatedSteps.length > 0) {
       const mapAction = (action: string) => {
@@ -517,7 +588,10 @@ const handleGenerateSteps = async () => {
   }
 }
 
-onMounted(() => fetchProjects())
+onMounted(async () => {
+  await fetchProjects()
+  await fetchAIModels()
+})
 </script>
 
 <style scoped>

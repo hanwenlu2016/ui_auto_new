@@ -84,23 +84,38 @@
 
         <!-- Multi-Tabs Bar -->
         <div class="tabs-bar">
-          <n-tabs
-            v-model:value="tabStore.activeTab"
-            type="card"
-            size="small"
-            closable
-            @close="handleTabClose"
-            @update:value="handleTabUpdate"
-            class="custom-tabs"
-          >
-            <n-tab
-              v-for="panel in tabStore.tabs"
-              :key="panel.name"
-              :name="panel.name"
-              :label="panel.label"
-              :closable="panel.closable"
-            />
-          </n-tabs>
+          <div class="tabs-scroll-container">
+            <n-tabs
+              v-model:value="tabStore.activeTab"
+              type="card"
+              size="small"
+              closable
+              @close="handleTabClose"
+              @update:value="handleTabUpdate"
+              class="custom-tabs"
+            >
+              <n-tab
+                v-for="panel in tabStore.tabs"
+                :key="panel.name"
+                :name="panel.name"
+                :label="panel.label"
+                :closable="panel.closable"
+              />
+            </n-tabs>
+          </div>
+          <div class="tabs-extra">
+            <n-dropdown
+              trigger="click"
+              :options="tabOptions"
+              @select="handleTabAction"
+            >
+              <n-button quaternary circle size="small">
+                <template #icon>
+                  <n-icon><ellipsis-horizontal-icon /></n-icon>
+                </template>
+              </n-button>
+            </n-dropdown>
+          </div>
         </div>
 
         <!-- Page Content -->
@@ -136,6 +151,7 @@ import {
   NDropdown,
   NTabs,
   NTab,
+  NButton,
 } from 'naive-ui'
 import type { MenuOption } from 'naive-ui'
 import {
@@ -151,6 +167,10 @@ import {
   LayersOutline as SuiteIcon,
   BrowsersOutline as PageIcon,
   CodeSlashOutline as ElementIcon,
+  PlanetOutline as SmartIcon,
+  EllipsisHorizontalOutline as EllipsisHorizontalIcon,
+  CloseOutline as CloseIcon,
+  CloseCircleOutline as CloseAllIcon,
 } from '@vicons/ionicons5'
 import { useUserStore } from '@/stores/user'
 import { useTabStore } from '@/stores/tab'
@@ -177,11 +197,25 @@ const menuOptions: MenuOption[] = [
   { label: '测试用例', key: 'TestCases', icon: renderIcon(CaseIcon) },
   { label: '测试套件', key: 'TestSuites', icon: renderIcon(SuiteIcon) },
   { label: '录制', key: 'Recording', icon: renderIcon(RecordIcon) },
-  { label: '报告管理', key: 'Reports', icon: renderIcon(ReportIcon) }
+  { label: '报告管理', key: 'Reports', icon: renderIcon(ReportIcon) },
+  { label: 'AI 配置', key: 'AIModels', icon: renderIcon(SmartIcon) }
 ]
 
 const userOptions = [
   { label: '退出登录', key: 'logout', icon: renderIcon(LogoutIcon) }
+]
+
+const tabOptions = [
+  {
+    label: '关闭其它',
+    key: 'close-others',
+    icon: renderIcon(CloseIcon)
+  },
+  {
+    label: '全部关闭',
+    key: 'close-all',
+    icon: renderIcon(CloseAllIcon)
+  }
 ]
 
 // 监听路由变化自动添加标签
@@ -210,6 +244,15 @@ function handleTabClose(name: string) {
   const nextTab = tabStore.removeTab(name)
   if (nextTab) {
     router.push({ name: nextTab.name })
+  }
+}
+
+function handleTabAction(key: string) {
+  if (key === 'close-others') {
+    tabStore.closeOthers(tabStore.activeTab)
+  } else if (key === 'close-all') {
+    tabStore.closeAll()
+    router.push({ name: 'Dashboard' })
   }
 }
 
@@ -296,6 +339,24 @@ function handleUserSelect(key: string) {
   background: #fff;
   padding: 6px 12px 0 12px;
   border-bottom: 1px solid var(--color-divider);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tabs-scroll-container {
+  flex: 1;
+  overflow: hidden;
+}
+
+.tabs-extra {
+  padding-left: 12px;
+  display: flex;
+  align-items: center;
+  height: 32px;
+  border-left: 1px solid var(--color-divider);
+  margin-left: 12px;
+  margin-bottom: 4px;
 }
 
 :deep(.custom-tabs .n-tabs-tab) {

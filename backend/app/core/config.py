@@ -46,12 +46,6 @@ class Settings(BaseSettings):
     BROWSER_HEADLESS: bool = True  # True=无头模式, False=有头模式
     BROWSER_TYPE: str = "chromium"  # chromium, firefox, webkit
 
-    # AI 配置
-    # AI 配置 (MiniMax / OpenAI Compatible)
-    AI_API_KEY: Optional[str] = "sk-api-eGyRjuzUbBXaH2ReahQJZEBmRoz1C2IzhWQStbLRjPzH0EUgnb8gbzp5ZIXUUoGQb9u0V9tle_eJONGMC9xdQcTD-31b7W6aNDQ9Z-s1FtVFe6aBYzTVi9Q"
-    AI_BASE_URL: str = "https://api.minimaxi.com/v1"
-    AI_MODEL: str = "MiniMax-M2.5"
-
     def __init__(self, **kwargs):
         """
         初始化配置，自动构建数据库连接字符串
@@ -63,6 +57,9 @@ class Settings(BaseSettings):
     class Config:
         """Pydantic 配置"""
         case_sensitive = True
+        env_file = ".env"
+        env_file_encoding = 'utf-8'
+        extra = "ignore"
 
 # 全局配置实例
 settings = Settings()

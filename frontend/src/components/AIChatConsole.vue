@@ -129,16 +129,27 @@
       </div>
 
       <div class="panel-footer">
-        <n-input
-          v-model:value="prompt"
-          type="textarea"
-          :autosize="{ minRows: 1, maxRows: 4 }"
-          placeholder="描述您想执行的操作..."
-          @keydown.enter.prevent="handleSend"
-        />
-        <n-button type="primary" circle :disabled="!prompt.trim() || loading" @click="handleSend">
-          <template #icon><n-icon><send-icon /></n-icon></template>
-        </n-button>
+        <div class="footer-toolbar">
+          <n-select
+            v-model:value="selectedAIModel"
+            :options="aiModelOptions"
+            size="small"
+            style="width: 140px"
+            placeholder="AI 引擎"
+          />
+        </div>
+        <div class="input-row">
+          <n-input
+            v-model:value="prompt"
+            type="textarea"
+            :autosize="{ minRows: 1, maxRows: 4 }"
+            placeholder="描述您想执行的操作..."
+            @keydown.enter.prevent="handleSend"
+          />
+          <n-button type="primary" circle :disabled="!prompt.trim() || loading" @click="handleSend">
+            <template #icon><n-icon><send-icon /></n-icon></template>
+          </n-button>
+        </div>
       </div>
     </div>
   </div>
@@ -147,7 +158,7 @@
 <script setup lang="ts">
 import { ref, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import { NIcon, NButton, NInput, NSpin, NTag, NTabs, NTabPane, useMessage } from 'naive-ui'
+import { NIcon, NButton, NInput, NSpin, NTag, NTabs, NTabPane, NSelect, useMessage } from 'naive-ui'
 import { 
   SparklesOutline as SparklesIcon, 
   CloseOutline as CloseIcon,
@@ -165,6 +176,8 @@ const loading = ref(false)
 const historyRef = ref<HTMLElement | null>(null)
 const messages = ref<any[]>([])
 const message = useMessage()
+const aiModelOptions = ref<any[]>([])
+const selectedAIModel = ref<string | null>(null)
 
 const handleSend = async () => {
   if (!prompt.value.trim() || loading.value) return
@@ -179,7 +192,10 @@ const handleSend = async () => {
   try {
     // 调用新的 generate 端点，或者 scenarios 端点以获得完整策略
     // 去掉开头的 / 以正确拼接到 Axios 的 baseURL (/api/v1) 上
-    const res = await api.post('ai/scenarios', { prompt: userText })
+    const res = await api.post('ai/scenarios', { 
+      prompt: userText,
+      model_id: selectedAIModel.value
+    })
     messages.value.push({
       role: 'ai',
       text: res.data.message,
@@ -288,6 +304,30 @@ const scrollToBottom = async () => {
     historyRef.value.scrollTop = historyRef.value.scrollHeight
   }
 }
+
+const fetchAIModels = async () => {
+  try {
+    const res = await api.get('/ai-models/')
+    const activeModels = res.data.filter((m: any) => m.is_active)
+    aiModelOptions.value = activeModels.map((m: any) => ({
+      label: m.is_default ? `${m.name} (默认)` : m.name,
+      value: String(m.id)
+    }))
+    
+    // Set default model
+    const defaultModel = activeModels.find((m: any) => m.is_active && m.is_default)
+    if (defaultModel) {
+      selectedAIModel.value = String(defaultModel.id)
+    } else if (activeModels.length > 0) {
+      selectedAIModel.value = String(activeModels[0].id)
+    }
+  } catch (error) {
+    console.error('Failed to fetch AI models', error)
+  }
+}
+
+import { onMounted } from 'vue'
+onMounted(fetchAIModels)
 
 watch(isOpen, (val) => {
   if (val) nextTick(scrollToBottom)
@@ -479,8 +519,20 @@ watch(isOpen, (val) => {
 .action-tag { min-width: 50px; text-align: center; }
 
 .panel-footer {
-  padding: 16px;
+  padding: 12px 16px;
   border-top: 1px solid var(--color-divider);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: white;
+}
+
+.footer-toolbar {
+  display: flex;
+  align-items: center;
+}
+
+.input-row {
   display: flex;
   align-items: flex-end;
   gap: 12px;

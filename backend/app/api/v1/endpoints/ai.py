@@ -23,6 +23,7 @@ class GenerateRequest(BaseModel):
     screenshot_description: Optional[str] = None  # 截图的语义描述
     business_rules: Optional[str] = None          # 业务规则上下文
     project_id: Optional[int] = None              # 用于加载项目记忆
+    model_id: Optional[str] = None                # 模型 ID (如 deepseek-chat, minimax-m2.5)
 
 
 class GenerateResponse(BaseModel):
@@ -34,6 +35,7 @@ class ScenariosRequest(BaseModel):
     prompt: str
     dom_snapshot: Optional[str] = None
     project_id: Optional[int] = None
+    model_id: Optional[str] = None
 
 
 class ScenariosResponse(BaseModel):
@@ -94,11 +96,13 @@ async def generate_steps(
     logger.info(f"AI Generate Request: {request.prompt[:100]}...")
     try:
         steps = await ai_service.generate_steps_from_text(
+            db=db,
             prompt=request.prompt,
             dom_snapshot=request.dom_snapshot,
             screenshot_description=request.screenshot_description,
             business_rules=request.business_rules,
             project_memory=project_memory,
+            model_id=request.model_id,
         )
 
         msg = (
@@ -131,9 +135,11 @@ async def generate_scenarios(
     logger.info(f"AI Scenarios Request: {request.prompt[:100]}...")
     try:
         result = await ai_service.generate_scenarios(
+            db=db,
             prompt=request.prompt,
             dom_snapshot=request.dom_snapshot,
             project_memory=project_memory,
+            model_id=request.model_id,
         )
 
         if not result:
@@ -179,9 +185,11 @@ async def heal_element(
 
     # 2. Call AI
     healing = await ai_service.heal_element(
+        db=db,
         element_metadata=element.metadata_json,
         page_source=request.page_source,
         screenshot_description=request.screenshot_description,
+        model_id=None,  # Heal endpoint currently doesn't specify model_id, using default
     )
 
     # 3. Write HealLog
