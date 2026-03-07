@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel
 from datetime import datetime
 
 # Shared properties
@@ -30,3 +30,13 @@ class AIModel(AIModelBase):
 
     class Config:
         from_attributes = True
+
+
+class AIModelTestResponse(BaseModel):
+    success: bool
+    model_id: int
+    model_name: str
+    latency_ms: Optional[int] = None
+    provider_message: Optional[str] = None
+    error_type: Optional[str] = None
+    error_message: Optional[str] = None

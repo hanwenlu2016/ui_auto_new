@@ -2,7 +2,7 @@ from typing import List, Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.api import deps
-from app.schemas.ai_model import AIModel, AIModelCreate, AIModelUpdate
+from app.schemas.ai_model import AIModel, AIModelCreate, AIModelUpdate, AIModelTestResponse
 from app.services.ai_model_service import ai_model_service
 from app.models.user import User
 
@@ -62,3 +62,20 @@ async def delete_ai_model(
     if not db_obj:
         raise HTTPException(status_code=404, detail="AI Model not found")
     return await ai_model_service.remove(db, model_id=model_id)
+
+
+@router.post("/{model_id}/test", response_model=AIModelTestResponse)
+async def test_ai_model_connection(
+    *,
+    db: AsyncSession = Depends(deps.get_db),
+    model_id: int,
+    current_user: User = Depends(deps.get_current_user),
+) -> Any:
+    """
+    测试指定 AI 模型配置是否可连通
+    """
+    db_obj = await ai_model_service.get(db, model_id=model_id)
+    if not db_obj:
+        raise HTTPException(status_code=404, detail="AI Model not found")
+
+    return await ai_model_service.test_connection(db_obj)

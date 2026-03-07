@@ -54,7 +54,17 @@
 
           <template #footer>
             <div class="card-footer">
-              <n-button quaternary size="small" type="primary" @click="setAsDefault(model)" :disabled="model.is_default">设为默认</n-button>
+              <div class="footer-left">
+                <n-button quaternary size="small" type="primary" @click="setAsDefault(model)" :disabled="model.is_default">设为默认</n-button>
+                <n-button
+                  quaternary
+                  size="small"
+                  @click="testModelConnection(model)"
+                  :loading="testingModelId === model.id"
+                >
+                  测试连接
+                </n-button>
+              </div>
               <div class="footer-right">
                 <n-button quaternary circle size="small" @click="editModel(model)">
                   <template #icon><n-icon><edit-icon /></n-icon></template>
@@ -120,6 +130,7 @@ const loading = ref(false)
 const saving = ref(false)
 const showModal = ref(false)
 const models = ref<any[]>([])
+const testingModelId = ref<number | null>(null)
 
 const initialForm = {
   id: null,
@@ -195,6 +206,29 @@ const handleStatusChange = async (model: any) => {
   } catch (err) {
     message.error('更新状态失败')
     fetchModels()
+  }
+}
+
+const testModelConnection = async (model: any) => {
+  testingModelId.value = model.id
+  try {
+    const res = await api.post(`/ai-models/${model.id}/test`)
+    const result = res.data
+    if (result.success) {
+      const latency = result.latency_ms !== null && result.latency_ms !== undefined
+        ? `（${result.latency_ms}ms）`
+        : ''
+      const summary = result.provider_message ? ` 返回: ${result.provider_message}` : ''
+      message.success(`连接成功 ${latency}${summary}`)
+    } else {
+      const errorType = result.error_type || 'unknown_error'
+      const errorMessage = result.error_message || '未知错误'
+      message.error(`连接失败 [${errorType}] ${errorMessage}`)
+    }
+  } catch (err: any) {
+    message.error(err?.response?.data?.detail || '连接测试失败')
+  } finally {
+    testingModelId.value = null
   }
 }
 
@@ -278,6 +312,11 @@ onMounted(fetchModels)
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.footer-left {
+  display: flex;
+  gap: 8px;
 }
 
 .footer-right {
