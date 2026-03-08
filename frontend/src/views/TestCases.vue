@@ -126,9 +126,15 @@
                     :options="[
                       { label: '🖱️ 点击', value: 'click' },
                       { label: '⌨️ 输入', value: 'fill' },
+                      { label: '🪄 按键', value: 'press' },
+                      { label: '🖐️ 悬停', value: 'hover' },
+                      { label: '📑 下拉选择', value: 'select' },
                       { label: '🔗 跳转', value: 'goto' },
                       { label: '✅ 断言', value: 'assert_text' },
+                      { label: '👀 断言可见', value: 'assert_visible' },
                       { label: '⏳ 等待', value: 'wait' },
+                      { label: '⏳ 等待元素', value: 'wait_for_selector' },
+                      { label: '📸 截图', value: 'screenshot' },
                       { label: '📋 提取文本', value: 'get_text' },
                       { label: '🆔 提取属性', value: 'get_attribute' },
                       { label: '⚙️ 设置变量', value: 'set_variable' }
@@ -543,18 +549,52 @@ const handleGenerateSteps = async () => {
     })
     const generatedSteps = response.data.steps
     if (generatedSteps && generatedSteps.length > 0) {
-      const mapAction = (action: string) => {
-        const a = (action || '').toLowerCase()
-        if (a.includes('click') || a.includes('press') || a.includes('点击') || a.includes('按')) return 'click'
-        if (a.includes('fill') || a.includes('type') || a.includes('input') || a.includes('输入') || a.includes('填写')) return 'fill'
-        if (a.includes('goto') || a.includes('visit') || a.includes('open') || a.includes('navigate') || a.includes('跳转') || a.includes('访问') || a.includes('打开')) return 'goto'
-        if (a.includes('assert') || a.includes('verify') || a.includes('check') || a.includes('断言') || a.includes('验证') || a.includes('检查')) return 'assert_text'
-        if (a.includes('wait') || a.includes('sleep') || a.includes('等待')) return 'wait'
-        return a
+      const parseDurationToMs = (raw: any): string => {
+        if (raw === null || raw === undefined) return ''
+        const text = String(raw).trim().toLowerCase()
+        if (!text) return ''
+        const m = text.match(/^(\d+(?:\.\d+)?)\s*(ms|s)?$/)
+        if (!m) return String(raw).trim()
+        const amount = Number(m[1])
+        const unit = m[2]
+        if (unit === 'ms') return String(Math.round(amount))
+        if (unit === 's') return String(Math.round(amount * 1000))
+        return String(Math.round(amount >= 100 ? amount : amount * 1000))
       }
+
+      const isValidUrl = (val: string) => {
+        try {
+          const u = new URL(val)
+          return u.protocol === 'http:' || u.protocol === 'https:'
+        } catch {
+          return false
+        }
+      }
+
+      const mapAction = (action: string): { normalized: string; degraded: boolean } => {
+        const a = (action || '').toLowerCase()
+        if (a.includes('wait_for_selector') || a.includes('wait for selector') || a.includes('等待元素')) return { normalized: 'wait_for_selector', degraded: false }
+        if (a.includes('assert_visible') || a.includes('visible') || a.includes('可见')) return { normalized: 'assert_visible', degraded: false }
+        if (a.includes('assert') || a.includes('verify') || a.includes('check') || a.includes('断言') || a.includes('验证') || a.includes('检查')) return { normalized: 'assert_text', degraded: false }
+        if (a.includes('hover') || a.includes('悬停')) return { normalized: 'hover', degraded: false }
+        if (a.includes('select') || a.includes('选择')) return { normalized: 'select', degraded: false }
+        if (a.includes('press') || a.includes('按键')) return { normalized: 'press', degraded: false }
+        if (a.includes('click') || a.includes('点击')) return { normalized: 'click', degraded: false }
+        if (a.includes('fill') || a.includes('type') || a.includes('input') || a.includes('输入') || a.includes('填写')) return { normalized: 'fill', degraded: false }
+        if (a.includes('goto') || a.includes('visit') || a.includes('open') || a.includes('navigate') || a.includes('跳转') || a.includes('访问') || a.includes('打开')) return { normalized: 'goto', degraded: false }
+        if (a.includes('wait') || a.includes('sleep') || a.includes('等待')) return { normalized: 'wait', degraded: false }
+        if (a.includes('screenshot') || a.includes('截图')) return { normalized: 'screenshot', degraded: false }
+        if (a.includes('get_text') || a.includes('text_content') || a.includes('提取文本')) return { normalized: 'get_text', degraded: false }
+        if (a.includes('get_attribute') || a.includes('extract_attr') || a.includes('提取属性')) return { normalized: 'get_attribute', degraded: false }
+        if (a.includes('set_variable') || a.includes('设置变量')) return { normalized: 'set_variable', degraded: false }
+        return { normalized: 'click', degraded: true }
+      }
+      let degradedCount = 0
       const newSteps = generatedSteps.map((s: any) => {
-        const action = mapAction(s.action)
-        let val = s.value || ''
+        const mapped = mapAction(s.action)
+        if (mapped.degraded) degradedCount += 1
+        const action = mapped.normalized
+        let val = String(s.value || '').trim()
         let tar = s.target || s.selector || ''
         
         // 自动搬运 URL: 如果是跳转且 value 为空但 target 有内容，说明 AI 写反了
@@ -562,19 +602,32 @@ const handleGenerateSteps = async () => {
           val = tar
           tar = ''
         }
-        
-        // 清理脏数据后缀 (61ms 等)
-        const clean = (str: string) => (str || '').replace(/(\d+ms|\d+s|\d+ms\)?)$/gi, '').trim()
+
+        if (action === 'wait') {
+          val = parseDurationToMs(s.wait_ms ?? val)
+          if (!val) val = '1000'
+        }
+        if (action === 'goto' && val && !isValidUrl(val)) {
+          message.warning(`检测到疑似无效 URL: ${val}，请编辑后再执行`)
+        }
         
         return {
           action: action,
-          target: clean(tar),
-          value: clean(val),
+          target: String(tar || '').trim(),
+          selector: String(tar || '').trim(),
+          value: String(val || '').trim(),
+          wait_ms: action === 'wait' ? (Number(val) || 1000) : (s.wait_ms ?? null),
+          locator_chain: s.locator_chain || null,
+          description: s.description || '',
+          variable_name: s.variable_name || '',
           page_id: null,
           element_id: null
         }
       })
       formValue.value.steps = [...formValue.value.steps, ...newSteps]
+      if (degradedCount > 0) {
+        message.warning(`有 ${degradedCount} 个步骤动作无法识别，已降级为 click，请检查后执行`)
+      }
       message.success(`成功解析并添加 ${newSteps.length} 个步骤`)
       showAIModal.value = false
       aiPrompt.value = ''

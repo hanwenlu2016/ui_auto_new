@@ -5,7 +5,12 @@ from datetime import datetime
 class TestStep(BaseModel):
     action: str  # click, fill, goto, etc.
     element_id: Optional[int] = None
+    target: Optional[str] = None
+    selector: Optional[str] = None
     value: Optional[str] = None
+    wait_ms: Optional[int] = None
+    locator_chain: Optional[Dict[str, Any]] = None
+    variable_name: Optional[str] = None
     description: Optional[str] = None
 
 class TestCaseBase(BaseModel):

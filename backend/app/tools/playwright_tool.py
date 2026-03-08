@@ -3,6 +3,7 @@ Playwright automation tool for browser interactions.
 Provides a clean interface for common browser automation tasks.
 """
 import logging
+import re
 from typing import Optional, Dict, Any
 from playwright.async_api import async_playwright, Page, Browser, BrowserContext, expect
 
@@ -157,6 +158,58 @@ class PlaywrightTool:
         locator = self.page.locator(selector)
         await expect(locator).to_have_text(expected_text)
         logger.debug(f"Asserted text in {selector}: {expected_text}")
+
+    async def assert_text_contains(self, selector: str, expected_text: str) -> None:
+        """Assert that an element contains expected text."""
+        if not self.page:
+            raise RuntimeError("Browser not started. Call start() first.")
+        locator = self.page.locator(selector)
+        await expect(locator).to_contain_text(expected_text)
+        logger.debug(f"Asserted text contains in {selector}: {expected_text}")
+
+    async def assert_visible(self, selector: str, timeout: int = 10000) -> None:
+        """Assert an element is visible."""
+        if not self.page:
+            raise RuntimeError("Browser not started. Call start() first.")
+        locator = self.page.locator(selector)
+        await expect(locator).to_be_visible(timeout=timeout)
+        logger.debug(f"Asserted visible: {selector}")
+
+    async def wait_for_selector(self, selector: str, timeout: int = 10000, state: str = "visible") -> None:
+        """Wait for selector to reach state."""
+        if not self.page:
+            raise RuntimeError("Browser not started. Call start() first.")
+        await self.page.locator(selector).first.wait_for(timeout=timeout, state=state)
+        logger.debug(f"Waited for selector: {selector}, timeout={timeout}, state={state}")
+
+    async def hover(self, selector: str, **kwargs) -> None:
+        """Hover an element."""
+        if not self.page:
+            raise RuntimeError("Browser not started. Call start() first.")
+        await self.page.locator(selector).hover(**kwargs)
+        logger.debug(f"Hovered element: {selector}")
+
+    async def select(self, selector: str, value: str, **kwargs) -> None:
+        """Select option in dropdown."""
+        if not self.page:
+            raise RuntimeError("Browser not started. Call start() first.")
+        await self.page.locator(selector).select_option(value=value, **kwargs)
+        logger.debug(f"Selected value '{value}' in {selector}")
+
+    async def press(self, selector: str, key: str, **kwargs) -> None:
+        """Press keyboard key on element."""
+        if not self.page:
+            raise RuntimeError("Browser not started. Call start() first.")
+        await self.page.locator(selector).press(key, **kwargs)
+        logger.debug(f"Pressed key '{key}' on {selector}")
+
+    async def get_attribute(self, selector: str, name: str) -> Optional[str]:
+        """Get attribute value of an element."""
+        if not self.page:
+            raise RuntimeError("Browser not started. Call start() first.")
+        value = await self.page.locator(selector).get_attribute(name)
+        logger.debug(f"Got attribute {name} from {selector}: {value}")
+        return value
     
     async def screenshot(self, path: Optional[str] = None, **kwargs) -> bytes:
         """
@@ -174,6 +227,34 @@ class PlaywrightTool:
         screenshot_bytes = await self.page.screenshot(path=path, **kwargs)
         logger.debug(f"Screenshot taken{f' and saved to {path}' if path else ''}")
         return screenshot_bytes
+
+    def _parse_duration_to_ms(self, value: Any) -> int:
+        """
+        Parse duration from number/string and return milliseconds.
+        Compatible with "2", "2s", "2000ms", "0.5s", "1000" (legacy ms).
+        """
+        if value is None:
+            raise ValueError("Duration required")
+
+        if isinstance(value, (int, float)):
+            # Legacy compatibility: values >= 100 are likely ms, otherwise seconds.
+            return int(value if value >= 100 else value * 1000)
+
+        text = str(value).strip().lower()
+        if not text:
+            raise ValueError("Duration required")
+
+        match = re.match(r"^\s*(\d+(?:\.\d+)?)\s*(ms|s)?\s*$", text)
+        if not match:
+            raise ValueError(f"Invalid wait duration: {value}")
+
+        amount = float(match.group(1))
+        unit = match.group(2)
+        if unit == "ms":
+            return int(amount)
+        if unit == "s":
+            return int(amount * 1000)
+        return int(amount if amount >= 100 else amount * 1000)
     
     async def execute_action(self, action: str, selector: Optional[str] = None, 
                             value: Optional[str] = None, **kwargs) -> Dict[str, Any]:
@@ -192,38 +273,93 @@ class PlaywrightTool:
         result = {"success": False, "error": None, "output": None}
         
         try:
+            call_kwargs = dict(kwargs)
+            timeout_ms = call_kwargs.pop("timeout_ms", None)
+            if timeout_ms is not None and "timeout" not in call_kwargs:
+                call_kwargs["timeout"] = int(timeout_ms)
+
             if action == "goto":
                 if not value:
                     raise ValueError("URL required for goto action")
-                await self.goto(value, **kwargs)
+                await self.goto(value, **call_kwargs)
             
             elif action == "wait":
                 if not value:
                     raise ValueError("Duration required for wait action")
-                # Convert seconds to milliseconds
-                ms = int(float(value) * 1000)
+                ms = self._parse_duration_to_ms(value)
                 await self.wait(ms)
+
+            elif action == "wait_for_selector":
+                if not selector:
+                    raise ValueError("Selector required for wait_for_selector action")
+                timeout = int(call_kwargs.get("timeout", 10000))
+                state = call_kwargs.get("state", "visible")
+                await self.wait_for_selector(selector, timeout=timeout, state=state)
             
             elif action == "click":
                 if not selector:
                     raise ValueError("Selector required for click action")
-                await self.click(selector, **kwargs)
+                call_kwargs.pop("exact", None)
+                call_kwargs.pop("state", None)
+                await self.click(selector, **call_kwargs)
             
             elif action == "fill":
                 if not selector or not value:
                     raise ValueError("Selector and value required for fill action")
-                await self.fill(selector, value, **kwargs)
+                call_kwargs.pop("exact", None)
+                call_kwargs.pop("state", None)
+                await self.fill(selector, value, **call_kwargs)
+
+            elif action == "select":
+                if not selector or value is None:
+                    raise ValueError("Selector and value required for select action")
+                call_kwargs.pop("exact", None)
+                call_kwargs.pop("state", None)
+                await self.select(selector, str(value), **call_kwargs)
+
+            elif action == "hover":
+                if not selector:
+                    raise ValueError("Selector required for hover action")
+                call_kwargs.pop("exact", None)
+                call_kwargs.pop("state", None)
+                await self.hover(selector, **call_kwargs)
+
+            elif action == "press":
+                if not selector or not value:
+                    raise ValueError("Selector and key required for press action")
+                call_kwargs.pop("exact", None)
+                call_kwargs.pop("state", None)
+                await self.press(selector, str(value), **call_kwargs)
             
             elif action == "text_content":
                 if not selector:
                     raise ValueError("Selector required for text_content action")
                 text = await self.get_text(selector)
                 result["output"] = text
+
+            elif action == "get_attribute":
+                if not selector:
+                    raise ValueError("Selector required for get_attribute action")
+                attr_name = str(value or "value")
+                result["output"] = await self.get_attribute(selector, attr_name)
             
             elif action == "assert_text":
                 if not selector or not value:
                     raise ValueError("Selector and expected text required for assert_text action")
-                await self.assert_text(selector, value)
+                exact = bool(call_kwargs.get("exact", False))
+                if exact:
+                    await self.assert_text(selector, str(value))
+                else:
+                    await self.assert_text_contains(selector, str(value))
+
+            elif action == "assert_visible":
+                if not selector:
+                    raise ValueError("Selector required for assert_visible action")
+                timeout = int(call_kwargs.get("timeout", 10000))
+                await self.assert_visible(selector, timeout=timeout)
+
+            elif action == "screenshot":
+                result["output"] = await self.screenshot()
             
             else:
                 raise ValueError(f"Unknown action: {action}")

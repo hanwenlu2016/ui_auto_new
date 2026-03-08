@@ -237,31 +237,81 @@ const useSteps = (steps: any[]) => {
   
   const mapAction = (action: string) => {
     const a = (action || '').toLowerCase()
-    if (a.includes('click') || a.includes('press') || a.includes('点击') || a.includes('按')) return 'click'
+    if (a.includes('wait_for_selector') || a.includes('wait for selector') || a.includes('等待元素')) return 'wait_for_selector'
+    if (a.includes('assert_visible') || a.includes('visible') || a.includes('可见')) return 'assert_visible'
+    if (a.includes('click') || a.includes('点击')) return 'click'
+    if (a.includes('press') || a.includes('按键')) return 'press'
     if (a.includes('fill') || a.includes('type') || a.includes('input') || a.includes('输入') || a.includes('填写')) return 'fill'
+    if (a.includes('select') || a.includes('选择')) return 'select'
+    if (a.includes('hover') || a.includes('悬停')) return 'hover'
     if (a.includes('goto') || a.includes('visit') || a.includes('open') || a.includes('navigate') || a.includes('跳转') || a.includes('访问') || a.includes('打开')) return 'goto'
     if (a.includes('assert') || a.includes('verify') || a.includes('check') || a.includes('断言') || a.includes('验证') || a.includes('检查')) return 'assert_text'
     if (a.includes('wait') || a.includes('sleep') || a.includes('等待')) return 'wait'
+    if (a.includes('screenshot') || a.includes('截图')) return 'screenshot'
+    if (a.includes('get_text') || a.includes('text_content') || a.includes('提取文本')) return 'get_text'
+    if (a.includes('get_attribute') || a.includes('extract_attr') || a.includes('提取属性')) return 'get_attribute'
+    if (a.includes('set_variable') || a.includes('设置变量')) return 'set_variable'
     return a
   }
-  
-  const clean = (str: string) => (str || '').replace(/(\d+ms|\d+s|\d+ms\)?)$/gi, '').trim()
+
+  const parseDurationToMs = (raw: any): number | null => {
+    if (raw === null || raw === undefined) return null
+    if (typeof raw === 'number' && Number.isFinite(raw)) {
+      return Math.round(raw >= 100 ? raw : raw * 1000)
+    }
+    const text = String(raw).trim().toLowerCase()
+    if (!text) return null
+    const m = text.match(/^(\d+(?:\.\d+)?)\s*(ms|s)?$/)
+    if (!m) return null
+    const amount = Number(m[1])
+    const unit = m[2]
+    if (unit === 'ms') return Math.round(amount)
+    if (unit === 's') return Math.round(amount * 1000)
+    return Math.round(amount >= 100 ? amount : amount * 1000)
+  }
+
+  const buildDefaultDescription = (action: string, target: string, value: string, waitMs: number | null) => {
+    if (action === 'goto') return `访问页面 ${value || target || ''}`.trim()
+    if (action === 'wait') return `等待 ${(waitMs ?? 1000) / 1000}s`
+    if (action === 'wait_for_selector') return `等待元素出现: ${target || '目标元素'} (超时 ${(waitMs ?? 8000) / 1000}s)`
+    if (action === 'click') return `点击 ${target || '目标元素'}`
+    if (action === 'fill') return `输入内容到 ${target || '输入框'}`
+    if (action === 'assert_text') return `断言 ${target || '元素'} 包含文本 ${value || ''}`.trim()
+    if (action === 'assert_visible') return `断言元素可见: ${target || '目标元素'}`
+    if (action === 'select') return `选择 ${value || ''} 于 ${target || '下拉框'}`.trim()
+    if (action === 'press') return `在 ${target || '目标元素'} 按键 ${value || ''}`.trim()
+    if (action === 'screenshot') return '截图'
+    return '执行动作'
+  }
 
   const normalizedSteps = steps.map(s => {
     const action = mapAction(s.action)
-    let val = s.value || ''
+    let val = String(s.value || '').trim()
     let tar = s.target || s.selector || ''
     
     if (action === 'goto' && !val && tar) {
       val = tar
       tar = ''
     }
+
+    const waitMs = action === 'wait' ? (parseDurationToMs(s.wait_ms ?? val) ?? 1000) : null
+    if (action === 'wait') {
+      val = String(waitMs)
+    }
+    const waitForSelectorMs = action === 'wait_for_selector' ? (parseDurationToMs(s.wait_ms ?? val) ?? 8000) : null
+    if (action === 'wait_for_selector') {
+      val = String(waitForSelectorMs)
+    }
+    const finalWaitMs = action === 'wait' ? waitMs : (action === 'wait_for_selector' ? waitForSelectorMs : null)
     
     return {
       ...s,
       action: action,
-      target: clean(tar),
-      value: clean(val)
+      target: String(tar || '').trim(),
+      selector: String(tar || '').trim(),
+      value: String(val || '').trim(),
+      wait_ms: finalWaitMs,
+      description: (s.description || '').trim() || buildDefaultDescription(action, String(tar || '').trim(), String(val || '').trim(), finalWaitMs)
     }
   })
 

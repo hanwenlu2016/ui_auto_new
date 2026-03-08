@@ -32,7 +32,7 @@ You MUST:
 OUTPUT FORMAT (strict JSON array, no markdown):
 [
   {
-    "action": "goto|click|fill|wait|hover|select|assert_text|screenshot",
+    "action": "goto|click|fill|wait|wait_for_selector|hover|select|press|assert_text|assert_visible|get_text|get_attribute|set_variable|screenshot",
     "target": "selector_string",
     "value": "optional_value_or_url",
     "locator_chain": {
@@ -58,7 +58,7 @@ Return a JSON object with three arrays:
 
 IMPORTANT: Limit each array to a maximum of 5 most critical steps. Total response must be concise.
 Each step follows the same schema as standard test steps with locator_chain and assertions.
-Action MUST be one of: [goto, click, fill, assert_text, wait, hover, select, screenshot].
+Action MUST be one of: [goto, click, fill, wait, wait_for_selector, hover, select, press, assert_text, assert_visible, screenshot].
 ALWAYS provide a 'target' selector for click/fill/hover actions, even if it's a generic guess like 'button:has-text("Login")' or 'input[type="text"]'.
 """
 
@@ -98,6 +98,44 @@ class AIService:
     def __init__(self):
         self._clients: Dict[int, AsyncOpenAI] = {}
         logger.info("Universal AI Service v4.0 initialized (DB-Driven)")
+        self._action_aliases = {
+            "open": "goto",
+            "visit": "goto",
+            "navigate": "goto",
+            "跳转": "goto",
+            "访问": "goto",
+            "打开": "goto",
+            "input": "fill",
+            "type": "fill",
+            "填写": "fill",
+            "输入": "fill",
+            "sleep": "wait",
+            "等待": "wait",
+            "verify": "assert_text",
+            "check": "assert_text",
+            "验证": "assert_text",
+            "检查": "assert_text",
+            "extract_text": "get_text",
+            "提取文本": "get_text",
+            "extract_attr": "get_attribute",
+            "提取属性": "get_attribute",
+        }
+        self._allowed_actions = {
+            "goto",
+            "click",
+            "fill",
+            "wait",
+            "wait_for_selector",
+            "assert_text",
+            "assert_visible",
+            "screenshot",
+            "hover",
+            "select",
+            "press",
+            "get_text",
+            "get_attribute",
+            "set_variable",
+        }
 
     async def _get_client_from_db(
         self, db: AsyncSession, model_id: Optional[str] = None
@@ -342,10 +380,24 @@ class AIService:
     def _clean_steps(self, steps: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         cleaned = []
         for s in steps:
+            action = self._canonical_action(s.get("action", "click"))
+            target = s.get("target") or s.get("selector") or ""
+            value = s.get("value", "")
+            wait_ms = self._parse_wait_ms(s.get("wait_ms"), value)
+            if action == "goto" and not value and target:
+                value = target
+                target = ""
+            if action == "wait" and wait_ms is None:
+                wait_ms = 1000
+                value = "1000"
             cleaned.append({
-                "action": s.get("action", "click"),
-                "target": s.get("target") or s.get("selector") or "",
-                "value": str(s.get("value", "")),
+                "action": action,
+                "target": target,
+                "selector": target,
+                "value": str(value or ""),
+                "wait_ms": wait_ms,
+                "locator_chain": s.get("locator_chain"),
+                "variable_name": s.get("variable_name"),
                 "description": s.get("description", "")
             })
         return cleaned
@@ -356,6 +408,33 @@ class AIService:
         if "baidu" in p or "百度" in p:
             return [{"action": "goto", "target": "", "value": "https://www.baidu.com", "description": "打开百度"}]
         return [{"action": "wait", "target": "", "value": "1000", "description": "AI 暂不可用，默认等待"}]
+
+    def _canonical_action(self, action: Any) -> str:
+        raw = str(action or "").strip().lower()
+        canonical = self._action_aliases.get(raw, raw)
+        if canonical not in self._allowed_actions:
+            if "assert" in canonical or "verify" in canonical:
+                return "assert_text"
+            return "click"
+        return canonical
+
+    def _parse_wait_ms(self, wait_ms: Any, value: Any) -> Optional[int]:
+        source = wait_ms if wait_ms is not None else value
+        if source is None:
+            return None
+        if isinstance(source, (int, float)):
+            return int(source if source >= 100 else source * 1000)
+        text = str(source).strip().lower()
+        m = re.match(r"^(\d+(?:\.\d+)?)\s*(ms|s)?$", text)
+        if not m:
+            return None
+        amount = float(m.group(1))
+        unit = m.group(2)
+        if unit == "ms":
+            return int(amount)
+        if unit == "s":
+            return int(amount * 1000)
+        return int(amount if amount >= 100 else amount * 1000)
 
 
 ai_service = AIService()

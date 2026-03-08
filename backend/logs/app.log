@@ -33858,3 +33858,1253 @@ WHERE users.email = $1::VARCHAR
 [2026-03-07 23:03:48] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
 [2026-03-07 23:03:52] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/reports/case_25_20260307_225009/data/suites.json
 [2026-03-07 23:03:52] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:14:40] [INFO] [ui_auto] [ai_service.py:100]: Universal AI Service v4.0 initialized (DB-Driven)
+[2026-03-07 23:14:40] [INFO] [ui_auto] [main.py:67]: UI Automation Platform API started successfully
+[2026-03-07 23:15:12] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/users/me
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: select pg_catalog.version()
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [raw sql] ()
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: select current_schema()
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [raw sql] ()
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: show standard_conforming_strings
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [raw sql] ()
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00021s] ('admin@163.com',)
+[2026-03-07 23:15:12] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:15:12] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/projects/
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.2456s ago] ('admin@163.com',)
+[2026-03-07 23:15:12] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/ai-models/
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT projects.id, projects.name, projects.description, projects.base_url, projects.owner_id, projects.created_at, projects.updated_at 
+FROM projects 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00033s] (100, 0)
+[2026-03-07 23:15:12] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.2758s ago] ('admin@163.com',)
+[2026-03-07 23:15:12] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/modules/?project_id=2
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.2777s ago] ('admin@163.com',)
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT modules.id, modules.name, modules.description, modules.project_id, modules.parent_id, modules.created_at, modules.updated_at, modules.creator_id, modules.updater_id 
+FROM modules 
+WHERE modules.project_id = $1::INTEGER 
+ LIMIT $2::INTEGER OFFSET $3::INTEGER
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00019s] (2, 100, 0)
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT ai_models.id, ai_models.name, ai_models.base_url, ai_models.api_key, ai_models.model_identifier, ai_models.is_default, ai_models.is_active, ai_models.created_at, ai_models.updated_at 
+FROM ai_models 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00011s] (100, 0)
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00030s] (1,)
+[2026-03-07 23:15:12] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00017s] (1,)
+[2026-03-07 23:15:12] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:15:12] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/cases/?module_id=2
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.3011s ago] ('admin@163.com',)
+[2026-03-07 23:15:12] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/pages/?module_id=2
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.3025s ago] ('admin@163.com',)
+[2026-03-07 23:15:12] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/ai-models/
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id, test_cases.name, test_cases.description, test_cases.module_id, test_cases.priority, test_cases.status, test_cases.steps, test_cases.created_at, test_cases.updated_at, test_cases.creator_id, test_cases.updater_id 
+FROM test_cases 
+WHERE test_cases.module_id = $1::INTEGER 
+ LIMIT $2::INTEGER OFFSET $3::INTEGER
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00030s] (2, 100, 0)
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT pages.id, pages.name, pages.description, pages.module_id, pages.created_at, pages.updated_at, pages.creator_id, pages.updater_id 
+FROM pages 
+WHERE pages.module_id = $1::INTEGER
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00019s] (2,)
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00015s] (1,)
+[2026-03-07 23:15:12] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00021s] (1,)
+[2026-03-07 23:15:12] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.3392s ago] ('admin@163.com',)
+[2026-03-07 23:15:12] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/cases/?module_id=2
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.3405s ago] ('admin@163.com',)
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id, test_cases.name, test_cases.description, test_cases.module_id, test_cases.priority, test_cases.status, test_cases.steps, test_cases.created_at, test_cases.updated_at, test_cases.creator_id, test_cases.updater_id 
+FROM test_cases 
+WHERE test_cases.module_id = $1::INTEGER 
+ LIMIT $2::INTEGER OFFSET $3::INTEGER
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.03237s ago] (2, 100, 0)
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT ai_models.id, ai_models.name, ai_models.base_url, ai_models.api_key, ai_models.model_identifier, ai_models.is_default, ai_models.is_active, ai_models.created_at, ai_models.updated_at 
+FROM ai_models 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.06159s ago] (100, 0)
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.03055s ago] (1,)
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.01307s ago] (1,)
+[2026-03-07 23:15:12] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:15:12] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:15:12] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:15:15] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/users/me
+[2026-03-07 23:15:15] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:15:15] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:15:15] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 2.459s ago] ('admin@163.com',)
+[2026-03-07 23:15:15] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:15:15] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:15:15] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/dashboard/stats
+[2026-03-07 23:15:15] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:15:15] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(projects.id) AS count_1 
+FROM projects
+[2026-03-07 23:15:15] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00052s] ()
+[2026-03-07 23:15:15] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/ai-models/
+[2026-03-07 23:15:15] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:15:15] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:15:15] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 2.672s ago] ('admin@163.com',)
+[2026-03-07 23:15:15] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT ai_models.id, ai_models.name, ai_models.base_url, ai_models.api_key, ai_models.model_identifier, ai_models.is_default, ai_models.is_active, ai_models.created_at, ai_models.updated_at 
+FROM ai_models 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-07 23:15:15] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 2.391s ago] (100, 0)
+[2026-03-07 23:15:15] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_cases.id) AS count_1 
+FROM test_cases
+[2026-03-07 23:15:15] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00028s] ()
+[2026-03-07 23:15:15] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:15:15] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_reports.id) AS count_1 
+FROM test_reports
+[2026-03-07 23:15:15] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00057s] ()
+[2026-03-07 23:15:15] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:15:15] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_reports.id) AS count_1 
+FROM test_reports 
+WHERE test_reports.status = $1::VARCHAR
+[2026-03-07 23:15:15] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00019s] ('success',)
+[2026-03-07 23:15:15] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:15:15] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:15:15] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/dashboard/activities
+[2026-03-07 23:15:15] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:15:15] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_reports.id, test_reports.status, test_reports.created_at, test_reports.report_path, test_cases.name AS case_name 
+FROM test_reports LEFT OUTER JOIN test_cases ON test_reports.test_case_id = test_cases.id ORDER BY test_reports.created_at DESC 
+ LIMIT $1::INTEGER
+[2026-03-07 23:15:15] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00014s] (5,)
+[2026-03-07 23:15:15] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:15:15] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:18:08] [INFO] [ui_auto] [ai_service.py:100]: Universal AI Service v4.0 initialized (DB-Driven)
+[2026-03-07 23:18:08] [INFO] [ui_auto] [main.py:67]: UI Automation Platform API started successfully
+[2026-03-07 23:19:34] [INFO] [ui_auto] [ai_service.py:100]: Universal AI Service v4.0 initialized (DB-Driven)
+[2026-03-07 23:19:34] [INFO] [ui_auto] [main.py:67]: UI Automation Platform API started successfully
+[2026-03-07 23:19:57] [INFO] [ui_auto] [ai_service.py:100]: Universal AI Service v4.0 initialized (DB-Driven)
+[2026-03-07 23:19:58] [INFO] [ui_auto] [main.py:67]: UI Automation Platform API started successfully
+[2026-03-07 23:20:02] [INFO] [ui_auto] [ai_service.py:100]: Universal AI Service v4.0 initialized (DB-Driven)
+[2026-03-07 23:20:02] [INFO] [ui_auto] [main.py:67]: UI Automation Platform API started successfully
+[2026-03-07 23:20:32] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/projects/
+[2026-03-07 23:20:32] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 403
+[2026-03-07 23:20:32] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/ai-models/
+[2026-03-07 23:20:32] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 403
+[2026-03-07 23:20:51] [INFO] [ui_auto] [ai_service.py:100]: Universal AI Service v4.0 initialized (DB-Driven)
+[2026-03-07 23:20:51] [INFO] [ui_auto] [main.py:67]: UI Automation Platform API started successfully
+[2026-03-07 23:20:58] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/users/me
+[2026-03-07 23:20:58] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 403
+[2026-03-07 23:21:03] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: POST http://127.0.0.1:8000/api/v1/login/access-token
+[2026-03-07 23:21:03] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: select pg_catalog.version()
+[2026-03-07 23:21:03] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [raw sql] ()
+[2026-03-07 23:21:03] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: select current_schema()
+[2026-03-07 23:21:03] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [raw sql] ()
+[2026-03-07 23:21:03] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: show standard_conforming_strings
+[2026-03-07 23:21:03] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [raw sql] ()
+[2026-03-07 23:21:03] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:21:03] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:21:03] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00029s] ('admin@163.com',)
+[2026-03-07 23:21:04] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:21:04] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:21:04] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/users/me
+[2026-03-07 23:21:04] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:21:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:21:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.4182s ago] ('admin@163.com',)
+[2026-03-07 23:21:04] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:21:04] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:21:04] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/users/me
+[2026-03-07 23:21:04] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:21:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:21:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 1.002s ago] ('admin@163.com',)
+[2026-03-07 23:21:04] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:21:04] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:21:04] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/dashboard/stats
+[2026-03-07 23:21:04] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:21:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(projects.id) AS count_1 
+FROM projects
+[2026-03-07 23:21:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00018s] ()
+[2026-03-07 23:21:04] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/ai-models/
+[2026-03-07 23:21:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_cases.id) AS count_1 
+FROM test_cases
+[2026-03-07 23:21:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00026s] ()
+[2026-03-07 23:21:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_reports.id) AS count_1 
+FROM test_reports
+[2026-03-07 23:21:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00018s] ()
+[2026-03-07 23:21:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_reports.id) AS count_1 
+FROM test_reports 
+WHERE test_reports.status = $1::VARCHAR
+[2026-03-07 23:21:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00011s] ('success',)
+[2026-03-07 23:21:04] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:21:04] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:21:04] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:21:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:21:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 1.131s ago] ('admin@163.com',)
+[2026-03-07 23:21:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT ai_models.id, ai_models.name, ai_models.base_url, ai_models.api_key, ai_models.model_identifier, ai_models.is_default, ai_models.is_active, ai_models.created_at, ai_models.updated_at 
+FROM ai_models 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-07 23:21:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00036s] (100, 0)
+[2026-03-07 23:21:04] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/dashboard/activities
+[2026-03-07 23:21:04] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:21:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_reports.id, test_reports.status, test_reports.created_at, test_reports.report_path, test_cases.name AS case_name 
+FROM test_reports LEFT OUTER JOIN test_cases ON test_reports.test_case_id = test_cases.id ORDER BY test_reports.created_at DESC 
+ LIMIT $1::INTEGER
+[2026-03-07 23:21:04] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00024s] (5,)
+[2026-03-07 23:21:04] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:21:04] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:21:04] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:21:04] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:21:06] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/reports/
+[2026-03-07 23:21:06] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:21:06] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:21:06] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 3.201s ago] ('admin@163.com',)
+[2026-03-07 23:21:06] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_reports.id, test_reports.test_case_id, test_reports.test_suite_id, test_reports.executor_id, test_reports.report_path, test_reports.status, test_reports.browser_type, test_reports.headless, test_reports.error_message, test_reports.created_at 
+FROM test_reports 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-07 23:21:06] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00042s] (100, 0)
+[2026-03-07 23:21:06] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id AS test_cases_id, test_cases.name AS test_cases_name, test_cases.description AS test_cases_description, test_cases.module_id AS test_cases_module_id, test_cases.priority AS test_cases_priority, test_cases.status AS test_cases_status, test_cases.steps AS test_cases_steps, test_cases.created_at AS test_cases_created_at, test_cases.updated_at AS test_cases_updated_at, test_cases.creator_id AS test_cases_creator_id, test_cases.updater_id AS test_cases_updater_id 
+FROM test_cases 
+WHERE test_cases.id = $1::INTEGER
+[2026-03-07 23:21:06] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00056s] (24,)
+[2026-03-07 23:21:06] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id AS test_cases_id, test_cases.name AS test_cases_name, test_cases.description AS test_cases_description, test_cases.module_id AS test_cases_module_id, test_cases.priority AS test_cases_priority, test_cases.status AS test_cases_status, test_cases.steps AS test_cases_steps, test_cases.created_at AS test_cases_created_at, test_cases.updated_at AS test_cases_updated_at, test_cases.creator_id AS test_cases_creator_id, test_cases.updater_id AS test_cases_updater_id 
+FROM test_cases 
+WHERE test_cases.id = $1::INTEGER
+[2026-03-07 23:21:06] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.004648s ago] (8,)
+[2026-03-07 23:21:06] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id AS test_cases_id, test_cases.name AS test_cases_name, test_cases.description AS test_cases_description, test_cases.module_id AS test_cases_module_id, test_cases.priority AS test_cases_priority, test_cases.status AS test_cases_status, test_cases.steps AS test_cases_steps, test_cases.created_at AS test_cases_created_at, test_cases.updated_at AS test_cases_updated_at, test_cases.creator_id AS test_cases_creator_id, test_cases.updater_id AS test_cases_updater_id 
+FROM test_cases 
+WHERE test_cases.id = $1::INTEGER
+[2026-03-07 23:21:06] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.007495s ago] (25,)
+[2026-03-07 23:21:06] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id AS test_cases_id, test_cases.name AS test_cases_name, test_cases.description AS test_cases_description, test_cases.module_id AS test_cases_module_id, test_cases.priority AS test_cases_priority, test_cases.status AS test_cases_status, test_cases.steps AS test_cases_steps, test_cases.created_at AS test_cases_created_at, test_cases.updated_at AS test_cases_updated_at, test_cases.creator_id AS test_cases_creator_id, test_cases.updater_id AS test_cases_updater_id 
+FROM test_cases 
+WHERE test_cases.id = $1::INTEGER
+[2026-03-07 23:21:06] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.01304s ago] (26,)
+[2026-03-07 23:21:06] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:21:06] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:21:10] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/projects/
+[2026-03-07 23:21:10] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:21:10] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:21:10] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 6.511s ago] ('admin@163.com',)
+[2026-03-07 23:21:10] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT projects.id, projects.name, projects.description, projects.base_url, projects.owner_id, projects.created_at, projects.updated_at 
+FROM projects 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-07 23:21:10] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00026s] (100, 0)
+[2026-03-07 23:21:10] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:21:10] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:21:10] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/modules/?project_id=2
+[2026-03-07 23:21:10] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:21:10] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:21:10] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 6.528s ago] ('admin@163.com',)
+[2026-03-07 23:21:10] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT modules.id, modules.name, modules.description, modules.project_id, modules.parent_id, modules.created_at, modules.updated_at, modules.creator_id, modules.updater_id 
+FROM modules 
+WHERE modules.project_id = $1::INTEGER 
+ LIMIT $2::INTEGER OFFSET $3::INTEGER
+[2026-03-07 23:21:10] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00035s] (2, 100, 0)
+[2026-03-07 23:21:10] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-07 23:21:10] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00021s] (1,)
+[2026-03-07 23:21:10] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-07 23:21:10] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00014s] (1,)
+[2026-03-07 23:21:10] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:21:10] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:21:11] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: DELETE http://127.0.0.1:8000/api/v1/reports/60
+[2026-03-07 23:21:11] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:21:11] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:21:11] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 8.273s ago] ('admin@163.com',)
+[2026-03-07 23:21:11] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_reports.id AS test_reports_id, test_reports.test_case_id AS test_reports_test_case_id, test_reports.test_suite_id AS test_reports_test_suite_id, test_reports.executor_id AS test_reports_executor_id, test_reports.report_path AS test_reports_report_path, test_reports.status AS test_reports_status, test_reports.browser_type AS test_reports_browser_type, test_reports.headless AS test_reports_headless, test_reports.error_message AS test_reports_error_message, test_reports.created_at AS test_reports_created_at 
+FROM test_reports 
+WHERE test_reports.id = $1::INTEGER
+[2026-03-07 23:21:11] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00060s] (60,)
+[2026-03-07 23:21:11] [INFO] [ui_auto] [report_service.py:138]: Deleting report directory: /Users/yangqiongjiu/gitCode/uidemo/ui_auto_new/backend/allure-reports/case_26_20260307_230435
+[2026-03-07 23:21:12] [INFO] [ui_auto] [report_service.py:140]: Successfully deleted report directory: /Users/yangqiongjiu/gitCode/uidemo/ui_auto_new/backend/allure-reports/case_26_20260307_230435
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: DELETE FROM test_reports WHERE test_reports.id = $1::INTEGER
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00044s] (60,)
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:2708]: COMMIT
+[2026-03-07 23:21:12] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:21:12] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/reports/
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 8.338s ago] ('admin@163.com',)
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_reports.id, test_reports.test_case_id, test_reports.test_suite_id, test_reports.executor_id, test_reports.report_path, test_reports.status, test_reports.browser_type, test_reports.headless, test_reports.error_message, test_reports.created_at 
+FROM test_reports 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 5.139s ago] (100, 0)
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id AS test_cases_id, test_cases.name AS test_cases_name, test_cases.description AS test_cases_description, test_cases.module_id AS test_cases_module_id, test_cases.priority AS test_cases_priority, test_cases.status AS test_cases_status, test_cases.steps AS test_cases_steps, test_cases.created_at AS test_cases_created_at, test_cases.updated_at AS test_cases_updated_at, test_cases.creator_id AS test_cases_creator_id, test_cases.updater_id AS test_cases_updater_id 
+FROM test_cases 
+WHERE test_cases.id = $1::INTEGER
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 5.139s ago] (24,)
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id AS test_cases_id, test_cases.name AS test_cases_name, test_cases.description AS test_cases_description, test_cases.module_id AS test_cases_module_id, test_cases.priority AS test_cases_priority, test_cases.status AS test_cases_status, test_cases.steps AS test_cases_steps, test_cases.created_at AS test_cases_created_at, test_cases.updated_at AS test_cases_updated_at, test_cases.creator_id AS test_cases_creator_id, test_cases.updater_id AS test_cases_updater_id 
+FROM test_cases 
+WHERE test_cases.id = $1::INTEGER
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 5.143s ago] (8,)
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id AS test_cases_id, test_cases.name AS test_cases_name, test_cases.description AS test_cases_description, test_cases.module_id AS test_cases_module_id, test_cases.priority AS test_cases_priority, test_cases.status AS test_cases_status, test_cases.steps AS test_cases_steps, test_cases.created_at AS test_cases_created_at, test_cases.updated_at AS test_cases_updated_at, test_cases.creator_id AS test_cases_creator_id, test_cases.updater_id AS test_cases_updater_id 
+FROM test_cases 
+WHERE test_cases.id = $1::INTEGER
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 5.151s ago] (25,)
+[2026-03-07 23:21:12] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:21:12] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: DELETE http://127.0.0.1:8000/api/v1/reports/59
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 8.921s ago] ('admin@163.com',)
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_reports.id AS test_reports_id, test_reports.test_case_id AS test_reports_test_case_id, test_reports.test_suite_id AS test_reports_test_suite_id, test_reports.executor_id AS test_reports_executor_id, test_reports.report_path AS test_reports_report_path, test_reports.status AS test_reports_status, test_reports.browser_type AS test_reports_browser_type, test_reports.headless AS test_reports_headless, test_reports.error_message AS test_reports_error_message, test_reports.created_at AS test_reports_created_at 
+FROM test_reports 
+WHERE test_reports.id = $1::INTEGER
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.6478s ago] (59,)
+[2026-03-07 23:21:12] [INFO] [ui_auto] [report_service.py:138]: Deleting report directory: /Users/yangqiongjiu/gitCode/uidemo/ui_auto_new/backend/allure-reports/case_25_20260307_225009
+[2026-03-07 23:21:12] [INFO] [ui_auto] [report_service.py:140]: Successfully deleted report directory: /Users/yangqiongjiu/gitCode/uidemo/ui_auto_new/backend/allure-reports/case_25_20260307_225009
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: DELETE FROM test_reports WHERE test_reports.id = $1::INTEGER
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.6441s ago] (59,)
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:2708]: COMMIT
+[2026-03-07 23:21:12] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:21:12] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/reports/
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 8.973s ago] ('admin@163.com',)
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_reports.id, test_reports.test_case_id, test_reports.test_suite_id, test_reports.executor_id, test_reports.report_path, test_reports.status, test_reports.browser_type, test_reports.headless, test_reports.error_message, test_reports.created_at 
+FROM test_reports 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 5.772s ago] (100, 0)
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id AS test_cases_id, test_cases.name AS test_cases_name, test_cases.description AS test_cases_description, test_cases.module_id AS test_cases_module_id, test_cases.priority AS test_cases_priority, test_cases.status AS test_cases_status, test_cases.steps AS test_cases_steps, test_cases.created_at AS test_cases_created_at, test_cases.updated_at AS test_cases_updated_at, test_cases.creator_id AS test_cases_creator_id, test_cases.updater_id AS test_cases_updater_id 
+FROM test_cases 
+WHERE test_cases.id = $1::INTEGER
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 5.77s ago] (24,)
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id AS test_cases_id, test_cases.name AS test_cases_name, test_cases.description AS test_cases_description, test_cases.module_id AS test_cases_module_id, test_cases.priority AS test_cases_priority, test_cases.status AS test_cases_status, test_cases.steps AS test_cases_steps, test_cases.created_at AS test_cases_created_at, test_cases.updated_at AS test_cases_updated_at, test_cases.creator_id AS test_cases_creator_id, test_cases.updater_id AS test_cases_updater_id 
+FROM test_cases 
+WHERE test_cases.id = $1::INTEGER
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 5.775s ago] (8,)
+[2026-03-07 23:21:12] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:21:12] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:21:13] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: DELETE http://127.0.0.1:8000/api/v1/reports/58
+[2026-03-07 23:21:13] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:21:13] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:21:13] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 9.442s ago] ('admin@163.com',)
+[2026-03-07 23:21:13] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_reports.id AS test_reports_id, test_reports.test_case_id AS test_reports_test_case_id, test_reports.test_suite_id AS test_reports_test_suite_id, test_reports.executor_id AS test_reports_executor_id, test_reports.report_path AS test_reports_report_path, test_reports.status AS test_reports_status, test_reports.browser_type AS test_reports_browser_type, test_reports.headless AS test_reports_headless, test_reports.error_message AS test_reports_error_message, test_reports.created_at AS test_reports_created_at 
+FROM test_reports 
+WHERE test_reports.id = $1::INTEGER
+[2026-03-07 23:21:13] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 1.168s ago] (58,)
+[2026-03-07 23:21:13] [INFO] [ui_auto] [report_service.py:138]: Deleting report directory: /Users/yangqiongjiu/gitCode/uidemo/ui_auto_new/backend/allure-reports/case_8_20260307_220236
+[2026-03-07 23:21:13] [INFO] [ui_auto] [report_service.py:140]: Successfully deleted report directory: /Users/yangqiongjiu/gitCode/uidemo/ui_auto_new/backend/allure-reports/case_8_20260307_220236
+[2026-03-07 23:21:13] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: DELETE FROM test_reports WHERE test_reports.id = $1::INTEGER
+[2026-03-07 23:21:13] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 1.165s ago] (58,)
+[2026-03-07 23:21:13] [INFO] [sqlalchemy.engine.Engine] [base.py:2708]: COMMIT
+[2026-03-07 23:21:13] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:21:13] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/reports/
+[2026-03-07 23:21:13] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:21:13] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:21:13] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 9.494s ago] ('admin@163.com',)
+[2026-03-07 23:21:13] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_reports.id, test_reports.test_case_id, test_reports.test_suite_id, test_reports.executor_id, test_reports.report_path, test_reports.status, test_reports.browser_type, test_reports.headless, test_reports.error_message, test_reports.created_at 
+FROM test_reports 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-07 23:21:13] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 6.292s ago] (100, 0)
+[2026-03-07 23:21:13] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id AS test_cases_id, test_cases.name AS test_cases_name, test_cases.description AS test_cases_description, test_cases.module_id AS test_cases_module_id, test_cases.priority AS test_cases_priority, test_cases.status AS test_cases_status, test_cases.steps AS test_cases_steps, test_cases.created_at AS test_cases_created_at, test_cases.updated_at AS test_cases_updated_at, test_cases.creator_id AS test_cases_creator_id, test_cases.updater_id AS test_cases_updater_id 
+FROM test_cases 
+WHERE test_cases.id = $1::INTEGER
+[2026-03-07 23:21:13] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 6.291s ago] (24,)
+[2026-03-07 23:21:13] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:21:13] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:21:13] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: DELETE http://127.0.0.1:8000/api/v1/reports/57
+[2026-03-07 23:21:13] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:21:13] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:21:13] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 10.27s ago] ('admin@163.com',)
+[2026-03-07 23:21:13] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_reports.id AS test_reports_id, test_reports.test_case_id AS test_reports_test_case_id, test_reports.test_suite_id AS test_reports_test_suite_id, test_reports.executor_id AS test_reports_executor_id, test_reports.report_path AS test_reports_report_path, test_reports.status AS test_reports_status, test_reports.browser_type AS test_reports_browser_type, test_reports.headless AS test_reports_headless, test_reports.error_message AS test_reports_error_message, test_reports.created_at AS test_reports_created_at 
+FROM test_reports 
+WHERE test_reports.id = $1::INTEGER
+[2026-03-07 23:21:13] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 1.991s ago] (57,)
+[2026-03-07 23:21:13] [INFO] [ui_auto] [report_service.py:138]: Deleting report directory: /Users/yangqiongjiu/gitCode/uidemo/ui_auto_new/backend/allure-reports/case_24_20260306_223513
+[2026-03-07 23:21:13] [INFO] [ui_auto] [report_service.py:140]: Successfully deleted report directory: /Users/yangqiongjiu/gitCode/uidemo/ui_auto_new/backend/allure-reports/case_24_20260306_223513
+[2026-03-07 23:21:13] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: DELETE FROM test_reports WHERE test_reports.id = $1::INTEGER
+[2026-03-07 23:21:13] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 1.984s ago] (57,)
+[2026-03-07 23:21:13] [INFO] [sqlalchemy.engine.Engine] [base.py:2708]: COMMIT
+[2026-03-07 23:21:14] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:21:14] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/reports/
+[2026-03-07 23:21:14] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:21:14] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:21:14] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 10.31s ago] ('admin@163.com',)
+[2026-03-07 23:21:14] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_reports.id, test_reports.test_case_id, test_reports.test_suite_id, test_reports.executor_id, test_reports.report_path, test_reports.status, test_reports.browser_type, test_reports.headless, test_reports.error_message, test_reports.created_at 
+FROM test_reports 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-07 23:21:14] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 7.105s ago] (100, 0)
+[2026-03-07 23:21:14] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:21:14] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:21:16] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/projects/
+[2026-03-07 23:21:16] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:21:16] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:21:16] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 12.63s ago] ('admin@163.com',)
+[2026-03-07 23:21:16] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT projects.id, projects.name, projects.description, projects.base_url, projects.owner_id, projects.created_at, projects.updated_at 
+FROM projects 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-07 23:21:16] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 6.114s ago] (100, 0)
+[2026-03-07 23:21:16] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:21:16] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:21:16] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/suites/?project_id=2
+[2026-03-07 23:21:16] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:21:16] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:21:16] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 12.64s ago] ('admin@163.com',)
+[2026-03-07 23:21:16] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_suites.id, test_suites.name, test_suites.description, test_suites.project_id, test_suites.created_at, test_suites.updated_at, test_suites.creator_id, test_suites.updater_id 
+FROM test_suites 
+WHERE test_suites.project_id = $1::INTEGER 
+ LIMIT $2::INTEGER OFFSET $3::INTEGER
+[2026-03-07 23:21:16] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00086s] (2, 100, 0)
+[2026-03-07 23:21:16] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:21:16] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:21:17] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/projects/
+[2026-03-07 23:21:17] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:21:17] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:21:17] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 13.75s ago] ('admin@163.com',)
+[2026-03-07 23:21:17] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT projects.id, projects.name, projects.description, projects.base_url, projects.owner_id, projects.created_at, projects.updated_at 
+FROM projects 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-07 23:21:17] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 7.236s ago] (100, 0)
+[2026-03-07 23:21:17] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:21:17] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:21:17] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/modules/?project_id=2
+[2026-03-07 23:21:17] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:21:17] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:21:17] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 13.78s ago] ('admin@163.com',)
+[2026-03-07 23:21:17] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT modules.id, modules.name, modules.description, modules.project_id, modules.parent_id, modules.created_at, modules.updated_at, modules.creator_id, modules.updater_id 
+FROM modules 
+WHERE modules.project_id = $1::INTEGER 
+ LIMIT $2::INTEGER OFFSET $3::INTEGER
+[2026-03-07 23:21:17] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 7.238s ago] (2, 100, 0)
+[2026-03-07 23:21:17] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-07 23:21:17] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 7.238s ago] (1,)
+[2026-03-07 23:21:17] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-07 23:21:17] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 7.242s ago] (1,)
+[2026-03-07 23:21:17] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:21:17] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:21:17] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/cases/?module_id=2
+[2026-03-07 23:21:17] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:21:17] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:21:17] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 13.81s ago] ('admin@163.com',)
+[2026-03-07 23:21:17] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/ai-models/
+[2026-03-07 23:21:17] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:21:17] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:21:17] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 13.82s ago] ('admin@163.com',)
+[2026-03-07 23:21:17] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id, test_cases.name, test_cases.description, test_cases.module_id, test_cases.priority, test_cases.status, test_cases.steps, test_cases.created_at, test_cases.updated_at, test_cases.creator_id, test_cases.updater_id 
+FROM test_cases 
+WHERE test_cases.module_id = $1::INTEGER 
+ LIMIT $2::INTEGER OFFSET $3::INTEGER
+[2026-03-07 23:21:17] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00050s] (2, 100, 0)
+[2026-03-07 23:21:17] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT ai_models.id, ai_models.name, ai_models.base_url, ai_models.api_key, ai_models.model_identifier, ai_models.is_default, ai_models.is_active, ai_models.created_at, ai_models.updated_at 
+FROM ai_models 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-07 23:21:17] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 12.7s ago] (100, 0)
+[2026-03-07 23:21:17] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-07 23:21:17] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00049s] (1,)
+[2026-03-07 23:21:17] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:21:17] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:21:17] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-07 23:21:17] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00071s] (1,)
+[2026-03-07 23:21:17] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:21:17] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:21:21] [INFO] [ui_auto] [ai_service.py:100]: Universal AI Service v4.0 initialized (DB-Driven)
+[2026-03-07 23:21:21] [INFO] [ui_auto] [main.py:67]: UI Automation Platform API started successfully
+[2026-03-07 23:21:21] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: DELETE http://127.0.0.1:8000/api/v1/cases/26
+[2026-03-07 23:21:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: select pg_catalog.version()
+[2026-03-07 23:21:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [raw sql] ()
+[2026-03-07 23:21:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: select current_schema()
+[2026-03-07 23:21:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [raw sql] ()
+[2026-03-07 23:21:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: show standard_conforming_strings
+[2026-03-07 23:21:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [raw sql] ()
+[2026-03-07 23:21:21] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:21:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:21:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00033s] ('admin@163.com',)
+[2026-03-07 23:21:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id, test_cases.name, test_cases.description, test_cases.module_id, test_cases.priority, test_cases.status, test_cases.steps, test_cases.created_at, test_cases.updated_at, test_cases.creator_id, test_cases.updater_id 
+FROM test_cases 
+WHERE test_cases.id = $1::INTEGER
+[2026-03-07 23:21:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00036s] (26,)
+[2026-03-07 23:21:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id, test_cases.name, test_cases.description, test_cases.module_id, test_cases.priority, test_cases.status, test_cases.steps, test_cases.created_at, test_cases.updated_at, test_cases.creator_id, test_cases.updater_id 
+FROM test_cases 
+WHERE test_cases.id = $1::INTEGER
+[2026-03-07 23:21:21] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.004279s ago] (26,)
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: DELETE FROM heal_logs WHERE heal_logs.case_id = $1::INTEGER
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00033s] (26,)
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: DELETE FROM test_reports WHERE test_reports.test_case_id = $1::INTEGER
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00069s] (26,)
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_suites.id AS test_suites_id, test_suites.name AS test_suites_name, test_suites.description AS test_suites_description, test_suites.project_id AS test_suites_project_id, test_suites.created_at AS test_suites_created_at, test_suites.updated_at AS test_suites_updated_at, test_suites.creator_id AS test_suites_creator_id, test_suites.updater_id AS test_suites_updater_id 
+FROM test_suites, test_suite_cases 
+WHERE $1::INTEGER = test_suite_cases.test_case_id AND test_suites.id = test_suite_cases.test_suite_id
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00262s] (26,)
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_reports.id AS test_reports_id, test_reports.test_case_id AS test_reports_test_case_id, test_reports.test_suite_id AS test_reports_test_suite_id, test_reports.executor_id AS test_reports_executor_id, test_reports.report_path AS test_reports_report_path, test_reports.status AS test_reports_status, test_reports.browser_type AS test_reports_browser_type, test_reports.headless AS test_reports_headless, test_reports.error_message AS test_reports_error_message, test_reports.created_at AS test_reports_created_at 
+FROM test_reports 
+WHERE $1::INTEGER = test_reports.test_case_id
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00041s] (26,)
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: DELETE FROM test_cases WHERE test_cases.id = $1::INTEGER
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00035s] (26,)
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:2708]: COMMIT
+[2026-03-07 23:21:22] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:21:22] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/cases/?module_id=2
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.06935s ago] ('admin@163.com',)
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id, test_cases.name, test_cases.description, test_cases.module_id, test_cases.priority, test_cases.status, test_cases.steps, test_cases.created_at, test_cases.updated_at, test_cases.creator_id, test_cases.updater_id 
+FROM test_cases 
+WHERE test_cases.module_id = $1::INTEGER 
+ LIMIT $2::INTEGER OFFSET $3::INTEGER
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00036s] (2, 100, 0)
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00056s] (1,)
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00186s] (1,)
+[2026-03-07 23:21:22] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:21:22] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: DELETE http://127.0.0.1:8000/api/v1/cases/25
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.5908s ago] ('admin@163.com',)
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id, test_cases.name, test_cases.description, test_cases.module_id, test_cases.priority, test_cases.status, test_cases.steps, test_cases.created_at, test_cases.updated_at, test_cases.creator_id, test_cases.updater_id 
+FROM test_cases 
+WHERE test_cases.id = $1::INTEGER
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.5873s ago] (25,)
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id, test_cases.name, test_cases.description, test_cases.module_id, test_cases.priority, test_cases.status, test_cases.steps, test_cases.created_at, test_cases.updated_at, test_cases.creator_id, test_cases.updater_id 
+FROM test_cases 
+WHERE test_cases.id = $1::INTEGER
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.5891s ago] (25,)
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: DELETE FROM heal_logs WHERE heal_logs.case_id = $1::INTEGER
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.5834s ago] (25,)
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: DELETE FROM test_reports WHERE test_reports.test_case_id = $1::INTEGER
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.5807s ago] (25,)
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_suites.id AS test_suites_id, test_suites.name AS test_suites_name, test_suites.description AS test_suites_description, test_suites.project_id AS test_suites_project_id, test_suites.created_at AS test_suites_created_at, test_suites.updated_at AS test_suites_updated_at, test_suites.creator_id AS test_suites_creator_id, test_suites.updater_id AS test_suites_updater_id 
+FROM test_suites, test_suite_cases 
+WHERE $1::INTEGER = test_suite_cases.test_case_id AND test_suites.id = test_suite_cases.test_suite_id
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.5739s ago] (25,)
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_reports.id AS test_reports_id, test_reports.test_case_id AS test_reports_test_case_id, test_reports.test_suite_id AS test_reports_test_suite_id, test_reports.executor_id AS test_reports_executor_id, test_reports.report_path AS test_reports_report_path, test_reports.status AS test_reports_status, test_reports.browser_type AS test_reports_browser_type, test_reports.headless AS test_reports_headless, test_reports.error_message AS test_reports_error_message, test_reports.created_at AS test_reports_created_at 
+FROM test_reports 
+WHERE $1::INTEGER = test_reports.test_case_id
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.5661s ago] (25,)
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: DELETE FROM test_cases WHERE test_cases.id = $1::INTEGER
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.5624s ago] (25,)
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:2708]: COMMIT
+[2026-03-07 23:21:22] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:21:22] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/cases/?module_id=2
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.6195s ago] ('admin@163.com',)
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id, test_cases.name, test_cases.description, test_cases.module_id, test_cases.priority, test_cases.status, test_cases.steps, test_cases.created_at, test_cases.updated_at, test_cases.creator_id, test_cases.updater_id 
+FROM test_cases 
+WHERE test_cases.module_id = $1::INTEGER 
+ LIMIT $2::INTEGER OFFSET $3::INTEGER
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.5476s ago] (2, 100, 0)
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.5347s ago] (1,)
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 0.5271s ago] (1,)
+[2026-03-07 23:21:22] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:21:22] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:21:23] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: DELETE http://127.0.0.1:8000/api/v1/cases/24
+[2026-03-07 23:21:23] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:21:23] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:21:23] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 1.26s ago] ('admin@163.com',)
+[2026-03-07 23:21:23] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id, test_cases.name, test_cases.description, test_cases.module_id, test_cases.priority, test_cases.status, test_cases.steps, test_cases.created_at, test_cases.updated_at, test_cases.creator_id, test_cases.updater_id 
+FROM test_cases 
+WHERE test_cases.id = $1::INTEGER
+[2026-03-07 23:21:23] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 1.259s ago] (24,)
+[2026-03-07 23:21:23] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id, test_cases.name, test_cases.description, test_cases.module_id, test_cases.priority, test_cases.status, test_cases.steps, test_cases.created_at, test_cases.updated_at, test_cases.creator_id, test_cases.updater_id 
+FROM test_cases 
+WHERE test_cases.id = $1::INTEGER
+[2026-03-07 23:21:23] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 1.261s ago] (24,)
+[2026-03-07 23:21:23] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: DELETE FROM heal_logs WHERE heal_logs.case_id = $1::INTEGER
+[2026-03-07 23:21:23] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 1.253s ago] (24,)
+[2026-03-07 23:21:23] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: DELETE FROM test_reports WHERE test_reports.test_case_id = $1::INTEGER
+[2026-03-07 23:21:23] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 1.25s ago] (24,)
+[2026-03-07 23:21:23] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_suites.id AS test_suites_id, test_suites.name AS test_suites_name, test_suites.description AS test_suites_description, test_suites.project_id AS test_suites_project_id, test_suites.created_at AS test_suites_created_at, test_suites.updated_at AS test_suites_updated_at, test_suites.creator_id AS test_suites_creator_id, test_suites.updater_id AS test_suites_updater_id 
+FROM test_suites, test_suite_cases 
+WHERE $1::INTEGER = test_suite_cases.test_case_id AND test_suites.id = test_suite_cases.test_suite_id
+[2026-03-07 23:21:23] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 1.243s ago] (24,)
+[2026-03-07 23:21:23] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_reports.id AS test_reports_id, test_reports.test_case_id AS test_reports_test_case_id, test_reports.test_suite_id AS test_reports_test_suite_id, test_reports.executor_id AS test_reports_executor_id, test_reports.report_path AS test_reports_report_path, test_reports.status AS test_reports_status, test_reports.browser_type AS test_reports_browser_type, test_reports.headless AS test_reports_headless, test_reports.error_message AS test_reports_error_message, test_reports.created_at AS test_reports_created_at 
+FROM test_reports 
+WHERE $1::INTEGER = test_reports.test_case_id
+[2026-03-07 23:21:23] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 1.235s ago] (24,)
+[2026-03-07 23:21:23] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: DELETE FROM test_cases WHERE test_cases.id = $1::INTEGER
+[2026-03-07 23:21:23] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 1.231s ago] (24,)
+[2026-03-07 23:21:23] [INFO] [sqlalchemy.engine.Engine] [base.py:2708]: COMMIT
+[2026-03-07 23:21:23] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:21:23] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/cases/?module_id=2
+[2026-03-07 23:21:23] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:21:23] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:21:23] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 1.286s ago] ('admin@163.com',)
+[2026-03-07 23:21:23] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id, test_cases.name, test_cases.description, test_cases.module_id, test_cases.priority, test_cases.status, test_cases.steps, test_cases.created_at, test_cases.updated_at, test_cases.creator_id, test_cases.updater_id 
+FROM test_cases 
+WHERE test_cases.module_id = $1::INTEGER 
+ LIMIT $2::INTEGER OFFSET $3::INTEGER
+[2026-03-07 23:21:23] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 1.214s ago] (2, 100, 0)
+[2026-03-07 23:21:23] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:21:23] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:23:38] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: POST http://127.0.0.1:8000/api/v1/ai/scenarios
+[2026-03-07 23:23:38] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:23:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:23:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 136.6s ago] ('admin@163.com',)
+[2026-03-07 23:23:38] [INFO] [ui_auto] [ai.py:135]: AI Scenarios Request: 打开百度，搜索“AI 自动化”...
+[2026-03-07 23:23:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT ai_models.id, ai_models.name, ai_models.base_url, ai_models.api_key, ai_models.model_identifier, ai_models.is_default, ai_models.is_active, ai_models.created_at, ai_models.updated_at 
+FROM ai_models 
+WHERE ai_models.id = $1::INTEGER
+[2026-03-07 23:23:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00043s] (1,)
+[2026-03-07 23:24:01] [INFO] [httpx] [_client.py:1740]: HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+[2026-03-07 23:24:01] [INFO] [ui_auto] [ai.py:154]: AI Scenarios Success: 15 steps generated
+[2026-03-07 23:24:01] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:24:01] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:25:07] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/users/me
+[2026-03-07 23:25:07] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:25:07] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:25:07] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 225.2s ago] ('admin@163.com',)
+[2026-03-07 23:25:07] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:25:07] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:25:07] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/projects/
+[2026-03-07 23:25:07] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:25:07] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:25:07] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 225.3s ago] ('admin@163.com',)
+[2026-03-07 23:25:07] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/ai-models/
+[2026-03-07 23:25:07] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT projects.id, projects.name, projects.description, projects.base_url, projects.owner_id, projects.created_at, projects.updated_at 
+FROM projects 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-07 23:25:07] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00021s] (100, 0)
+[2026-03-07 23:25:07] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:25:07] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:25:07] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:25:07] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:25:07] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 225.4s ago] ('admin@163.com',)
+[2026-03-07 23:25:07] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/modules/?project_id=2
+[2026-03-07 23:25:07] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:25:07] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:25:07] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 225.4s ago] ('admin@163.com',)
+[2026-03-07 23:25:07] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT ai_models.id, ai_models.name, ai_models.base_url, ai_models.api_key, ai_models.model_identifier, ai_models.is_default, ai_models.is_active, ai_models.created_at, ai_models.updated_at 
+FROM ai_models 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-07 23:25:07] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00020s] (100, 0)
+[2026-03-07 23:25:07] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT modules.id, modules.name, modules.description, modules.project_id, modules.parent_id, modules.created_at, modules.updated_at, modules.creator_id, modules.updater_id 
+FROM modules 
+WHERE modules.project_id = $1::INTEGER 
+ LIMIT $2::INTEGER OFFSET $3::INTEGER
+[2026-03-07 23:25:07] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00021s] (2, 100, 0)
+[2026-03-07 23:25:07] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:25:07] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-07 23:25:07] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00017s] (1,)
+[2026-03-07 23:25:07] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:25:07] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-07 23:25:07] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00025s] (1,)
+[2026-03-07 23:25:07] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:25:07] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:25:12] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: POST http://127.0.0.1:8000/api/v1/ai/scenarios
+[2026-03-07 23:25:12] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:25:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:25:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 230.5s ago] ('admin@163.com',)
+[2026-03-07 23:25:12] [INFO] [ui_auto] [ai.py:135]: AI Scenarios Request: 打开百度，搜索“AI 自动化”...
+[2026-03-07 23:25:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT ai_models.id, ai_models.name, ai_models.base_url, ai_models.api_key, ai_models.model_identifier, ai_models.is_default, ai_models.is_active, ai_models.created_at, ai_models.updated_at 
+FROM ai_models 
+WHERE ai_models.id = $1::INTEGER
+[2026-03-07 23:25:12] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 93.97s ago] (1,)
+[2026-03-07 23:25:29] [INFO] [httpx] [_client.py:1740]: HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+[2026-03-07 23:25:29] [INFO] [ui_auto] [ai.py:154]: AI Scenarios Success: 0 steps generated
+[2026-03-07 23:25:29] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:25:29] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:25:49] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/users/me
+[2026-03-07 23:25:49] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:25:49] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:25:49] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 267.8s ago] ('admin@163.com',)
+[2026-03-07 23:25:49] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:25:49] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:25:49] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/projects/
+[2026-03-07 23:25:49] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:25:49] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:25:49] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 267.9s ago] ('admin@163.com',)
+[2026-03-07 23:25:49] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/ai-models/
+[2026-03-07 23:25:49] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:25:49] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:25:49] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 267.9s ago] ('admin@163.com',)
+[2026-03-07 23:25:49] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT projects.id, projects.name, projects.description, projects.base_url, projects.owner_id, projects.created_at, projects.updated_at 
+FROM projects 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-07 23:25:49] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 42.56s ago] (100, 0)
+[2026-03-07 23:25:49] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT ai_models.id, ai_models.name, ai_models.base_url, ai_models.api_key, ai_models.model_identifier, ai_models.is_default, ai_models.is_active, ai_models.created_at, ai_models.updated_at 
+FROM ai_models 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-07 23:25:49] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 42.53s ago] (100, 0)
+[2026-03-07 23:25:49] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:25:49] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:25:49] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:25:49] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:25:49] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/modules/?project_id=2
+[2026-03-07 23:25:49] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:25:49] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:25:49] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 267.9s ago] ('admin@163.com',)
+[2026-03-07 23:25:49] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT modules.id, modules.name, modules.description, modules.project_id, modules.parent_id, modules.created_at, modules.updated_at, modules.creator_id, modules.updater_id 
+FROM modules 
+WHERE modules.project_id = $1::INTEGER 
+ LIMIT $2::INTEGER OFFSET $3::INTEGER
+[2026-03-07 23:25:49] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 42.54s ago] (2, 100, 0)
+[2026-03-07 23:25:49] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-07 23:25:49] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 42.54s ago] (1,)
+[2026-03-07 23:25:49] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-07 23:25:49] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 42.54s ago] (1,)
+[2026-03-07 23:25:49] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:25:49] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:25:54] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: POST http://127.0.0.1:8000/api/v1/ai/scenarios
+[2026-03-07 23:25:54] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:25:54] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:25:54] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 272.4s ago] ('admin@163.com',)
+[2026-03-07 23:25:54] [INFO] [ui_auto] [ai.py:135]: AI Scenarios Request: 打开百度，搜索“AI 自动化”...
+[2026-03-07 23:25:54] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT ai_models.id, ai_models.name, ai_models.base_url, ai_models.api_key, ai_models.model_identifier, ai_models.is_default, ai_models.is_active, ai_models.created_at, ai_models.updated_at 
+FROM ai_models 
+WHERE ai_models.id = $1::INTEGER
+[2026-03-07 23:25:54] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 135.8s ago] (1,)
+[2026-03-07 23:26:13] [INFO] [httpx] [_client.py:1740]: HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+[2026-03-07 23:26:13] [INFO] [ui_auto] [ai.py:154]: AI Scenarios Success: 15 steps generated
+[2026-03-07 23:26:13] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:26:13] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:26:32] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/modules/?project_id=2
+[2026-03-07 23:26:32] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:26:32] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:26:32] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 310.7s ago] ('admin@163.com',)
+[2026-03-07 23:26:32] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT modules.id, modules.name, modules.description, modules.project_id, modules.parent_id, modules.created_at, modules.updated_at, modules.creator_id, modules.updater_id 
+FROM modules 
+WHERE modules.project_id = $1::INTEGER 
+ LIMIT $2::INTEGER OFFSET $3::INTEGER
+[2026-03-07 23:26:32] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 85.38s ago] (2, 100, 0)
+[2026-03-07 23:26:32] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-07 23:26:32] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 85.38s ago] (1,)
+[2026-03-07 23:26:32] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-07 23:26:32] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 85.38s ago] (1,)
+[2026-03-07 23:26:32] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:26:32] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:26:36] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: POST http://127.0.0.1:8000/api/v1/cases/
+[2026-03-07 23:26:36] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:26:36] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:26:36] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 314.6s ago] ('admin@163.com',)
+[2026-03-07 23:26:36] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id, test_cases.name, test_cases.description, test_cases.module_id, test_cases.priority, test_cases.status, test_cases.steps, test_cases.created_at, test_cases.updated_at, test_cases.creator_id, test_cases.updater_id 
+FROM test_cases 
+WHERE test_cases.module_id = $1::INTEGER AND test_cases.name = $2::VARCHAR
+[2026-03-07 23:26:36] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00013s] (2, '33')
+[2026-03-07 23:26:36] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: INSERT INTO test_cases (name, description, module_id, priority, status, steps, updated_at, creator_id, updater_id) VALUES ($1::VARCHAR, $2::VARCHAR, $3::INTEGER, $4::VARCHAR, $5::VARCHAR, $6::JSON, $7::TIMESTAMP WITH TIME ZONE, $8::INTEGER, $9::INTEGER) RETURNING test_cases.id, test_cases.created_at
+[2026-03-07 23:26:36] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00029s] ('33', '', 2, 'P1', 'draft', '[{"action": "goto", "selector": "", "value": "https://www.baidu.com", "element_id": null, "metadata_json": null, "locator_chain": null}, {"action": " ... (402 characters truncated) ... assert_text", "selector": "div#content_left", "value": "AI \\u81ea\\u52a8\\u5316", "element_id": null, "metadata_json": null, "locator_chain": null}]', None, 1, 1)
+[2026-03-07 23:26:36] [INFO] [sqlalchemy.engine.Engine] [base.py:2708]: COMMIT
+[2026-03-07 23:26:36] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:26:36] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id, test_cases.name, test_cases.description, test_cases.module_id, test_cases.priority, test_cases.status, test_cases.steps, test_cases.created_at, test_cases.updated_at, test_cases.creator_id, test_cases.updater_id 
+FROM test_cases 
+WHERE test_cases.id = $1::INTEGER
+[2026-03-07 23:26:36] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00013s] (27,)
+[2026-03-07 23:26:36] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:26:36] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:26:38] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/projects/
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 316.8s ago] ('admin@163.com',)
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT projects.id, projects.name, projects.description, projects.base_url, projects.owner_id, projects.created_at, projects.updated_at 
+FROM projects 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 91.51s ago] (100, 0)
+[2026-03-07 23:26:38] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:26:38] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/modules/?project_id=2
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 316.8s ago] ('admin@163.com',)
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT modules.id, modules.name, modules.description, modules.project_id, modules.parent_id, modules.created_at, modules.updated_at, modules.creator_id, modules.updater_id 
+FROM modules 
+WHERE modules.project_id = $1::INTEGER 
+ LIMIT $2::INTEGER OFFSET $3::INTEGER
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 91.48s ago] (2, 100, 0)
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 91.48s ago] (1,)
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 91.48s ago] (1,)
+[2026-03-07 23:26:38] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:26:38] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/cases/?module_id=2
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 316.9s ago] ('admin@163.com',)
+[2026-03-07 23:26:38] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/pages/?module_id=2
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 316.9s ago] ('admin@163.com',)
+[2026-03-07 23:26:38] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/ai-models/
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id, test_cases.name, test_cases.description, test_cases.module_id, test_cases.priority, test_cases.status, test_cases.steps, test_cases.created_at, test_cases.updated_at, test_cases.creator_id, test_cases.updater_id 
+FROM test_cases 
+WHERE test_cases.module_id = $1::INTEGER 
+ LIMIT $2::INTEGER OFFSET $3::INTEGER
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 316.8s ago] (2, 100, 0)
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT pages.id, pages.name, pages.description, pages.module_id, pages.created_at, pages.updated_at, pages.creator_id, pages.updater_id 
+FROM pages 
+WHERE pages.module_id = $1::INTEGER
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00014s] (2,)
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 316.8s ago] (1,)
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 316.8s ago] (1,)
+[2026-03-07 23:26:38] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:26:38] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:26:38] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/cases/?module_id=2
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 316.9s ago] ('admin@163.com',)
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id, test_cases.name, test_cases.description, test_cases.module_id, test_cases.priority, test_cases.status, test_cases.steps, test_cases.created_at, test_cases.updated_at, test_cases.creator_id, test_cases.updater_id 
+FROM test_cases 
+WHERE test_cases.module_id = $1::INTEGER 
+ LIMIT $2::INTEGER OFFSET $3::INTEGER
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 316.8s ago] (2, 100, 0)
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 316.9s ago] ('admin@163.com',)
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 316.8s ago] (1,)
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 316.8s ago] (1,)
+[2026-03-07 23:26:38] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT ai_models.id, ai_models.name, ai_models.base_url, ai_models.api_key, ai_models.model_identifier, ai_models.is_default, ai_models.is_active, ai_models.created_at, ai_models.updated_at 
+FROM ai_models 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 91.56s ago] (100, 0)
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:26:38] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:26:38] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:26:51] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: PUT http://127.0.0.1:8000/api/v1/cases/27
+[2026-03-07 23:26:51] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:26:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:26:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 330s ago] ('admin@163.com',)
+[2026-03-07 23:26:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id, test_cases.name, test_cases.description, test_cases.module_id, test_cases.priority, test_cases.status, test_cases.steps, test_cases.created_at, test_cases.updated_at, test_cases.creator_id, test_cases.updater_id 
+FROM test_cases 
+WHERE test_cases.id = $1::INTEGER
+[2026-03-07 23:26:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 330s ago] (27,)
+[2026-03-07 23:26:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: UPDATE test_cases SET steps=$1::JSON, updated_at=now() WHERE test_cases.id = $2::INTEGER
+[2026-03-07 23:26:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00013s] ('[{"action": "goto", "selector": "", "value": "https://www.baidu.com", "element_id": null, "metadata_json": null, "locator_chain": null}, {"action": " ... (403 characters truncated) ... assert_text", "selector": "div#content_left", "value": "AI \\u81ea\\u52a8\\u5316", "element_id": null, "metadata_json": null, "locator_chain": null}]', 27)
+[2026-03-07 23:26:51] [INFO] [sqlalchemy.engine.Engine] [base.py:2708]: COMMIT
+[2026-03-07 23:26:51] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:26:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id, test_cases.name, test_cases.description, test_cases.module_id, test_cases.priority, test_cases.status, test_cases.steps, test_cases.created_at, test_cases.updated_at, test_cases.creator_id, test_cases.updater_id 
+FROM test_cases 
+WHERE test_cases.id = $1::INTEGER
+[2026-03-07 23:26:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 15.38s ago] (27,)
+[2026-03-07 23:26:51] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:26:51] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:26:51] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/cases/?module_id=2
+[2026-03-07 23:26:51] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:26:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:26:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 330s ago] ('admin@163.com',)
+[2026-03-07 23:26:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id, test_cases.name, test_cases.description, test_cases.module_id, test_cases.priority, test_cases.status, test_cases.steps, test_cases.created_at, test_cases.updated_at, test_cases.creator_id, test_cases.updater_id 
+FROM test_cases 
+WHERE test_cases.module_id = $1::INTEGER 
+ LIMIT $2::INTEGER OFFSET $3::INTEGER
+[2026-03-07 23:26:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 329.9s ago] (2, 100, 0)
+[2026-03-07 23:26:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-07 23:26:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 329.9s ago] (1,)
+[2026-03-07 23:26:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-07 23:26:51] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 329.9s ago] (1,)
+[2026-03-07 23:26:51] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:26:51] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:26:53] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: POST http://127.0.0.1:8000/api/v1/execution/cases/27/run
+[2026-03-07 23:26:53] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:26:53] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:26:53] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 332s ago] ('admin@163.com',)
+[2026-03-07 23:26:54] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:26:54] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:27:17] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/projects/
+[2026-03-07 23:27:17] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:27:17] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:27:17] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 355.1s ago] ('admin@163.com',)
+[2026-03-07 23:27:17] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT projects.id, projects.name, projects.description, projects.base_url, projects.owner_id, projects.created_at, projects.updated_at 
+FROM projects 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-07 23:27:17] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 129.8s ago] (100, 0)
+[2026-03-07 23:27:17] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:27:17] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:27:17] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/suites/?project_id=2
+[2026-03-07 23:27:17] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:27:17] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:27:17] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 355.1s ago] ('admin@163.com',)
+[2026-03-07 23:27:17] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_suites.id, test_suites.name, test_suites.description, test_suites.project_id, test_suites.created_at, test_suites.updated_at, test_suites.creator_id, test_suites.updater_id 
+FROM test_suites 
+WHERE test_suites.project_id = $1::INTEGER 
+ LIMIT $2::INTEGER OFFSET $3::INTEGER
+[2026-03-07 23:27:17] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00019s] (2, 100, 0)
+[2026-03-07 23:27:17] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:27:17] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:27:19] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/reports/
+[2026-03-07 23:27:19] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:27:19] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:27:19] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 357.4s ago] ('admin@163.com',)
+[2026-03-07 23:27:19] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_reports.id, test_reports.test_case_id, test_reports.test_suite_id, test_reports.executor_id, test_reports.report_path, test_reports.status, test_reports.browser_type, test_reports.headless, test_reports.error_message, test_reports.created_at 
+FROM test_reports 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-07 23:27:19] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00012s] (100, 0)
+[2026-03-07 23:27:19] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:27:19] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:27:24] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/reports
+[2026-03-07 23:27:24] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 307
+[2026-03-07 23:27:24] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/reports/
+[2026-03-07 23:27:24] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 404
+[2026-03-07 23:27:24] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/favicon.ico
+[2026-03-07 23:27:24] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 404
+[2026-03-07 23:27:59] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/users/me
+[2026-03-07 23:27:59] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:27:59] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:27:59] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 397.2s ago] ('admin@163.com',)
+[2026-03-07 23:27:59] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:27:59] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:27:59] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/dashboard/stats
+[2026-03-07 23:27:59] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:27:59] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(projects.id) AS count_1 
+FROM projects
+[2026-03-07 23:27:59] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00015s] ()
+[2026-03-07 23:27:59] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/ai-models/
+[2026-03-07 23:27:59] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:27:59] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:27:59] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 397.4s ago] ('admin@163.com',)
+[2026-03-07 23:27:59] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT ai_models.id, ai_models.name, ai_models.base_url, ai_models.api_key, ai_models.model_identifier, ai_models.is_default, ai_models.is_active, ai_models.created_at, ai_models.updated_at 
+FROM ai_models 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-07 23:27:59] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 172s ago] (100, 0)
+[2026-03-07 23:27:59] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_cases.id) AS count_1 
+FROM test_cases
+[2026-03-07 23:27:59] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00008s] ()
+[2026-03-07 23:27:59] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:27:59] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:27:59] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_reports.id) AS count_1 
+FROM test_reports
+[2026-03-07 23:27:59] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00015s] ()
+[2026-03-07 23:27:59] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT count(test_reports.id) AS count_1 
+FROM test_reports 
+WHERE test_reports.status = $1::VARCHAR
+[2026-03-07 23:27:59] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00042s] ('success',)
+[2026-03-07 23:27:59] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:27:59] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:27:59] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/dashboard/activities
+[2026-03-07 23:27:59] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:27:59] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_reports.id, test_reports.status, test_reports.created_at, test_reports.report_path, test_cases.name AS case_name 
+FROM test_reports LEFT OUTER JOIN test_cases ON test_reports.test_case_id = test_cases.id ORDER BY test_reports.created_at DESC 
+ LIMIT $1::INTEGER
+[2026-03-07 23:27:59] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00014s] (5,)
+[2026-03-07 23:27:59] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:27:59] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:28:01] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/ai-models/
+[2026-03-07 23:28:01] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:28:01] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:28:01] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 399.3s ago] ('admin@163.com',)
+[2026-03-07 23:28:01] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT ai_models.id, ai_models.name, ai_models.base_url, ai_models.api_key, ai_models.model_identifier, ai_models.is_default, ai_models.is_active, ai_models.created_at, ai_models.updated_at 
+FROM ai_models 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-07 23:28:01] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 174s ago] (100, 0)
+[2026-03-07 23:28:01] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:28:01] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:28:02] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/reports/
+[2026-03-07 23:28:02] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:28:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:28:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 400.1s ago] ('admin@163.com',)
+[2026-03-07 23:28:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_reports.id, test_reports.test_case_id, test_reports.test_suite_id, test_reports.executor_id, test_reports.report_path, test_reports.status, test_reports.browser_type, test_reports.headless, test_reports.error_message, test_reports.created_at 
+FROM test_reports 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-07 23:28:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 42.7s ago] (100, 0)
+[2026-03-07 23:28:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT test_cases.id AS test_cases_id, test_cases.name AS test_cases_name, test_cases.description AS test_cases_description, test_cases.module_id AS test_cases_module_id, test_cases.priority AS test_cases_priority, test_cases.status AS test_cases_status, test_cases.steps AS test_cases_steps, test_cases.created_at AS test_cases_created_at, test_cases.updated_at AS test_cases_updated_at, test_cases.creator_id AS test_cases_creator_id, test_cases.updater_id AS test_cases_updater_id 
+FROM test_cases 
+WHERE test_cases.id = $1::INTEGER
+[2026-03-07 23:28:02] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [generated in 0.00014s] (27,)
+[2026-03-07 23:28:02] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:28:02] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:28:04] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/reports/case_27_20260307_232728/index.html
+[2026-03-07 23:28:04] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:28:04] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/reports/case_27_20260307_232728/styles.css
+[2026-03-07 23:28:04] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/reports/case_27_20260307_232728/plugin/screen-diff/styles.css
+[2026-03-07 23:28:04] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/reports/case_27_20260307_232728/app.js
+[2026-03-07 23:28:04] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/reports/case_27_20260307_232728/plugin/behaviors/index.js
+[2026-03-07 23:28:04] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/reports/case_27_20260307_232728/plugin/packages/index.js
+[2026-03-07 23:28:04] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/reports/case_27_20260307_232728/plugin/screen-diff/index.js
+[2026-03-07 23:28:04] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:28:04] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:28:04] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:28:04] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:28:04] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:28:04] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:28:04] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/reports/case_27_20260307_232728/widgets/summary.json
+[2026-03-07 23:28:04] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/reports/case_27_20260307_232728/widgets/suites.json
+[2026-03-07 23:28:04] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/reports/case_27_20260307_232728/widgets/environment.json
+[2026-03-07 23:28:04] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/reports/case_27_20260307_232728/widgets/behaviors.json
+[2026-03-07 23:28:04] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/reports/case_27_20260307_232728/widgets/history-trend.json
+[2026-03-07 23:28:04] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/reports/case_27_20260307_232728/widgets/categories.json
+[2026-03-07 23:28:04] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:28:04] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:28:04] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:28:04] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:28:04] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:28:04] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:28:04] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/reports/case_27_20260307_232728/widgets/executors.json
+[2026-03-07 23:28:04] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:28:05] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/reports/case_27_20260307_232728/data/categories.json
+[2026-03-07 23:28:05] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:28:06] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/reports/case_27_20260307_232728/favicon.ico
+[2026-03-07 23:28:06] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:28:08] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/reports/case_27_20260307_232728/data/test-cases/87e7070b64526ff6.json
+[2026-03-07 23:28:08] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:28:23] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/reports/case_27_20260307_232728/data/attachments/b24c0085dd206c7a.png
+[2026-03-07 23:28:23] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:28:26] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/reports/case_27_20260307_232728/data/attachments/253bc2dce07184d9.png
+[2026-03-07 23:28:26] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:29:44] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: POST http://127.0.0.1:8000/api/v1/ai/scenarios
+[2026-03-07 23:29:44] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:29:44] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:29:44] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 502.7s ago] ('admin@163.com',)
+[2026-03-07 23:29:44] [INFO] [ui_auto] [ai.py:135]: AI Scenarios Request: 打开百度，搜索“AI 自动化”...
+[2026-03-07 23:29:44] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT ai_models.id, ai_models.name, ai_models.base_url, ai_models.api_key, ai_models.model_identifier, ai_models.is_default, ai_models.is_active, ai_models.created_at, ai_models.updated_at 
+FROM ai_models 
+WHERE ai_models.id = $1::INTEGER
+[2026-03-07 23:29:44] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 366.1s ago] (1,)
+[2026-03-07 23:30:24] [INFO] [httpx] [_client.py:1740]: HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+[2026-03-07 23:30:24] [INFO] [ui_auto] [ai.py:154]: AI Scenarios Success: 15 steps generated
+[2026-03-07 23:30:24] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:30:24] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:31:54] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/projects/
+[2026-03-07 23:31:54] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:31:54] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:31:54] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 632.5s ago] ('admin@163.com',)
+[2026-03-07 23:31:54] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT projects.id, projects.name, projects.description, projects.base_url, projects.owner_id, projects.created_at, projects.updated_at 
+FROM projects 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-07 23:31:54] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 407.1s ago] (100, 0)
+[2026-03-07 23:31:54] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:31:54] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:31:54] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/modules/?project_id=2
+[2026-03-07 23:31:54] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:31:54] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:31:54] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 632.5s ago] ('admin@163.com',)
+[2026-03-07 23:31:54] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT modules.id, modules.name, modules.description, modules.project_id, modules.parent_id, modules.created_at, modules.updated_at, modules.creator_id, modules.updater_id 
+FROM modules 
+WHERE modules.project_id = $1::INTEGER 
+ LIMIT $2::INTEGER OFFSET $3::INTEGER
+[2026-03-07 23:31:54] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 407.1s ago] (2, 100, 0)
+[2026-03-07 23:31:54] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-07 23:31:54] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 407.1s ago] (1,)
+[2026-03-07 23:31:54] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.full_name AS users_full_name, users.is_active AS users_is_active, users.is_superuser AS users_is_superuser, users.role AS users_role, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id IN ($1::INTEGER)
+[2026-03-07 23:31:54] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 407.1s ago] (1,)
+[2026-03-07 23:31:54] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:31:54] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK
+[2026-03-07 23:33:14] [INFO] [ui_auto] [main.py:41]: >>> Incoming Request: GET http://127.0.0.1:8000/api/v1/projects/
+[2026-03-07 23:33:14] [INFO] [sqlalchemy.engine.Engine] [base.py:2702]: BEGIN (implicit)
+[2026-03-07 23:33:14] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT users.id, users.email, users.hashed_password, users.full_name, users.is_active, users.is_superuser, users.role, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+[2026-03-07 23:33:14] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 712.6s ago] ('admin@163.com',)
+[2026-03-07 23:33:14] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: SELECT projects.id, projects.name, projects.description, projects.base_url, projects.owner_id, projects.created_at, projects.updated_at 
+FROM projects 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+[2026-03-07 23:33:14] [INFO] [sqlalchemy.engine.Engine] [base.py:1846]: [cached since 487.5s ago] (100, 0)
+[2026-03-07 23:33:14] [INFO] [ui_auto] [main.py:43]: <<< Response Status: 200
+[2026-03-07 23:33:14] [INFO] [sqlalchemy.engine.Engine] [base.py:2705]: ROLLBACK

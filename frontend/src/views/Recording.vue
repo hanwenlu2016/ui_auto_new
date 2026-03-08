@@ -87,7 +87,13 @@
                     </template>
                     <template v-else-if="event.action === 'wait'">
                       <span class="payload-label">时长:</span>
-                      <span class="payload-val">{{ (parseInt(event.value) / 1000).toFixed(1) }}s</span>
+                      <span class="payload-val">{{ formatWaitSeconds(event) }}</span>
+                    </template>
+                    <template v-else-if="event.action === 'wait_for_selector'">
+                      <span class="payload-label">目标:</span>
+                      <span class="payload-val">{{ event.selector || '-' }}</span>
+                      <span class="payload-label">超时:</span>
+                      <span class="payload-val">{{ formatWaitForSelectorSeconds(event) }}</span>
                     </template>
                     <template v-else>
                       <div class="payload-row">
@@ -109,6 +115,7 @@
                       </div>
                       <span v-if="event.value" class="payload-val" style="margin-top: 4px; display: block;">➔ {{ event.value }}</span>
                     </template>
+                    <span v-if="event.description" class="payload-desc">{{ event.description }}</span>
                   </div>
                 </n-timeline-item>
               </n-timeline>
@@ -210,6 +217,42 @@ const rules: FormRules = {
   module_id: { required: true, type: 'number', message: '请选择模块', trigger: 'change' }
 }
 
+const parseDurationToMs = (raw: any): number | null => {
+  if (raw === null || raw === undefined) return null
+  if (typeof raw === 'number' && Number.isFinite(raw)) {
+    return Math.round(raw >= 100 ? raw : raw * 1000)
+  }
+  const text = String(raw).trim().toLowerCase()
+  if (!text) return null
+  const m = text.match(/^(\d+(?:\.\d+)?)\s*(ms|s)?$/)
+  if (!m) return null
+  const amount = Number(m[1])
+  const unit = m[2]
+  if (unit === 'ms') return Math.round(amount)
+  if (unit === 's') return Math.round(amount * 1000)
+  return Math.round(amount >= 100 ? amount : amount * 1000)
+}
+
+const formatWaitSeconds = (event: any) => {
+  const ms = parseDurationToMs(event?.wait_ms ?? event?.value)
+  if (ms === null) return '-'
+  return `${(ms / 1000).toFixed(1)}s`
+}
+
+const formatWaitForSelectorSeconds = (event: any) => {
+  const ms = parseDurationToMs(event?.wait_ms ?? event?.value)
+  return `${((ms ?? 8000) / 1000).toFixed(1)}s`
+}
+
+const buildDefaultEventDescription = (action: string, selector: string, value: string, waitMs: number | null) => {
+  if (action === 'wait') return `等待 ${(waitMs ?? 1000) / 1000}s`
+  if (action === 'wait_for_selector') return `等待元素出现: ${selector || '目标元素'} (超时 ${(waitMs ?? 8000) / 1000}s)`
+  if (action === 'goto') return `访问页面 ${value || ''}`.trim()
+  if (action === 'click') return `点击 ${selector || '目标元素'}`
+  if (action === 'fill') return `输入 ${selector || '输入框'}`
+  return ''
+}
+
 const fetchProjects = async () => {
   try {
     const response = await api.get('/projects/')
@@ -258,7 +301,13 @@ const handleSave = async () => {
         const steps = events.value.map(e => ({
           action: e.action,
           selector: e.selector,
-          value: e.value || '',
+          value: (e.action === 'wait' || e.action === 'wait_for_selector')
+            ? String(parseDurationToMs(e.wait_ms ?? e.value) ?? (e.action === 'wait' ? 1000 : 8000))
+            : (e.value || ''),
+          wait_ms: (e.action === 'wait' || e.action === 'wait_for_selector')
+            ? (parseDurationToMs(e.wait_ms ?? e.value) ?? (e.action === 'wait' ? 1000 : 8000))
+            : null,
+          description: e.description || '',
           element_id: null,
           metadata_json: e.metadata || null,
           locator_chain: e.locator_chain || null
@@ -350,10 +399,19 @@ onUnmounted(() => {
 const handleAISteps = (e: CustomEvent) => {
   const steps = e.detail
   steps.forEach((s: any) => {
+    const isWait = s.action === 'wait'
+    const isWaitForSelector = s.action === 'wait_for_selector'
+    const waitMs = (isWait || isWaitForSelector)
+      ? (parseDurationToMs(s.wait_ms ?? s.value) ?? (isWait ? 1000 : 8000))
+      : null
+    const selector = s.target || s.selector || ''
+    const value = (isWait || isWaitForSelector) ? String(waitMs) : (s.value || '')
     events.value.push({
       action: s.action,
-      selector: s.target || '',
-      value: s.value || '',
+      selector,
+      value,
+      wait_ms: waitMs,
+      description: (s.description || '').trim() || buildDefaultEventDescription(s.action, selector, value, waitMs),
       recordedAt: new Date().toLocaleTimeString(),
       metadata: null // AI generated steps might not have metadata initially
     })
@@ -365,6 +423,12 @@ const getEventColor = (action: string) => {
     'click': 'primary',
     'fill': 'warning',
     'wait': 'default',
+    'wait_for_selector': 'default',
+    'assert_text': 'success',
+    'assert_visible': 'success',
+    'select': 'secondary',
+    'press': 'error',
+    'screenshot': 'info',
     'hover': 'secondary'
   }
   return map[action] || 'info'
@@ -376,6 +440,12 @@ const getEventTitle = (action: string) => {
     'click': '🖱️ 点击操作',
     'fill': '⌨️ 输入操作',
     'wait': '⏳ 等待时长',
+    'wait_for_selector': '⏳ 等待元素',
+    'assert_text': '✅ 文本断言',
+    'assert_visible': '✅ 可见断言',
+    'select': '📑 下拉选择',
+    'press': '🪄 按键操作',
+    'screenshot': '📸 截图',
     'hover': '🕒 悬停操作'
   }
   return map[action] || '🖱️ 动作'
@@ -426,6 +496,13 @@ const getEventTitle = (action: string) => {
 .payload-val {
   color: var(--color-primary);
   font-weight: 500;
+}
+
+.payload-desc {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  color: var(--color-text-2);
 }
 
 .payload-row {
