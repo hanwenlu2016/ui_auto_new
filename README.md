@@ -4,7 +4,7 @@
 
 ## 🏗 架构设计图
 ![架构概览](./assets/architecture_diagram.png)
-![架构设计](./assets/mermaid-diagram-01.png)
+(./assets/mermaid-diagram-01.png)
 
 ## ✨ 核心功能
 
