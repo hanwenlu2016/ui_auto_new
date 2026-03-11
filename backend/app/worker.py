@@ -46,7 +46,7 @@ def run_test_case_task(case_id: int, headless: bool = True, browser_type: str = 
             # Initialize with temp results dir
             runner = TestRunner(db, results_dir=temp_results_dir)
             
-            result = await runner.run_test_case(case_id, headless=headless, browser_type=browser_type)
+            result = await runner.run_test_case(case_id, headless=headless, browser_type=browser_type, executor_id=executor_id)
             logger.info(f"Test case {case_id} completed. Success: {result.get('success')}")
             
             # Generate Allure report using temp results dir

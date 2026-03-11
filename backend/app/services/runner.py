@@ -10,11 +10,13 @@
 import os
 import re
 import uuid
+import json
 from datetime import datetime
 from typing import Dict, Any, List, Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 import allure_commons
 from allure_commons.model2 import TestResult, TestStepResult, Status, StatusDetails
@@ -23,7 +25,11 @@ from allure_commons.types import AttachmentType
 from app.core.logger import logger
 from app.models.case import TestCase
 from app.models.element import PageElement
+from app.models.module import Module
+from app.models.heal_log import HealLog
 from app.tools.playwright_tool import PlaywrightTool
+from app.services.ai_service import ai_service
+from app.db.session import AsyncSessionLocal
 
 
 class TestRunner:
@@ -79,6 +85,7 @@ class TestRunner:
         test_case_id: int,
         headless: bool = True,
         browser_type: str = "chromium",
+        executor_id: int = None,
     ) -> Dict[str, Any]:
         result: Dict[str, Any] = {
             "success": False,
@@ -88,9 +95,6 @@ class TestRunner:
             "context": {},
         }
         execution_context: Dict[str, Any] = {}
-
-        from sqlalchemy.orm import joinedload
-        from app.models.module import Module
 
         stmt = (
             select(TestCase)
@@ -110,6 +114,9 @@ class TestRunner:
         test_result = TestResult(uuid=test_uuid, name=test_case.name)
         test_result.fullName = f"TestCase_{test_case.id}_{test_case.name}"
         test_result.start = int(datetime.now().timestamp() * 1000)
+        
+        if executor_id:
+             test_result.labels.append(allure_commons.model2.Label(name="executor", value=str(executor_id)))
 
         async with PlaywrightTool(headless=headless, browser_type=browser_type) as tool:
             try:
@@ -120,44 +127,76 @@ class TestRunner:
                 for step_index, raw_step in enumerate(test_case.steps or []):
                     step_start = int(datetime.now().timestamp() * 1000)
                     normalized_step = self._normalize_step(raw_step)
-                    step_result = await self._execute_step(
-                        tool=tool,
-                        step=normalized_step,
-                        context=execution_context,
-                        step_index=step_index,
-                        case_id=test_case.id,
-                    )
-                    result["steps"].append(step_result)
-
+                    
+                    # Create Allure step
+                    step_title = f"[{step_index + 1}] {normalized_step['action']} {normalized_step.get('value') or ''}"
+                    
                     step_res_obj = TestStepResult(
-                        name=f"[{step_index + 1}] {step_result['action']} {step_result.get('resolved_value') or ''}",
+                        name=step_title,
                         start=step_start,
-                        stop=int(datetime.now().timestamp() * 1000),
+                        stop=step_start, # Will update later
+                        status=Status.BROKEN # Default
                     )
 
                     try:
-                        screenshot_bytes = await tool.screenshot()
-                        attachment_uuid = str(uuid.uuid4())
-                        with open(os.path.join(self.results_dir, f"{attachment_uuid}.png"), "wb") as f:
-                            f.write(screenshot_bytes)
-                        test_result.attachments.append(
-                            allure_commons.model2.Attachment(
-                                name=f"Step {step_index + 1}",
-                                source=f"{attachment_uuid}.png",
-                                type=AttachmentType.PNG,
-                            )
+                        step_result = await self._execute_step(
+                            tool=tool,
+                            step=normalized_step,
+                            context=execution_context,
+                            step_index=step_index,
+                            case_id=test_case.id,
                         )
-                    except Exception:
-                        pass
+                        result["steps"].append(step_result)
 
-                    if step_result["success"]:
-                        step_res_obj.status = Status.PASSED
-                    else:
+                        # Take screenshot immediately after step
+                        try:
+                            screenshot_bytes = await tool.screenshot()
+                            attachment_uuid = str(uuid.uuid4())
+                            with open(os.path.join(self.results_dir, f"{attachment_uuid}.png"), "wb") as f:
+                                f.write(screenshot_bytes)
+                            
+                            # Add attachment to the STEP result
+                            step_res_obj.attachments.append(
+                                allure_commons.model2.Attachment(
+                                    name="Screenshot",
+                                    source=f"{attachment_uuid}.png",
+                                    type=AttachmentType.PNG,
+                                )
+                            )
+                        except Exception:
+                            pass
+
+                        if step_result["success"]:
+                            step_res_obj.status = Status.PASSED
+                        else:
+                            step_res_obj.status = Status.FAILED
+                            step_res_obj.statusDetails = StatusDetails(message=step_result.get("error"))
+                            test_result.steps.append(step_res_obj)
+                            raise Exception(f"Step {step_index + 1} failed: {step_result.get('error')}")
+
+                    except Exception as e:
                         step_res_obj.status = Status.FAILED
-                        step_res_obj.statusDetails = StatusDetails(message=step_result.get("error"))
+                        step_res_obj.statusDetails = StatusDetails(message=str(e))
+                        # If screenshot wasn't taken in try block (e.g. error in execute_step), take it here
+                        if not step_res_obj.attachments:
+                             try:
+                                screenshot_bytes = await tool.screenshot()
+                                attachment_uuid = str(uuid.uuid4())
+                                with open(os.path.join(self.results_dir, f"{attachment_uuid}.png"), "wb") as f:
+                                    f.write(screenshot_bytes)
+                                step_res_obj.attachments.append(
+                                    allure_commons.model2.Attachment(
+                                        name="Error Screenshot",
+                                        source=f"{attachment_uuid}.png",
+                                        type=AttachmentType.PNG,
+                                    )
+                                )
+                             except:
+                                 pass
                         test_result.steps.append(step_res_obj)
-                        raise Exception(f"Step {step_index + 1} failed: {step_result.get('error')}")
-
+                        raise e
+                    
+                    step_res_obj.stop = int(datetime.now().timestamp() * 1000)
                     test_result.steps.append(step_res_obj)
 
                 result["success"] = True
@@ -168,7 +207,6 @@ class TestRunner:
                 test_result.statusDetails = StatusDetails(message=str(e))
                 try:
                     import base64
-
                     screenshot_bytes = await tool.screenshot()
                     result["screenshot"] = base64.b64encode(screenshot_bytes).decode("utf-8")
                 except Exception:
@@ -301,6 +339,18 @@ class TestRunner:
                     step_res["output"] = result.get("output")
                 return step_res
 
+            # Check for AI_AUTO instruction for direct PageAgent execution
+            target = step.get("target") or step.get("selector")
+            if target == "AI_AUTO" and action in self.INTERACTIVE_ACTIONS:
+                agent_res = await self._execute_via_page_agent(tool, action, resolved_value, step)
+                step_res["success"] = agent_res["success"]
+                step_res["error"] = agent_res.get("error")
+                if agent_res.get("output") is not None:
+                    step_res["output"] = agent_res.get("output")
+                if agent_res.get("used_selector"):
+                    step_res["used_selector"] = agent_res["used_selector"]
+                return step_res
+
             selectors = await self._build_selector_candidates(step, element_id, action)
             if action in self.ELEMENT_ACTIONS and not selectors:
                 step_res["error"] = f"Action '{action}' requires selector, but none was resolved"
@@ -425,6 +475,125 @@ class TestRunner:
                 unique_candidates.append(selector)
         return unique_candidates
 
+    async def _execute_via_page_agent(
+        self,
+        tool: PlaywrightTool,
+        action: str,
+        value: Any,
+        step: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """
+        Attempts to use PageAgent (client-side AI agent) to perform the action.
+        Used for both direct execution (AI_AUTO) and fallback healing.
+        """
+        try:
+            logger.info(f"[PageAgent Execution] Action={action} Target={step.get('target')} Desc={step.get('description')}")
+            
+            # 1. Check if PageAgent is available in the page
+            is_available = await tool.page.evaluate("() => typeof window.pageAgent !== 'undefined'")
+            if not is_available:
+                # Inject it if missing (similar to recorder)
+                import os
+                base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+                page_agent_path = os.path.join(base_dir, "app", "core", "static", "js", "page-agent.js")
+                init_agent_path = os.path.join(base_dir, "app", "core", "static", "js", "init-agent.js")
+                
+                if os.path.exists(page_agent_path):
+                    await tool.page.add_script_tag(path=page_agent_path)
+                    if os.path.exists(init_agent_path):
+                        await tool.page.add_script_tag(path=init_agent_path)
+                    
+                    # Wait for init
+                    await tool.page.wait_for_function("() => typeof window.pageAgent !== 'undefined'", timeout=5000)
+                else:
+                    return {"success": False, "error": "PageAgent script not found"}
+
+            # 2. Construct natural language prompt
+            prompt = step.get("description")
+            if not prompt:
+                # Infer from action and value
+                target = step.get("target") or step.get("selector")
+                if target == "AI_AUTO":
+                    # If AI_AUTO but no description, we are in trouble.
+                    prompt = f"Perform {action}"
+                    if value:
+                         prompt += f" with value '{value}'"
+                else:
+                    if action == "click":
+                        prompt = f"Click on the element that looks like {target}"
+                    elif action == "fill":
+                        prompt = f"Type '{value}' into the input field for {target}"
+                    else:
+                        prompt = f"Perform {action} on {target}"
+            
+            logger.info(f"[PageAgent Execution] Prompt: {prompt}")
+
+            # 3. Execute via PageAgent
+            # We need to expose the LLM proxy route if not already done?
+            # PlaywrightTool might not have the route set up like RecorderService.
+            # We need to set up the route dynamically here.
+            
+            # Define route handler (must be bound to self or defined here)
+            async def _handle_llm_route(route):
+                try:
+                    request = route.request
+                    if request.method != "POST":
+                        await route.continue_()
+                        return
+                    post_data = request.post_data_json
+                    if not post_data:
+                        await route.continue_()
+                        return
+                    
+                    messages = post_data.get("messages", [])
+                    async with AsyncSessionLocal() as db:
+                         response_data = await ai_service.chat_completion(
+                            db=db,
+                            messages=messages,
+                            temperature=post_data.get("temperature", 0.7),
+                        )
+                    
+                    content = response_data.get("content", "") if isinstance(response_data, dict) else response_data
+                    mock_response = {
+                        "id": "chatcmpl-page-agent-fallback",
+                        "object": "chat.completion",
+                        "created": 1677652288,
+                        "model": "gpt-3.5-turbo",
+                        "choices": [{"index": 0, "message": {"role": "assistant", "content": content}, "finish_reason": "stop"}]
+                    }
+                    await route.fulfill(status=200, content_type="application/json", body=json.dumps(mock_response))
+                except Exception as e:
+                    logger.error(f"LLM Route Error: {e}")
+                    await route.abort()
+
+            # Set up route (idempotent)
+            await tool.page.context.route("**/v1/chat/completions", _handle_llm_route)
+
+            # Call agent execute
+            # We use a wrapper to catch the promise result
+            js_code = f"""
+            (async () => {{
+                try {{
+                    if (!window.pageAgent) throw new Error("PageAgent not initialized");
+                    const result = await window.pageAgent.execute("{prompt}");
+                    return {{ success: true, result: result }};
+                }} catch (e) {{
+                    return {{ success: false, error: e.toString() }};
+                }}
+            }})()
+            """
+            
+            # Increase timeout for AI reasoning
+            result = await tool.page.evaluate(js_code)
+            
+            if result.get("success"):
+                return {"success": True, "output": result.get("result"), "used_selector": "PageAgent_AI"}
+            else:
+                return {"success": False, "error": f"PageAgent execution failed: {result.get('error')}"}
+
+        except Exception as e:
+            return {"success": False, "error": f"PageAgent execution exception: {str(e)}"}
+
     async def _try_selectors(
         self,
         tool: PlaywrightTool,
@@ -436,59 +605,49 @@ class TestRunner:
         step_index: int,
         element_id: Optional[int],
     ) -> Dict[str, Any]:
-        attempts_per_selector = 2 if action in self.INTERACTIVE_ACTIONS else 1
+        
         tried_selectors: List[str] = []
         last_error: Optional[str] = None
 
         for idx, selector in enumerate(selectors):
-            for _ in range(attempts_per_selector):
-                tried_selectors.append(selector)
-                try:
-                    if action in self.INTERACTIVE_ACTIONS:
-                        wait_result = await tool.execute_action(
-                            action="wait_for_selector",
-                            selector=selector,
-                            value=None,
-                            timeout_ms=8000,
-                            state="visible",
-                            step_description=step.get("description") or "",
-                        )
-                        if not wait_result.get("success"):
-                            last_error = wait_result.get("error")
-                            continue
-
-                    result = await tool.execute_action(
-                        action=action,
-                        selector=selector,
-                        value=value,
-                        exact=False,
-                        timeout_ms=8000,
-                        step_description=step.get("description") or "",
-                    )
-                    if result.get("success"):
-                        used_selector = result.get("resolved_selector") or selector
-                        if used_selector != selector and used_selector not in tried_selectors:
-                            tried_selectors.append(used_selector)
-
-                        if idx > 0 or used_selector != selectors[0]:
-                            await self._write_heal_log(
-                                case_id=case_id,
-                                element_id=element_id,
-                                step_index=step_index,
-                                original_selector=selectors[0],
-                                healed_selector=used_selector,
-                                heal_method="semantic_locator_recovery" if used_selector != selector else "locator_chain_fallback",
-                                status="auto_healed",
-                            )
-                        return {
-                            "success": True,
-                            "used_selector": used_selector,
-                            "tried_selectors": tried_selectors,
-                            "output": result.get("output"),
-                        }
-                    last_error = result.get("error")
-                except Exception as e:
-                    last_error = str(e)
+            tried_selectors.append(selector)
+            try:
+                res = await tool.execute_action(action=action, selector=selector, value=value)
+                if res["success"]:
+                    return {
+                        "success": True,
+                        "used_selector": selector,
+                        "tried_selectors": tried_selectors,
+                        "output": res.get("output"),
+                        "error": None
+                    }
+                else:
+                    last_error = res.get("error")
+            except Exception as e:
+                last_error = str(e)
+        
+        # If all selectors failed, try PageAgent fallback
+        if action in self.INTERACTIVE_ACTIONS:
+            fallback_res = await self._execute_via_page_agent(tool, action, value, step)
+            if fallback_res["success"]:
+                 await self._write_heal_log(
+                    case_id=case_id,
+                    element_id=element_id,
+                    step_index=step_index,
+                    original_selector=selectors[0] if selectors else "unknown",
+                    healed_selector="PageAgent_AI",
+                    heal_method="page_agent_fallback",
+                    status="auto_healed",
+                )
+                 return {
+                    "success": True,
+                    "used_selector": "PageAgent_AI",
+                    "tried_selectors": tried_selectors,
+                    "output": fallback_res.get("output"),
+                }
+            else:
+                # Append fallback error to last error
+                last_error = f"{last_error} | PageAgent Fallback: {fallback_res.get('error')}"
 
         return {
             "success": False,
@@ -496,6 +655,7 @@ class TestRunner:
             "tried_selectors": tried_selectors,
             "error": f"Action={action}; tried_selectors={tried_selectors}; final_error={last_error}",
         }
+
 
     async def _write_heal_log(
         self,
@@ -508,8 +668,6 @@ class TestRunner:
         status: str,
     ) -> None:
         try:
-            from app.models.heal_log import HealLog
-
             log = HealLog(
                 case_id=case_id,
                 element_id=element_id,

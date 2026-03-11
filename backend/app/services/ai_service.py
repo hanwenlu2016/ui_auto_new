@@ -27,17 +27,24 @@ You MUST:
 
 5. Sanitize all selector output — remove sensitive strings from DOM.
 
-6. NO EMPTY SELECTORS: For interactive steps (click, fill), if no DOM is provided, use semantic, execution-friendly selectors instead of site-specific legacy IDs. Prefer selectors such as '[role=\"textbox\"]', 'textarea', 'input:not([type=\"hidden\"])', '[aria-label*=\"搜索\"]', or 'button:has-text(\"搜索\")'. Never return an empty string for 'target' if the action requires one.
+6. NO EMPTY SELECTORS: For interactive steps (click, fill), if no DOM is provided, use semantic, execution-friendly selectors instead of site-specific legacy IDs. 
 
-7. For search-like flows, do NOT assume pressing Enter will submit. Prefer an explicit click on a visible submit/search button unless DOM or BUSINESS RULES prove Enter is the correct trigger.
+7. **INTELLIGENT AGENT MODE**: If you cannot determine a precise CSS/XPath selector from the context, or if the instruction is high-level (e.g., "Login with valid credentials"), you MUST set "target": "AI_AUTO" and provide a detailed natural language instruction in "description". The system will use a visual AI agent to execute these steps.
+   Example:
+   {
+     "action": "click",
+     "target": "AI_AUTO",
+     "value": "",
+     "description": "Click the 'Sign In' button in the top navigation bar"
+   }
 
-8. If BUSINESS RULES or PROJECT MEMORY contain a known page/element inventory, reuse those exact selectors first. Do not invent a weaker selector when a known selector already matches the intent.
+8. For search-like flows, do NOT assume pressing Enter will submit. Prefer an explicit click on a visible submit/search button unless DOM or BUSINESS RULES prove Enter is the correct trigger.
 
 OUTPUT FORMAT (strict JSON array, no markdown):
 [
   {
     "action": "goto|click|fill|wait|wait_for_selector|hover|select|press|assert_text|assert_visible|get_text|get_attribute|set_variable|screenshot",
-    "target": "selector_string",
+    "target": "selector_string_or_AI_AUTO",
     "value": "optional_value_or_url",
     "locator_chain": {
       "primary": "[data-testid='xxx']",
@@ -45,7 +52,7 @@ OUTPUT FORMAT (strict JSON array, no markdown):
       "fallback_2": "//relative/xpath",
       "fallback_3": "text=visible_text"
     },
-    ...
+    "description": "Detailed description of the step, ESPECIALLY if target is AI_AUTO"
   }
 ]
 """
@@ -174,6 +181,32 @@ class AIService:
                 return None, None
                 
         return self._clients[db_model.id], db_model.model_identifier
+
+    async def chat_completion(
+        self,
+        db: AsyncSession,
+        messages: List[Dict[str, str]],
+        temperature: float = 0.7,
+        model_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Generic chat completion wrapper for internal use (e.g. PageAgent proxy).
+        """
+        client, model_name = await self._get_client_from_db(db, model_id)
+        
+        if not client:
+            return {"content": "Error: No active AI model configured."}
+
+        try:
+            response = await client.chat.completions.create(
+                model=model_name,
+                messages=messages,
+                temperature=temperature,
+            )
+            return {"content": response.choices[0].message.content}
+        except Exception as e:
+            logger.error(f"Chat completion failed: {e}")
+            return {"content": f"Error: {str(e)}"}
 
     # ─── Module 1: Multimodal Step Generation ─────────────────────────────────
 

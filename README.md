@@ -3,9 +3,8 @@
 基于 Python (FastAPI) 和 Vue 3 构建的现代化、企业级 UI 自动化测试平台。它利用 Playwright 实现强大的浏览器自动化，并集成了 AI 能力以简化测试用例的创建。
 
 ## 🏗 架构设计图
-
-![架构设计图](./assets/architecture_diagram.png)
-
+![架构概览](./assets/architecture_diagram.png)
+![架构设计](./assets/mermaid-diagram-01.png)
 
 ## ✨ 核心功能
 
@@ -13,6 +12,24 @@
 -   **Page Object Model (POM)**: 结构化管理页面和 UI 元素，确保测试的可维护性。
 -   **多浏览器支持**: 无缝支持 Chromium, Firefox, 和 WebKit (通过 Playwright)。
 -   **分布式执行**: 使用 Celery 和 Redis 实现异步测试执行。
+-   **"Injection + Proxy" (注入 + 代理)** 模式，确保前端执行的灵活性与后端密钥的安全性。
+
+### 🤖 Page-Agent 智能集成 (New!)
+本项目深度集成了 [Alibaba Page-Agent](https://github.com/alibaba/page-agent)，实现了基于自然语言的智能操作执行与自我修复能力。
+
+
+#### 核心能力
+1.  **Agent-First Execution (智能优先执行)**
+    *   AI 生成的测试步骤如果难以用传统选择器描述，将标记为 `AI_AUTO`。
+    *   执行引擎直接调用 Page-Agent，将自然语言指令（如"点击右上角的登录按钮"）转化为操作。
+
+2.  **Auto-Healing Fallback (自动修复兜底)**
+    *   当常规 CSS/XPath 选择器失效时，自动触发 Page-Agent。
+    *   利用当前页面 DOM 和元素描述，通过 LLM 重新定位并执行操作，实现测试过程的自我修复。
+
+3.  **Secure Proxy (安全代理)**
+    *   前端 Page-Agent 不直接持有 API Key。
+    *   所有 LLM 请求由后端拦截并转发，确保敏感信息不泄露。
 
 ### 🎥 智能录制
 -   **交互式录制**: 内置浏览器录制器，可捕获用户操作并将其转换为测试步骤。
