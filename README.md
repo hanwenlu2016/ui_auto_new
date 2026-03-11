@@ -2,9 +2,9 @@
 
 基于 Python (FastAPI) 和 Vue 3 构建的现代化、企业级 UI 自动化测试平台。它利用 Playwright 实现强大的浏览器自动化，并集成了 AI 能力以简化测试用例的创建。
 
-## 🏗 架构设计图
+## 🏗 架构设计
 ![架构概览](./assets/architecture_diagram.png)
-(./assets/mermaid-diagram-01.png)
+![架构设计](./assets/mermaid-diagram-01.png)
 
 ## ✨ 核心功能
 
