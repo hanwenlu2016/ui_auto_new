@@ -167,9 +167,12 @@ import {
 } from '@vicons/ionicons5'
 import api from '@/api'
 import { useRecordingStore } from '@/stores/recording'
+import { useAppStore } from '@/stores/app'
+import { bindGeneratedStepsToKnownElements, loadAiContext } from '@/utils/aiContext'
 
 const router = useRouter()
 const recordingStore = useRecordingStore()
+const appStore = useAppStore()
 const isOpen = ref(false)
 const prompt = ref('')
 const loading = ref(false)
@@ -190,21 +193,25 @@ const handleSend = async () => {
   await scrollToBottom()
   
   try {
-    // 调用新的 generate 端点，或者 scenarios 端点以获得完整策略
-    // 去掉开头的 / 以正确拼接到 Axios 的 baseURL (/api/v1) 上
-    const res = await api.post('ai/scenarios', { 
+    const aiContext = await loadAiContext(appStore.selectedProjectId, appStore.selectedModuleId)
+    const res = await api.post('ai/generate', { 
       prompt: userText,
-      model_id: selectedAIModel.value
+      model_id: selectedAIModel.value,
+      project_id: appStore.selectedProjectId,
+      business_rules: aiContext.businessRules || undefined
     })
+    const binding = bindGeneratedStepsToKnownElements(res.data.steps || [], aiContext.knownElements)
     messages.value.push({
       role: 'ai',
       text: res.data.message,
-      scenarios: {
-        happy_path: res.data.happy_path || [],
-        boundary: res.data.boundary || [],
-        negative: res.data.negative || []
-      }
+      steps: binding.steps
     })
+    if (binding.boundCount > 0) {
+      message.info(`AI 结果中有 ${binding.boundCount} 个步骤已绑定到项目元素库`)
+    }
+    if (binding.unboundInteractiveCount > 0) {
+      message.warning(`仍有 ${binding.unboundInteractiveCount} 个交互步骤未绑定到项目元素库`)
+    }
   } catch (err: any) {
     console.error('[AI Chat Error]:', err)
     const detail = err.response?.data?.detail || err.message || '未知错误'
@@ -338,6 +345,7 @@ const submitFeedback = async (_msg: any, step: any, index: number | string, type
   try {
     // 使用相对路径 'ai/feedback' 确保拼接 baseURL
     await api.post('ai/feedback', {
+      project_id: appStore.selectedProjectId,
       step_index: Number(index),
       feedback_type: type,
       original_step: step

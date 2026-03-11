@@ -14,6 +14,7 @@ async def read_page_elements(
     skip: int = 0,
     limit: int = 100,
     module_id: int = None,
+    page_id: int = None,
     current_user: User = Depends(deps.get_current_user),
 ) -> Any:
     """
@@ -22,6 +23,8 @@ async def read_page_elements(
     filters = {}
     if module_id:
         filters["module_id"] = module_id
+    if page_id:
+        filters["page_id"] = page_id
         
     page_elements = await element_service.get_multi(db, skip=skip, limit=limit, filters=filters)
     return page_elements

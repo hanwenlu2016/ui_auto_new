@@ -96,7 +96,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useMessage, type FormInst, NCard, NForm, NFormItem, NInput, NButton, NCheckbox } from 'naive-ui'
+import { useMessage, type FormInst, NForm, NFormItem, NInput, NButton, NCheckbox } from 'naive-ui'
 import { useUserStore } from '@/stores/user'
 
 const formRef = ref<FormInst | null>(null)

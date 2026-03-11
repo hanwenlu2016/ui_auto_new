@@ -308,7 +308,8 @@ const handleSave = async () => {
             ? (parseDurationToMs(e.wait_ms ?? e.value) ?? (e.action === 'wait' ? 1000 : 8000))
             : null,
           description: e.description || '',
-          element_id: null,
+          page_id: e.page_id || null,
+          element_id: e.element_id || null,
           metadata_json: e.metadata || null,
           locator_chain: e.locator_chain || null
         }))
@@ -412,6 +413,9 @@ const handleAISteps = (e: CustomEvent) => {
       value,
       wait_ms: waitMs,
       description: (s.description || '').trim() || buildDefaultEventDescription(s.action, selector, value, waitMs),
+      page_id: s.page_id || null,
+      element_id: s.element_id || null,
+      locator_chain: s.locator_chain || null,
       recordedAt: new Date().toLocaleTimeString(),
       metadata: null // AI generated steps might not have metadata initially
     })

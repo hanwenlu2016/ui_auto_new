@@ -249,6 +249,7 @@ import { ref, onMounted, h, watch } from 'vue'
 import { NButton, NSpace, useMessage, type DataTableColumns, type FormInst, NCard, NDataTable, NModal, NForm, NFormItem, NInput, NSelect, NDynamicInput, NTag, NSpin } from 'naive-ui'
 import api from '@/api'
 import { useAppStore } from '@/stores/app'
+import { bindGeneratedStepsToKnownElements, loadAiContext } from '@/utils/aiContext'
 
 const appStore = useAppStore()
 
@@ -543,9 +544,12 @@ const handleDelete = async (row: TestCase) => {
 const handleGenerateSteps = async () => {
   aiLoading.value = true
   try {
+    const aiContext = await loadAiContext(selectedProjectId.value, selectedModuleId.value)
     const response = await api.post('/ai/generate', { 
       prompt: aiPrompt.value,
-      model_id: selectedAIModel.value
+      model_id: selectedAIModel.value,
+      project_id: selectedProjectId.value,
+      business_rules: aiContext.businessRules || undefined
     })
     const generatedSteps = response.data.steps
     if (generatedSteps && generatedSteps.length > 0) {
@@ -590,7 +594,7 @@ const handleGenerateSteps = async () => {
         return { normalized: 'click', degraded: true }
       }
       let degradedCount = 0
-      const newSteps = generatedSteps.map((s: any) => {
+      const mappedSteps = generatedSteps.map((s: any) => {
         const mapped = mapAction(s.action)
         if (mapped.degraded) degradedCount += 1
         const action = mapped.normalized
@@ -624,9 +628,17 @@ const handleGenerateSteps = async () => {
           element_id: null
         }
       })
+      const binding = bindGeneratedStepsToKnownElements(mappedSteps, aiContext.knownElements)
+      const newSteps = binding.steps
       formValue.value.steps = [...formValue.value.steps, ...newSteps]
       if (degradedCount > 0) {
         message.warning(`有 ${degradedCount} 个步骤动作无法识别，已降级为 click，请检查后执行`)
+      }
+      if (binding.boundCount > 0) {
+        message.info(`已自动绑定 ${binding.boundCount} 个步骤到已知页面元素`)
+      }
+      if (binding.unboundInteractiveCount > 0) {
+        message.warning(`仍有 ${binding.unboundInteractiveCount} 个交互步骤未绑定到已知元素，建议确认页面元素库`)
       }
       message.success(`成功解析并添加 ${newSteps.length} 个步骤`)
       showAIModal.value = false

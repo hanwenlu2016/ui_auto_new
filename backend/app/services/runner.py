@@ -445,13 +445,17 @@ class TestRunner:
                 tried_selectors.append(selector)
                 try:
                     if action in self.INTERACTIVE_ACTIONS:
-                        await tool.execute_action(
+                        wait_result = await tool.execute_action(
                             action="wait_for_selector",
                             selector=selector,
                             value=None,
                             timeout_ms=8000,
                             state="visible",
+                            step_description=step.get("description") or "",
                         )
+                        if not wait_result.get("success"):
+                            last_error = wait_result.get("error")
+                            continue
 
                     result = await tool.execute_action(
                         action=action,
@@ -459,21 +463,26 @@ class TestRunner:
                         value=value,
                         exact=False,
                         timeout_ms=8000,
+                        step_description=step.get("description") or "",
                     )
                     if result.get("success"):
-                        if idx > 0:
+                        used_selector = result.get("resolved_selector") or selector
+                        if used_selector != selector and used_selector not in tried_selectors:
+                            tried_selectors.append(used_selector)
+
+                        if idx > 0 or used_selector != selectors[0]:
                             await self._write_heal_log(
                                 case_id=case_id,
                                 element_id=element_id,
                                 step_index=step_index,
                                 original_selector=selectors[0],
-                                healed_selector=selector,
-                                heal_method="locator_chain_fallback",
+                                healed_selector=used_selector,
+                                heal_method="semantic_locator_recovery" if used_selector != selector else "locator_chain_fallback",
                                 status="auto_healed",
                             )
                         return {
                             "success": True,
-                            "used_selector": selector,
+                            "used_selector": used_selector,
                             "tried_selectors": tried_selectors,
                             "output": result.get("output"),
                         }

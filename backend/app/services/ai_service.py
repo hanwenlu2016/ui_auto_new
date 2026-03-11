@@ -27,7 +27,11 @@ You MUST:
 
 5. Sanitize all selector output — remove sensitive strings from DOM.
 
-6. NO EMPTY SELECTORS: For interactive steps (click, fill), if no DOM is provided, GUESS the most likely selector based on common patterns (e.g., search box -> '#kw', '[name=q]', 'input[type=text]'). Never return an empty string for 'target' if the action requires one.
+6. NO EMPTY SELECTORS: For interactive steps (click, fill), if no DOM is provided, use semantic, execution-friendly selectors instead of site-specific legacy IDs. Prefer selectors such as '[role=\"textbox\"]', 'textarea', 'input:not([type=\"hidden\"])', '[aria-label*=\"搜索\"]', or 'button:has-text(\"搜索\")'. Never return an empty string for 'target' if the action requires one.
+
+7. For search-like flows, do NOT assume pressing Enter will submit. Prefer an explicit click on a visible submit/search button unless DOM or BUSINESS RULES prove Enter is the correct trigger.
+
+8. If BUSINESS RULES or PROJECT MEMORY contain a known page/element inventory, reuse those exact selectors first. Do not invent a weaker selector when a known selector already matches the intent.
 
 OUTPUT FORMAT (strict JSON array, no markdown):
 [
