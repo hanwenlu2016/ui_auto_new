@@ -103,22 +103,71 @@
                     {{ index + 1 }}
                   </n-tag>
                   
-                  <!-- Page & Element context (Compact) -->
-                  <n-select
-                    v-model:value="value.page_id"
-                    :options="pageOptions"
-                    placeholder="页面"
-                    style="width: 100px"
-                    @update:value="(val) => fetchElementsForPage(val)"
-                  />
-                  <n-select
-                    v-model:value="value.element_id"
-                    :options="elementOptions.filter(e => e.page_id === value.page_id)"
-                    placeholder="目标元素"
-                    style="width: 120px"
-                    :disabled="!value.page_id"
-                    clearable
-                  />
+                  <!-- Element Strategy Toggle -->
+                  <div style="display: flex; align-items: center; border-right: 1px solid var(--color-divider); padding-right: 8px; margin-right: 8px;">
+                    <n-tooltip trigger="hover">
+                      <template #trigger>
+                        <n-button
+                          quaternary
+                          circle
+                          size="small"
+                          :type="value._custom_locator_mode ? 'warning' : 'primary'"
+                          @click="value._custom_locator_mode = !value._custom_locator_mode"
+                        >
+                          {{ value._custom_locator_mode ? '🎯' : '🗂️' }}
+                        </n-button>
+                      </template>
+                      {{ value._custom_locator_mode ? '切换到元素库 (选择已有元素)' : '切换到自定义定位 (直接编写XPath/CSS)' }}
+                    </n-tooltip>
+                  </div>
+
+                  <template v-if="!value._custom_locator_mode">
+                    <!-- Page & Element context (Compact) -->
+                    <n-select
+                      v-model:value="value.page_id"
+                      :options="pageOptions"
+                      placeholder="页面"
+                      style="width: 100px"
+                      @update:value="(val) => fetchElementsForPage(val)"
+                    />
+                    <n-select
+                      v-model:value="value.element_id"
+                      :options="elementOptions.filter(e => e.page_id === value.page_id)"
+                      placeholder="目标元素"
+                      style="width: 120px"
+                      :disabled="!value.page_id"
+                      clearable
+                      @update:value="(v) => { if (v) { value.target = ''; value.selector = ''; } }"
+                    />
+                    
+                    <!-- Edit Button for Bound Element -->
+                    <n-button 
+                      v-if="value.element_id"
+                      quaternary 
+                      circle 
+                      size="small" 
+                      type="info" 
+                      @click="handleOpenElementModal(index, true)" 
+                      title="编辑库内元素"
+                    >
+                      <template #icon><span>✏️</span></template>
+                    </n-button>
+                  </template>
+                  <template v-else>
+                    <!-- Custom Locator Mode: Button trigger -->
+                    <n-button
+                       dashed
+                       type="primary"
+                       size="medium"
+                       style="width: 228px; justify-content: flex-start; padding: 0 12px; font-weight: 500;"
+                       @click="handleOpenElementModal(index, false)"
+                    >
+                       <template #icon><span style="margin-right: 4px;">🎯</span></template>
+                       <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                         {{ value.target || '配置自定义定位' }}
+                       </span>
+                    </n-button>
+                  </template>
                   
                   <!-- Action & Value -->
                   <n-select
@@ -201,15 +250,23 @@
              <span style="color: var(--color-text-3); font-size: 12px;">💡 提示：描述越明确（包含页面元素名称和输入值），生成的质量越高。</span>
            </p>
            
-           <div style="display: flex; gap: 12px; margin-bottom: 12px; align-items: center;">
-             <span style="font-size: 13px; color: var(--color-text-2); font-weight: 500;">引擎选择:</span>
-             <n-select
-               v-model:value="selectedAIModel"
-               :options="aiModelOptions"
-               style="width: 200px"
-               size="small"
-               placeholder="加载模型中..."
-             />
+           <div style="display: flex; gap: 12px; margin-bottom: 12px; align-items: center; justify-content: space-between;">
+             <div style="display: flex; gap: 12px; align-items: center;">
+               <span style="font-size: 13px; color: var(--color-text-2); font-weight: 500;">引擎选择:</span>
+               <n-select
+                 v-model:value="selectedAIModel"
+                 :options="aiModelOptions"
+                 style="width: 160px"
+                 size="small"
+                 placeholder="加载模型中..."
+               />
+             </div>
+             
+             <div style="display: flex; align-items: center; gap: 8px;">
+               <span :style="{ fontSize: '12px', color: !agentMode ? 'var(--color-primary)' : 'var(--color-text-3)', fontWeight: !agentMode ? '600' : '400' }">快速</span>
+               <n-switch v-model:value="agentMode" size="small" />
+               <span :style="{ fontSize: '12px', color: agentMode ? 'var(--color-primary)' : 'var(--color-text-3)', fontWeight: agentMode ? '600' : '400' }">精准</span>
+             </div>
            </div>
 
            <n-input
@@ -223,9 +280,15 @@
         
         <div v-if="aiLoading" style="text-align: center; margin: 30px 0;">
           <n-spin size="medium" />
-          <div style="margin-top: 12px; color: var(--color-primary); font-size: 13px;">AI 大脑正在飞速运转中...</div>
+          <div style="margin-top: 12px; color: var(--color-primary); font-size: 13px;">
+            {{ agentMode ? 'Agent 正在浏览器中执行并验证...' : 'AI 大脑正在飞速运转中...' }}
+          </div>
+          <div v-if="agentMode" style="margin-top: 8px; font-size: 12px; color: var(--color-text-3);">
+            实时步骤已在编辑器背景中同步生成
+          </div>
         </div>
         
+        <!-- Footer -->
         <template #footer>
           <div style="display: flex; justify-content: flex-end; gap: 12px;">
             <n-button @click="showAIModal = false" :disabled="aiLoading">取消</n-button>
@@ -241,12 +304,79 @@
         </template>
       </n-card>
     </n-modal>
+    
+    <!-- Unified Inline Element Editor Modal -->
+    <n-modal v-model:show="showElementModal">
+      <n-card
+        style="width: 650px; max-width: 90vw"
+        :title="elementIsLibraryMode ? '✏️ 编辑库内元素' : '🎯 配置自定义定位'"
+        :bordered="false"
+        size="huge"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div v-if="!elementIsLibraryMode" style="margin-bottom: 20px;">
+          <n-alert type="info" :show-icon="false" style="border-radius: 8px;">
+            <template #default>
+              <div>当前处于 <strong>自定义定位模式</strong>。</div>
+              <div style="font-size: 13px; color: var(--color-text-2); margin-top: 4px;">
+                您可以直接修改 AI 生成的或手写的定位符。此修改<strong>仅作用于当前步骤</strong>，不影响项目公用元素库。
+              </div>
+            </template>
+          </n-alert>
+        </div>
+
+        <n-form
+          ref="elementFormRef"
+          :model="elementFormValue"
+          :rules="elementRules"
+          label-placement="top"
+        >
+          <n-form-item label="元素说明 / 标识" path="name">
+            <n-input v-model:value="elementFormValue.name" placeholder="例如：登录按钮、搜索框" />
+          </n-form-item>
+          <n-form-item v-if="elementIsLibraryMode" label="元素描述" path="description">
+            <n-input
+              v-model:value="elementFormValue.description"
+              type="textarea"
+              placeholder="添加补充说明（可选）"
+              :autosize="{ minRows: 2, maxRows: 4 }"
+            />
+          </n-form-item>
+          
+          <div style="background: var(--color-bg); padding: 16px 20px; border-radius: 12px; margin-top: 8px;">
+            <div style="font-weight: 500; font-size: 13px; color: var(--color-text-2); margin-bottom: 12px;">定位规则配置</div>
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 16px;">
+              <n-form-item label="定位方式" path="locator_type" style="margin-bottom: 0;">
+                <n-select
+                  v-model:value="elementFormValue.locator_type"
+                  :options="locatorOptions"
+                  placeholder="选择方式"
+                />
+              </n-form-item>
+              <n-form-item label="定位特征值" path="locator_value" style="margin-bottom: 0;">
+                <n-input v-model:value="elementFormValue.locator_value" placeholder="例如: #login-btn 或 //*[@id='app']" />
+              </n-form-item>
+            </div>
+          </div>
+        </n-form>
+        
+        <template #footer>
+          <div style="display: flex; justify-content: flex-end; gap: 12px;">
+            <n-button @click="showElementModal = false">取消</n-button>
+            <n-button type="primary" @click="handleSaveElement">
+              {{ elementIsLibraryMode ? '保存并同步到库' : '确认配置' }}
+            </n-button>
+          </div>
+        </template>
+      </n-card>
+    </n-modal>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, h, watch } from 'vue'
-import { NButton, NSpace, useMessage, type DataTableColumns, type FormInst, NCard, NDataTable, NModal, NForm, NFormItem, NInput, NSelect, NDynamicInput, NTag, NSpin } from 'naive-ui'
+import { NButton, NSpace, useMessage, type DataTableColumns, type FormInst, NCard, NDataTable, NModal, NForm, NFormItem, NInput, NSelect, NDynamicInput, NTag, NSpin, NAlert, NTooltip } from 'naive-ui'
 import api from '@/api'
 import { useAppStore } from '@/stores/app'
 import { bindGeneratedStepsToKnownElements, loadAiContext } from '@/utils/aiContext'
@@ -297,9 +427,39 @@ const aiPrompt = ref('')
 const aiLoading = ref(false)
 const aiModelOptions = ref<any[]>([])
 const selectedAIModel = ref<string | null>(null)
+const agentMode = ref(false) // Toggle between Fast (AIService) and Precision (AgentService)
 
 const rules = {
   name: { required: true, message: '请输入用例名称', trigger: 'blur' }
+}
+
+const locatorOptions = [
+  { label: 'XPath', value: 'xpath' },
+  { label: 'CSS Selector', value: 'css' },
+  { label: 'ID', value: 'id' },
+  { label: 'Name', value: 'name' },
+  { label: 'Class Name', value: 'class_name' },
+  { label: 'Link Text', value: 'link_text' }
+]
+
+// Element Editor Modal State
+const showElementModal = ref(false)
+const elementFormRef = ref<FormInst | null>(null)
+const elementIsLibraryMode = ref(false)
+const editingStepIndex = ref<number | null>(null)
+
+const elementFormValue = ref({
+  id: null as number | null,
+  name: '',
+  description: '',
+  locator_type: 'xpath',
+  locator_value: ''
+})
+
+const elementRules = {
+  name: { required: true, message: '请输入标识或名称', trigger: 'blur' },
+  locator_type: { required: true, message: '请选择定位方式', trigger: 'change' },
+  locator_value: { required: true, message: '请输入定位特征值', trigger: 'blur' }
 }
 
 const onCreateStep = () => {
@@ -309,7 +469,8 @@ const onCreateStep = () => {
     value: '',
     page_id: null,
     element_id: null,
-    variable_name: ''
+    variable_name: '',
+    _custom_locator_mode: false
   }
 }
 
@@ -522,7 +683,10 @@ const handleEdit = async (row: TestCase) => {
     name: row.name,
     description: row.description,
     priority: row.priority || 'P1',
-    steps: row.steps ? row.steps.map(s => ({...s})) : []
+    steps: row.steps ? row.steps.map(s => ({
+      ...s,
+      _custom_locator_mode: !s.element_id && (s.target || s.selector) ? true : false
+    })) : []
   }
   showCreateModal.value = true
 }
@@ -541,113 +705,288 @@ const handleDelete = async (row: TestCase) => {
   } catch (error) {}
 }
 
-const handleGenerateSteps = async () => {
-  aiLoading.value = true
-  try {
-    const aiContext = await loadAiContext(selectedProjectId.value, selectedModuleId.value)
-    const response = await api.post('/ai/generate', { 
-      prompt: aiPrompt.value,
-      model_id: selectedAIModel.value,
-      project_id: selectedProjectId.value,
-      business_rules: aiContext.businessRules || undefined
-    })
-    const generatedSteps = response.data.steps
-    if (generatedSteps && generatedSteps.length > 0) {
-      const parseDurationToMs = (raw: any): string => {
-        if (raw === null || raw === undefined) return ''
-        const text = String(raw).trim().toLowerCase()
-        if (!text) return ''
-        const m = text.match(/^(\d+(?:\.\d+)?)\s*(ms|s)?$/)
-        if (!m) return String(raw).trim()
-        const amount = Number(m[1])
-        const unit = m[2]
-        if (unit === 'ms') return String(Math.round(amount))
-        if (unit === 's') return String(Math.round(amount * 1000))
-        return String(Math.round(amount >= 100 ? amount : amount * 1000))
-      }
+const handleOpenElementModal = async (stepIndex: number, isLibraryMode: boolean) => {
+  editingStepIndex.value = stepIndex
+  elementIsLibraryMode.value = isLibraryMode
+  const step = formValue.value.steps[stepIndex]
 
-      const isValidUrl = (val: string) => {
+  if (isLibraryMode) {
+    if (!step.element_id) return
+    const elId = step.element_id
+    try {
+      // First, get it from local list if available
+      let elData = elements.value.find(e => e.id === elId)
+      if (!elData) {
+        const response = await api.get(`/elements/${elId}`)
+        elData = response.data
+      }
+      if (elData) {
+        elementFormValue.value = {
+          id: elData.id,
+          name: elData.name,
+          description: elData.description || '',
+          locator_type: elData.locator_type,
+          locator_value: elData.locator_value
+        }
+      }
+    } catch (e) {
+      message.error('无法获取元素详情')
+      return
+    }
+  } else {
+    // Custom locator mode
+    let locType = step.locator_type || 'xpath'
+    const targetVal = step.target || step.selector || ''
+    
+    // Auto-detect if no locator_type provided but target is given
+    if (!step.locator_type && targetVal) {
+      if (targetVal.startsWith('/')) locType = 'xpath'
+      else if (targetVal.startsWith('#') || targetVal.startsWith('.')) locType = 'css'
+      else locType = 'css'
+    }
+    
+    elementFormValue.value = {
+      id: null,
+      name: step.description || '未命名元素 (自动生成)', // Fallback to step description
+      description: '',
+      locator_type: locType,
+      locator_value: targetVal
+    }
+  }
+  
+  showElementModal.value = true
+}
+
+const handleSaveElement = async () => {
+  elementFormRef.value?.validate(async (errors) => {
+    if (!errors && editingStepIndex.value !== null) {
+      const stepIndex = editingStepIndex.value
+      
+      if (elementIsLibraryMode.value && elementFormValue.value.id) {
+        // Save to backend library
         try {
-          const u = new URL(val)
-          return u.protocol === 'http:' || u.protocol === 'https:'
-        } catch {
-          return false
+          const data = {
+             name: elementFormValue.value.name,
+             description: elementFormValue.value.description,
+             locator_type: elementFormValue.value.locator_type,
+             locator_value: elementFormValue.value.locator_value,
+             // The page_id cannot be changed from this view, grab from existing step
+             page_id: formValue.value.steps[stepIndex].page_id
+          }
+          await api.put(`/elements/${elementFormValue.value.id}`, data)
+          message.success('已同步更新项目元素库')
+          showElementModal.value = false
+          // Refresh elements to get new data in UI
+          if (data.page_id) {
+            await fetchElementsForPage(data.page_id)
+          }
+        } catch (e) {
+          message.error('更新元素库失败')
         }
-      }
-
-      const mapAction = (action: string): { normalized: string; degraded: boolean } => {
-        const a = (action || '').toLowerCase()
-        if (a.includes('wait_for_selector') || a.includes('wait for selector') || a.includes('等待元素')) return { normalized: 'wait_for_selector', degraded: false }
-        if (a.includes('assert_visible') || a.includes('visible') || a.includes('可见')) return { normalized: 'assert_visible', degraded: false }
-        if (a.includes('assert') || a.includes('verify') || a.includes('check') || a.includes('断言') || a.includes('验证') || a.includes('检查')) return { normalized: 'assert_text', degraded: false }
-        if (a.includes('hover') || a.includes('悬停')) return { normalized: 'hover', degraded: false }
-        if (a.includes('select') || a.includes('选择')) return { normalized: 'select', degraded: false }
-        if (a.includes('press') || a.includes('按键')) return { normalized: 'press', degraded: false }
-        if (a.includes('click') || a.includes('点击')) return { normalized: 'click', degraded: false }
-        if (a.includes('fill') || a.includes('type') || a.includes('input') || a.includes('输入') || a.includes('填写')) return { normalized: 'fill', degraded: false }
-        if (a.includes('goto') || a.includes('visit') || a.includes('open') || a.includes('navigate') || a.includes('跳转') || a.includes('访问') || a.includes('打开')) return { normalized: 'goto', degraded: false }
-        if (a.includes('wait') || a.includes('sleep') || a.includes('等待')) return { normalized: 'wait', degraded: false }
-        if (a.includes('screenshot') || a.includes('截图')) return { normalized: 'screenshot', degraded: false }
-        if (a.includes('get_text') || a.includes('text_content') || a.includes('提取文本')) return { normalized: 'get_text', degraded: false }
-        if (a.includes('get_attribute') || a.includes('extract_attr') || a.includes('提取属性')) return { normalized: 'get_attribute', degraded: false }
-        if (a.includes('set_variable') || a.includes('设置变量')) return { normalized: 'set_variable', degraded: false }
-        return { normalized: 'click', degraded: true }
-      }
-      let degradedCount = 0
-      const mappedSteps = generatedSteps.map((s: any) => {
-        const mapped = mapAction(s.action)
-        if (mapped.degraded) degradedCount += 1
-        const action = mapped.normalized
-        let val = String(s.value || '').trim()
-        let tar = s.target || s.selector || ''
+      } else {
+        // Save locally to step (Custom Locator)
+        formValue.value.steps[stepIndex].target = elementFormValue.value.locator_value
+        formValue.value.steps[stepIndex].selector = elementFormValue.value.locator_value
+        formValue.value.steps[stepIndex].locator_type = elementFormValue.value.locator_type
         
-        // 自动搬运 URL: 如果是跳转且 value 为空但 target 有内容，说明 AI 写反了
-        if (action === 'goto' && !val && tar) {
-          val = tar
-          tar = ''
-        }
-
-        if (action === 'wait') {
-          val = parseDurationToMs(s.wait_ms ?? val)
-          if (!val) val = '1000'
-        }
-        if (action === 'goto' && val && !isValidUrl(val)) {
-          message.warning(`检测到疑似无效 URL: ${val}，请编辑后再执行`)
+        // Use name as friendly description if no other description exists
+        if (elementFormValue.value.name && (!formValue.value.steps[stepIndex].description || formValue.value.steps[stepIndex].description.includes('自动生成'))) {
+          formValue.value.steps[stepIndex].description = elementFormValue.value.name
         }
         
-        return {
-          action: action,
-          target: String(tar || '').trim(),
-          selector: String(tar || '').trim(),
-          value: String(val || '').trim(),
-          wait_ms: action === 'wait' ? (Number(val) || 1000) : (s.wait_ms ?? null),
-          locator_chain: s.locator_chain || null,
-          description: s.description || '',
-          variable_name: s.variable_name || '',
-          page_id: null,
-          element_id: null
-        }
+        message.success('自定义定位配置已更新 (仅本次用例生效)')
+        showElementModal.value = false
+      }
+    }
+  })
+}
+
+const handleGenerateSteps = async () => {
+  if (!aiPrompt.value.trim()) return
+  aiLoading.value = true
+  
+  try {
+    if (agentMode.value) {
+      // Precision Mode: Real-time streaming from Agent
+      const response = await fetch('/api/v1/agent/execute_stream', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          task: aiPrompt.value,
+          model_id: selectedAIModel.value,
+          headless: true,
+          max_steps: 20,
+          use_vision: false
+        })
       })
-      const binding = bindGeneratedStepsToKnownElements(mappedSteps, aiContext.knownElements)
-      const newSteps = binding.steps
-      formValue.value.steps = [...formValue.value.steps, ...newSteps]
-      if (degradedCount > 0) {
-        message.warning(`有 ${degradedCount} 个步骤动作无法识别，已降级为 click，请检查后执行`)
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || '请求失败')
       }
-      if (binding.boundCount > 0) {
-        message.info(`已自动绑定 ${binding.boundCount} 个步骤到已知页面元素`)
+
+      const reader = response.body?.getReader()
+      if (!reader) throw new Error('流读取器不可用')
+
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
+
+        for (const line of lines) {
+          if (!line.trim()) continue
+          try {
+            const item = JSON.parse(line)
+            if (item.type === 'step' && item.data) {
+              const s = item.data
+              // Convert Agent action to Platform step
+              formValue.value.steps.push({
+                action: s.action,
+                target: s.target || '',
+                selector: s.target || '',
+                value: s.value || '',
+                locator_chain: s.locator_chain || null,
+                locator_type: s.locator_type || null,
+                description: s.description || '',
+                variable_name: s.variable_name || '',
+                page_id: null,
+                element_id: null,
+                _custom_locator_mode: true
+              })
+            } else if (item.type === 'error') {
+              message.error(item.message)
+            }
+          } catch (e) {
+            console.error('Failed to parse agent stream line', e)
+          }
+        }
       }
-      if (binding.unboundInteractiveCount > 0) {
-        message.warning(`仍有 ${binding.unboundInteractiveCount} 个交互步骤未绑定到已知元素，建议确认页面元素库`)
-      }
-      message.success(`成功解析并添加 ${newSteps.length} 个步骤`)
+      message.success('精度模式执行完成')
       showAIModal.value = false
       aiPrompt.value = ''
     } else {
-      message.warning('未生成步骤，请尝试换种描述')
+      // Fast Mode: Normal generation
+      const aiContext = await loadAiContext(selectedProjectId.value, selectedModuleId.value)
+      const resp = await api.post('/ai/generate', { 
+        prompt: aiPrompt.value,
+        model_id: selectedAIModel.value,
+        project_id: selectedProjectId.value,
+        business_rules: aiContext.businessRules || undefined
+      })
+      
+      const generatedSteps = resp.data.steps
+      if (generatedSteps && generatedSteps.length > 0) {
+        const parseDurationToMs = (raw: any): string => {
+          if (raw === null || raw === undefined) return ''
+          const text = String(raw).trim().toLowerCase()
+          if (!text) return ''
+          const m = text.match(/^(\d+(?:\.\d+)?)\s*(ms|s)?$/)
+          if (!m) return String(raw).trim()
+          const amount = Number(m[1])
+          const unit = m[2]
+          if (unit === 'ms') return String(Math.round(amount))
+          if (unit === 's') return String(Math.round(amount * 1000))
+          return String(Math.round(amount >= 100 ? amount : amount * 1000))
+        }
+
+        const isValidUrl = (val: string) => {
+          try {
+            const u = new URL(val)
+            return u.protocol === 'http:' || u.protocol === 'https:'
+          } catch {
+            return false
+          }
+        }
+
+        const mapAction = (action: string): { normalized: string; degraded: boolean } => {
+          const a = (action || '').toLowerCase()
+          if (a.includes('wait_for_selector') || a.includes('wait for selector') || a.includes('等待元素')) return { normalized: 'wait_for_selector', degraded: false }
+          if (a.includes('assert_visible') || a.includes('visible') || a.includes('可见')) return { normalized: 'assert_visible', degraded: false }
+          if (a.includes('assert') || a.includes('verify') || a.includes('check') || a.includes('断言') || a.includes('验证') || a.includes('检查')) return { normalized: 'assert_text', degraded: false }
+          if (a.includes('hover') || a.includes('悬停')) return { normalized: 'hover', degraded: false }
+          if (a.includes('select') || a.includes('选择')) return { normalized: 'select', degraded: false }
+          if (a.includes('press') || a.includes('按键')) return { normalized: 'press', degraded: false }
+          if (a.includes('click') || a.includes('点击')) return { normalized: 'click', degraded: false }
+          if (a.includes('fill') || a.includes('type') || a.includes('input') || a.includes('输入') || a.includes('填写')) return { normalized: 'fill', degraded: false }
+          if (a.includes('goto') || a.includes('visit') || a.includes('open') || a.includes('navigate') || a.includes('跳转') || a.includes('访问') || a.includes('打开')) return { normalized: 'goto', degraded: false }
+          if (a.includes('wait') || a.includes('sleep') || a.includes('等待')) return { normalized: 'wait', degraded: false }
+          if (a.includes('screenshot') || a.includes('截图')) return { normalized: 'screenshot', degraded: false }
+          if (a.includes('get_text') || a.includes('text_content') || a.includes('提取文本')) return { normalized: 'get_text', degraded: false }
+          if (a.includes('get_attribute') || a.includes('extract_attr') || a.includes('提取属性')) return { normalized: 'get_attribute', degraded: false }
+          if (a.includes('set_variable') || a.includes('设置变量')) return { normalized: 'set_variable', degraded: false }
+          return { normalized: 'click', degraded: true }
+        }
+
+        let degradedCount = 0
+        const mappedSteps = generatedSteps.map((s: any) => {
+          const mapped = mapAction(s.action)
+          if (mapped.degraded) degradedCount += 1
+          const action = mapped.normalized
+          let val = String(s.value || '').trim()
+          let tar = s.target || s.selector || ''
+          
+          if (action === 'goto' && !val && tar) {
+            val = tar
+            tar = ''
+          }
+
+          if (action === 'wait') {
+            val = parseDurationToMs(s.wait_ms ?? val)
+            if (!val) val = '1000'
+          }
+          if (action === 'goto' && val && !isValidUrl(val)) {
+            message.warning(`检测到疑似无效 URL: ${val}，请编辑后再执行`)
+          }
+          
+          return {
+            action: action,
+            target: String(tar || '').trim(),
+            selector: String(tar || '').trim(),
+            value: String(val || '').trim(),
+            wait_ms: action === 'wait' ? (Number(val) || 1000) : (s.wait_ms ?? null),
+            locator_chain: s.locator_chain || null,
+            locator_type: s.locator_type || null,
+            description: s.description || '',
+            variable_name: s.variable_name || '',
+            page_id: null,
+            element_id: null
+          }
+        })
+
+        const binding = bindGeneratedStepsToKnownElements(mappedSteps, aiContext.knownElements)
+        const finalSteps = binding.steps.map((s: any) => ({
+          ...s,
+          _custom_locator_mode: !s.element_id
+        }))
+        formValue.value.steps = [...formValue.value.steps, ...finalSteps]
+        
+        if (degradedCount > 0) {
+          message.warning(`有 ${degradedCount} 个步骤动作无法识别，已降级为 click，请检查后执行`)
+        }
+        if (binding.boundCount > 0) {
+          message.info(`已自动绑定 ${binding.boundCount} 个步骤到已知页面元素`)
+        }
+        if (binding.unboundInteractiveCount > 0) {
+          message.warning(`仍有 ${binding.unboundInteractiveCount} 个交互步骤未绑定到已知元素，建议确认页面元素库`)
+        }
+        message.success(`成功解析并添加 ${binding.steps.length} 个步骤`)
+        showAIModal.value = false
+        aiPrompt.value = ''
+      } else {
+        message.warning('未生成步骤，请尝试换种描述')
+      }
     }
-  } catch (error) {
-    message.error('AI 解析异常')
+  } catch (error: any) {
+    message.error(error.message || 'AI 解析异常')
   } finally {
     aiLoading.value = false
   }

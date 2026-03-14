@@ -23,6 +23,8 @@ dependencies = [
     "celery[redis]>=5.3.6",
     "nest-asyncio>=1.6.0",
     "openai>=2.24.0",
+    "browser-use>=0.11.13",
+    "langchain-openai>=1.1.10",
 ]
 
 [build-system]
