@@ -179,12 +179,43 @@
         </template>
       </n-card>
     </n-modal>
+
+    <!-- Modeling Modal -->
+    <n-modal v-model:show="showModelingModal">
+      <n-card
+        title="✨ 一键沉淀页面元素"
+        :bordered="false"
+        size="huge"
+        role="dialog"
+        aria-modal="true"
+        style="width: 600px; max-width: 90vw;"
+      >
+        <p>录制结束，我们在您的操作中发现了以下未入库的新元素。是否将其快捷加入项目资产库以供未来复用？</p>
+        <div style="max-height: 300px; overflow-y: auto; margin-top: 16px;">
+          <div v-for="(el, idx) in targetElements" :key="idx" style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding: 8px; background: var(--color-bg); border-radius: 8px;">
+            <n-checkbox v-model:checked="el.selected" />
+            <n-input size="small" v-model:value="el.name" placeholder="元素名称" style="width: 140px;" />
+            <div style="flex: 1; font-family: monospace; font-size: 12px; color: var(--color-text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              {{ el.selector }}
+            </div>
+            <n-tag size="small" type="info">{{ el.type }}</n-tag>
+          </div>
+        </div>
+        <template #footer>
+          <div style="display: flex; justify-content: flex-end; gap: 12px;">
+            <n-button @click="showModelingModal = false">跳过</n-button>
+            <n-button type="success" :loading="syncingElements" @click="handleSyncModeling">📥 同步入库</n-button>
+          </div>
+        </template>
+      </n-card>
+    </n-modal>
+
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onUnmounted, onMounted, watch } from 'vue'
-import { useMessage, NCard, NInputGroup, NInput, NButton, NScrollbar, NTimeline, NTimelineItem, NGrid, NGridItem, NTag, NModal, NForm, NFormItem, NSelect, type FormRules } from 'naive-ui'
+import { useMessage, NCard, NInputGroup, NInput, NButton, NScrollbar, NTimeline, NTimelineItem, NGrid, NGridItem, NTag, NModal, NForm, NFormItem, NSelect, NCheckbox, type FormRules } from 'naive-ui'
 import api from '@/api'
 import { useRecordingStore } from '@/stores/recording'
 import { useAppStore } from '@/stores/app'
@@ -212,7 +243,12 @@ const formValue = ref({
   description: ''
 })
 
+const showModelingModal = ref(false)
+const targetElements = ref<any[]>([])
+const syncingElements = ref(false)
+
 const rules: FormRules = {
+
   name: { required: true, message: '请输入用例名称', trigger: 'blur' },
   module_id: { required: true, type: 'number', message: '请选择模块', trigger: 'change' }
 }
@@ -344,6 +380,7 @@ const connectWebSocket = () => {
     } else if (data.status === 'stopped') {
       isRecording.value = false
       message.success('已停止录制')
+      handleRecordingStopped()
     } else if (data.status === 'error') {
       isRecording.value = false
       message.error(`引擎异常: ${data.message}`)
@@ -379,6 +416,7 @@ const toggleRecording = () => {
       ws.close()
     }
     isRecording.value = false
+    handleRecordingStopped()
   }
 }
 
@@ -399,6 +437,9 @@ onUnmounted(() => {
 
 const handleAISteps = (e: CustomEvent) => {
   const steps = e.detail
+  // 核心修复：每次导入新 AI 步骤前清空当前动作流，防止重复叠加
+  events.value = []
+  
   steps.forEach((s: any) => {
     const isWait = s.action === 'wait'
     const isWaitForSelector = s.action === 'wait_for_selector'
@@ -436,6 +477,67 @@ const getEventColor = (action: string) => {
     'hover': 'secondary'
   }
   return map[action] || 'info'
+}
+
+const handleRecordingStopped = () => {
+    const newElements = events.value.filter((e: any) => e.selector && !e.element_id && ['click', 'fill', 'hover', 'select'].includes(e.action))
+    if (newElements.length > 0) {
+        const unique = []
+        const seen = new Set()
+        for (const el of newElements) {
+            if (!seen.has(el.selector)) {
+                seen.add(el.selector)
+                unique.push({
+                    name: el.description?.replace(/点击 |输入 |使用 \[[^\]]+\] -> /g, '').trim() || 'New Element',
+                    selector: el.selector,
+                    type: el.action,
+                    selected: true,
+                })
+            }
+        }
+        targetElements.value = unique
+        showModelingModal.value = true
+    }
+}
+
+const handleSyncModeling = async () => {
+    syncingElements.value = true
+    const selected = targetElements.value.filter(el => el.selected)
+    if (selected.length === 0) {
+        showModelingModal.value = false
+        syncingElements.value = false
+        return
+    }
+    try {
+        const pagesRes = await api.get(`/pages/?project_id=${selectedProjectId.value}`)
+        let targetPageId = pagesRes.data?.[0]?.id
+
+        if (!targetPageId) {
+          const newPageRes = await api.post('/pages/', {
+            name: 'Recording Discovered',
+            project_id: selectedProjectId.value,
+            module_id: formValue.value.module_id
+          })
+          targetPageId = newPageRes.data.id
+        }
+
+        for (const el of selected) {
+          await api.post('/elements/', {
+            name: el.name,
+            description: '',
+            page_id: targetPageId,
+            locator_type: 'css',
+            locator_value: el.selector,
+            metadata_json: { discovered: true, type: el.type }
+          })
+        }
+        message.success(`成功同步 ${selected.length} 个元素到资产库！这些元素现在可以在 AI 自然语言模式中直接被理解和精确调用。`)
+        showModelingModal.value = false
+    } catch (e) {
+        message.error('同步失败')
+    } finally {
+        syncingElements.value = false
+    }
 }
 
 const getEventTitle = (action: string) => {

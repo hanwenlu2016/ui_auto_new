@@ -248,11 +248,13 @@ class RecorderService:
                 page_source = await self.page.content()
                 
                 # Call AI to generate a robust locator_chain based on pure metadata and current DOM
-                heal_result = await ai_service.heal_element(
-                    element_metadata=event.get("metadata", {}),
-                    page_source=page_source,
-                    screenshot_description=f"User performed {event['action']} during recording."
-                )
+                async with AsyncSessionLocal() as db:
+                    heal_result = await ai_service.heal_element(
+                        db=db,
+                        element_metadata=event.get("metadata", {}),
+                        page_source=page_source,
+                        screenshot_description=f"User performed {event['action']} during recording."
+                    )
                 
                 # Merge AI reinforcement results
                 event["locator_chain"] = heal_result.get("locator_chain")

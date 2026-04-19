@@ -19,6 +19,7 @@ from app.core.logger import logger
 # browser-use imports
 from browser_use import Agent, Browser
 from browser_use.llm import ChatDeepSeek, ChatOpenAI
+from browser_use.dom.views import filter_dynamic_classes
 
 
 class AgentService:
@@ -51,14 +52,20 @@ class AgentService:
         model_name = model_config.model_identifier
         
         # 提取动态参数
-        temperature = model_config.temperature if model_config.temperature is not None else 0.1
-        max_tokens = model_config.max_tokens if model_config.max_tokens is not None else 8192
+        temperature = getattr(model_config, 'temperature', 0.1)
+        if temperature is None:
+            temperature = 0.1
+            
+        max_tokens = getattr(model_config, 'max_tokens', 8192)
+        if max_tokens is None:
+            max_tokens = 8192
         
         # 提取额外 kwargs
         extra_kwargs = {}
-        if hasattr(model_config, 'kwargs') and model_config.kwargs:
+        raw_kwargs = getattr(model_config, 'kwargs', None)
+        if raw_kwargs:
             try:
-                extra_kwargs = json.loads(model_config.kwargs)
+                extra_kwargs = json.loads(raw_kwargs)
                 if not isinstance(extra_kwargs, dict):
                     extra_kwargs = {}
             except json.JSONDecodeError:
@@ -74,7 +81,6 @@ class AgentService:
                 model=model_name,
                 api_key=api_key,
                 temperature=temperature,
-                max_tokens=max_tokens,
                 **extra_kwargs
             )
         else:
@@ -85,7 +91,6 @@ class AgentService:
                 model=model_name,
                 api_key=api_key,
                 temperature=temperature,
-                max_tokens=max_tokens,
                 **extra_kwargs
             )
 
@@ -97,6 +102,7 @@ class AgentService:
         headless: bool = True,
         max_steps: int = 20,
         use_vision: bool = False,
+        project_id: Optional[int] = None,
     ) -> Dict[str, Any]:
         """
         执行 AI Agent 任务。
@@ -108,6 +114,7 @@ class AgentService:
             headless: 是否无头模式
             max_steps: Agent 最大步骤数
             use_vision: 是否使用视觉模型 (消耗更多 Token)
+            project_id: 当前关联项目ID（用于拉取 Page Object 库和记忆）
 
         Returns:
             dict: 包含 success, message, steps, execution_time 等
@@ -197,6 +204,13 @@ class AgentService:
 
         # 5. 提取步骤
         steps = self._extract_steps_from_history(agent_history)
+        
+        # 6. 绑定已有项目资产
+        if project_id and steps:
+            from app.services.ai_service import ai_service
+            project_memory = await ai_service.load_project_memory(db, project_id)
+            if project_memory:
+                steps = ai_service.bind_steps_to_library(steps, project_memory)
 
         execution_time = time.time() - start_time
         # AgentHistoryList 有 __len__ 方法
@@ -219,12 +233,18 @@ class AgentService:
         headless: bool = True,
         max_steps: int = 20,
         use_vision: bool = False,
+        project_id: Optional[int] = None,
     ):
         """
         流式执行 AI Agent 任务，实时通过 yield 返回步骤。
         """
         from app.services.ai_model_service import ai_model_service
+        from app.services.ai_service import ai_service
         import asyncio
+
+        project_memory = None
+        if project_id:
+            project_memory = await ai_service.load_project_memory(db, project_id)
 
         db_model = None
         if model_id and str(model_id).isdigit():
@@ -271,6 +291,11 @@ class AgentService:
                                 continue
                             
                             last_step_data = current_identity
+                            
+                            # Bind immediately
+                            if project_memory:
+                                step = ai_service.bind_steps_to_library([step], project_memory)[0]
+                                
                             logger.info(f"AgentService Stream: Yielding step {step_number} | {step['action']}")
                             await queue.put({"type": "step", "data": step, "step_number": step_number})
 
@@ -309,6 +334,8 @@ class AgentService:
             history = await task_execution
             # 提取已验证的历史步骤 (包含真实的 ActionResult 数据)
             final_steps = self._extract_steps_from_history(history)
+            if project_memory and final_steps:
+                final_steps = ai_service.bind_steps_to_library(final_steps, project_memory)
             yield {"type": "done", "total_steps": len(final_steps), "final_steps": final_steps}
 
         except Exception as e:
@@ -320,6 +347,11 @@ class AgentService:
                     await browser.stop()
                 except:
                     pass
+
+    # Actions that require a target selector to execute.
+    # Steps with an empty target for these actions will be marked AI_AUTO so the runner's
+    # PageAgent fallback can locate the element via natural language instead of failing immediately.
+    _INTERACTIVE_ACTIONS = {"click", "fill", "select", "hover", "press"}
 
     def _action_to_platform_step(self, action_model, selector_map=None, interacted_elements=None, result_content=None) -> Optional[Dict[str, Any]]:
         """
@@ -387,8 +419,12 @@ class AgentService:
                 # 情况 B：有历史 interacted_elements
                 elif idx is not None and interacted_elements:
                     for el in interacted_elements:
-                        if el and hasattr(el, 'x_path'):
-                            target = el.x_path
+                        if not el:
+                            continue
+                        if idx != getattr(el, 'highlight_index', None):
+                            continue
+                        target = getattr(el, 'x_path', None) or getattr(el, 'xpath', None) or ""
+                        if target:
                             break
             elif isinstance(params, str):
                 value = params
@@ -399,6 +435,12 @@ class AgentService:
             # 如果是提取类动作，优先使用 ActionResult 中的内容
             if platform_action == 'get_text' and result_content:
                 value = result_content
+
+            # For interactive actions where browser-use could not resolve a concrete selector,
+            # mark target as AI_AUTO so the runner's PageAgent fallback can handle execution.
+            # Without this, steps with target="" immediately fail with "requires selector" error.
+            if not target and platform_action in self._INTERACTIVE_ACTIONS:
+                target = "AI_AUTO"
 
             # 生成更友好的中文描述
             desc = ""
@@ -421,14 +463,86 @@ class AgentService:
             else:
                 desc = f"执行 {platform_action} {target} {value}".strip()
 
+            # 1. Generate Redundant Locator Chain
+            locator_chain = None
+            if target and target != "AI_AUTO" and isinstance(params, dict) and (selector_map or interacted_elements):
+                element = None
+                idx = params.get('index')
+                if idx is not None and selector_map:
+                    element = selector_map.get(idx)
+                elif idx is not None and interacted_elements:
+                    for el in interacted_elements:
+                        if el and idx == getattr(el, 'highlight_index', None):
+                            element = el
+                            break
+                
+                if element:
+                    # Level 1: Stable Attributes (ID, TestID, Name, ARIA)
+                    attrs = getattr(element, 'attributes', {})
+                    stable_id = attrs.get('data-testid') or attrs.get('id') or attrs.get('name') or attrs.get('aria-label')
+                    
+                    # Level 2: Text-Based (Fuzzy match)
+                    meaningful_text = ""
+                    if hasattr(element, 'get_meaningful_text_for_llm'):
+                        meaningful_text = element.get_meaningful_text_for_llm()
+                    
+                    # Quote text for Playwright selector safety
+                    safe_text = meaningful_text.replace('"', '\\"').strip()
+                    text_selector = f'text="{safe_text}"' if safe_text and len(safe_text) < 60 else None
+
+                    # Level 3: Cleaned CSS (Filtering dynamic classes)
+                    raw_css = getattr(element, 'css_selector', None)
+                    clean_css = None
+                    if raw_css:
+                        cls_str = attrs.get('class', '')
+                        stable_classes = filter_dynamic_classes(cls_str)
+                        tag = getattr(element, 'node_name', '').lower() or "*"
+                        if stable_classes:
+                            clean_css = f"{tag}.{stable_classes.replace(' ', '.')}"
+                        else:
+                            clean_css = tag
+
+                    # Construct the chain
+                    # priority: data-testid > data-qa > data-cy > aria-label > id > name
+                    primary = str(target)
+                    for attr in ['data-testid', 'data-test', 'data-qa', 'data-cy', 'aria-label', 'id', 'name']:
+                        val = attrs.get(attr)
+                        if val:
+                            if attr == 'id':
+                                primary = f"#{val}"
+                            elif attr == 'aria-label':
+                                primary = f"[aria-label=\"{val.replace('\"', '\\\"')}\"]"
+                            else:
+                                primary = f"[{attr}=\"{val.replace('\"', '\\\"')}\"]"
+                            break
+
+                    locator_chain = {
+                        "primary": primary,
+                        "fallback_1": text_selector,
+                        "fallback_2": clean_css if clean_css and clean_css != primary else None,
+                        "fallback_3": getattr(element, 'xpath', None),
+                    }
+
+            # If no complex chain was built, use the simple one
+            if not locator_chain and target and target != "AI_AUTO":
+                locator_chain = {
+                    "primary": str(target),
+                    "fallback_1": None,
+                    "fallback_2": None,
+                    "fallback_3": None
+                }
+
             return {
                 "action": platform_action,
                 "target": str(target),
                 "value": str(value),
                 "description": desc,
+                "locator_chain": locator_chain,
             }
         except Exception as e:
             logger.warning(f"AgentService: Action conversion error: {e}")
+            import traceback
+            logger.debug(traceback.format_exc())
             return None
 
     def _extract_steps_from_history(self, history) -> List[Dict[str, Any]]:

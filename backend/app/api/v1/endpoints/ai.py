@@ -8,8 +8,11 @@ from app.api import deps
 from app.core.logger import logger
 from app.models.user import User
 from app.models.element import PageElement
+from app.models.page import Page
+from app.models.module import Module
 from app.models.heal_log import HealLog
 from app.models.feedback import StepFeedback
+from sqlalchemy.orm import joinedload
 from app.services.ai_service import ai_service
 
 router = APIRouter()
@@ -17,31 +20,17 @@ router = APIRouter()
 
 # ─── Schemas ─────────────────────────────────────────────────────────────────
 
-class GenerateRequest(BaseModel):
-    prompt: str
-    dom_snapshot: Optional[str] = None            # 页面 DOM 快照（Top 200 行）
-    screenshot_description: Optional[str] = None  # 截图的语义描述
-    business_rules: Optional[str] = None          # 业务规则上下文
-    project_id: Optional[int] = None              # 用于加载项目记忆
-    model_id: Optional[str] = None                # 模型 ID (如 deepseek-chat, minimax-m2.5)
 
 
-class GenerateResponse(BaseModel):
-    steps: List[Dict[str, Any]]
-    message: str
 
+# ScenariosRequest and ScenariosResponse removed as /scenarios is no longer used.
 
-class ScenariosRequest(BaseModel):
-    prompt: str
-    dom_snapshot: Optional[str] = None
-    project_id: Optional[int] = None
+class DiscoveryRequest(BaseModel):
+    dom_snapshot: str
     model_id: Optional[str] = None
 
-
-class ScenariosResponse(BaseModel):
-    happy_path: List[Dict[str, Any]]
-    boundary: List[Dict[str, Any]]
-    negative: List[Dict[str, Any]]
+class DiscoveryResponse(BaseModel):
+    elements: List[Dict[str, Any]]
     message: str
 
 
@@ -78,90 +67,36 @@ class FeedbackResponse(BaseModel):
 
 # ─── Endpoints ────────────────────────────────────────────────────────────────
 
-@router.post("/generate", response_model=GenerateResponse)
-async def generate_steps(
+
+
+
+# /scenarios endpoint removed. Use /generate for single path output.
+
+@router.post("/discover", response_model=DiscoveryResponse)
+async def discover_elements(
     *,
     db: AsyncSession = Depends(deps.get_db),
-    request: GenerateRequest,
+    request: DiscoveryRequest,
     current_user: User = Depends(deps.get_current_user),
 ) -> Any:
     """
-    [Module 1] Generate test steps from natural language + optional multimodal context.
-    Supports DOM snapshot and screenshot description injection for richer AI reasoning.
+    [Module 2 Extension] AI Page Modeling & Element Discovery.
+    Analyzes a DOM snapshot and recommends PageElements to save to the library.
     """
-    project_memory = None
-    if request.project_id:
-        project_memory = await _load_project_memory(db, request.project_id)
-
-    logger.info(f"AI Generate Request: {request.prompt[:100]}...")
+    logger.info(f"AI Discovery Request | DOM Size: {len(request.dom_snapshot)}")
     try:
-        steps = await ai_service.generate_steps_from_text(
+        elements = await ai_service.discover_page_elements(
             db=db,
-            prompt=request.prompt,
             dom_snapshot=request.dom_snapshot,
-            screenshot_description=request.screenshot_description,
-            business_rules=request.business_rules,
-            project_memory=project_memory,
-            model_id=request.model_id,
+            model_id=request.model_id
         )
-
-        msg = (
-            f"已为您规划 {len(steps)} 个自动化步骤，每步包含多重定位备用选择器。"
-            if steps else
-            "未能识别出具体操作，请尝试更明确的描述，例如：「打开百度，输入 Python 并点击搜索」。"
-        )
-        logger.info(f"AI Generate Success: {len(steps)} steps")
-        return {"steps": steps, "message": msg}
-    except Exception as e:
-        logger.error(f"AI Generate Failed: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"AI Step Generation Failed: {str(e)}")
-
-
-@router.post("/scenarios", response_model=ScenariosResponse)
-async def generate_scenarios(
-    *,
-    db: AsyncSession = Depends(deps.get_db),
-    request: ScenariosRequest,
-    current_user: User = Depends(deps.get_current_user),
-) -> Any:
-    """
-    [Module 2] Generate happy_path, boundary, and negative test scenarios in one shot.
-    Ideal for comprehensive test coverage from a single feature description.
-    """
-    project_memory = None
-    if request.project_id:
-        project_memory = await _load_project_memory(db, request.project_id)
-
-    logger.info(f"AI Scenarios Request: {request.prompt[:100]}...")
-    try:
-        result = await ai_service.generate_scenarios(
-            db=db,
-            prompt=request.prompt,
-            dom_snapshot=request.dom_snapshot,
-            project_memory=project_memory,
-            model_id=request.model_id,
-        )
-
-        if not result:
-            logger.error("AI Scenarios returned None or empty result")
-            raise ValueError("AI Service returned invalid empty result")
-
-        h_path = result.get("happy_path") or []
-        b_path = result.get("boundary") or []
-        n_path = result.get("negative") or []
-
-        total = len(h_path) + len(b_path) + len(n_path)
-        logger.info(f"AI Scenarios Success: {total} steps generated")
-        
         return {
-            "happy_path": h_path,
-            "boundary": b_path,
-            "negative": n_path,
-            "message": f"已生成 {total} 个覆盖三类场景的测试步骤（正向/边界/负面）。",
+            "elements": elements,
+            "message": f"AI 已成功在页面中识别出 {len(elements)} 个关键交互元素。"
         }
     except Exception as e:
-        logger.error(f"AI Scenarios Failed: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"AI Scenario Planning Failed: {str(e)}")
+        logger.error(f"AI Discovery Failed: {e}")
+        raise HTTPException(status_code=500, detail=f"AI Discovery Failed: {str(e)}")
 
 
 @router.post("/heal", response_model=HealResponse)
@@ -209,6 +144,26 @@ async def heal_element(
         status="auto_healed" if healed else "manual_review",
     )
     db.add(log)
+    
+    # 4. Write back to Element Library if confidence is high
+    from datetime import datetime
+    if healing.get("confidence", 0.0) >= 0.8 and healed:
+        element.locator_value = healed
+        # Ensure metadata_json is a dict before updating
+        current_meta = element.metadata_json or {}
+        if isinstance(current_meta, str):
+            try:
+                import json
+                current_meta = json.loads(current_meta)
+            except:
+                current_meta = {}
+        element.metadata_json = {
+            **current_meta,
+            "last_healed_at": datetime.utcnow().isoformat(),
+        }
+        db.add(element)
+        logger.info(f"Auto-healed element {element.id} with new selector: {healed}")
+
     await db.commit()
     await db.refresh(log)
 
@@ -333,26 +288,4 @@ async def get_feedbacks(
 
 # ─── Private Helpers ──────────────────────────────────────────────────────────
 
-async def _load_project_memory(db: AsyncSession, project_id: int) -> Dict[str, Any]:
-    """
-    Load project-specific feedback history to inject as AI memory context.
-    Returns the last 20 corrections and thumbs_up entries.
-    """
-    result = await db.execute(
-        select(StepFeedback)
-        .where(StepFeedback.project_id == project_id)
-        .where(StepFeedback.feedback_type.in_(["thumbs_up", "correction"]))
-        .order_by(StepFeedback.created_at.desc())
-        .limit(20)
-    )
-    feedbacks = result.scalars().all()
-    return {
-        "feedbacks": [
-            {
-                "feedback_type": f.feedback_type,
-                "ai_notes": f.ai_notes,
-                "comment": f.comment,
-            }
-            for f in feedbacks
-        ]
-    }
+# Helpers moved to ai_service.py for reusability with agent_service.py

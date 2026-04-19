@@ -242,7 +242,7 @@
         size="large"
         role="dialog"
         aria-modal="true"
-        style="width: 500px;"
+        style="width: 700px;"
       >
         <div style="margin-bottom: 20px;">
            <p style="color: var(--color-text-2); font-size: 13px; line-height: 1.6; margin-bottom: 12px;">
@@ -262,11 +262,17 @@
                />
              </div>
              
-             <div style="display: flex; align-items: center; gap: 8px;">
-               <span :style="{ fontSize: '12px', color: !agentMode ? 'var(--color-primary)' : 'var(--color-text-3)', fontWeight: !agentMode ? '600' : '400' }">快速</span>
-               <n-switch v-model:value="agentMode" size="small" />
-               <span :style="{ fontSize: '12px', color: agentMode ? 'var(--color-primary)' : 'var(--color-text-3)', fontWeight: agentMode ? '600' : '400' }">精准</span>
-             </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span 
+                  @click="agentMode = false"
+                  :style="{ fontSize: '13px', cursor: 'pointer', userSelect: 'none', color: !agentMode ? 'var(--color-primary)' : 'var(--color-text-3)', fontWeight: !agentMode ? '600' : '400' }"
+                >快速</span>
+                <n-switch v-model:value="agentMode" size="small" />
+                <span 
+                  @click="agentMode = true"
+                  :style="{ fontSize: '13px', cursor: 'pointer', userSelect: 'none', color: agentMode ? 'var(--color-primary)' : 'var(--color-text-3)', fontWeight: agentMode ? '600' : '400' }"
+                >精准</span>
+              </div>
            </div>
 
            <n-input
@@ -819,7 +825,8 @@ const handleGenerateSteps = async () => {
           model_id: selectedAIModel.value,
           headless: true,
           max_steps: 20,
-          use_vision: false
+          use_vision: false,
+          project_id: selectedProjectId.value
         })
       })
 
@@ -858,9 +865,9 @@ const handleGenerateSteps = async () => {
                 locator_type: s.locator_type || null,
                 description: s.description || '',
                 variable_name: s.variable_name || '',
-                page_id: null,
-                element_id: null,
-                _custom_locator_mode: true
+                page_id: s.page_id || null,
+                element_id: s.element_id || null,
+                _custom_locator_mode: !s.element_id
               })
             } else if (item.type === 'error') {
               message.error(item.message)
