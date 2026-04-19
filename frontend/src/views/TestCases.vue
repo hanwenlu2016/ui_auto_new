@@ -964,8 +964,8 @@ const handleGenerateSteps = async () => {
             locator_type: s.locator_type || null,
             description: s.description || '',
             variable_name: s.variable_name || '',
-            page_id: null,
-            element_id: null
+            page_id: s.page_id || null,
+            element_id: s.element_id || null
           }
         })
 

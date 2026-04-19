@@ -34,6 +34,18 @@ class DiscoveryResponse(BaseModel):
     message: str
 
 
+class GenerateRequest(BaseModel):
+    prompt: str
+    model_id: Optional[str] = None
+    project_id: Optional[int] = None
+    business_rules: Optional[str] = None
+
+
+class GenerateResponse(BaseModel):
+    steps: List[Dict[str, Any]]
+    message: str
+
+
 class HealRequest(BaseModel):
     element_id: int
     page_source: str
@@ -71,6 +83,35 @@ class FeedbackResponse(BaseModel):
 
 
 # /scenarios endpoint removed. Use /generate for single path output.
+
+@router.post("/generate", response_model=GenerateResponse)
+async def generate_steps(
+    *,
+    db: AsyncSession = Depends(deps.get_db),
+    request: GenerateRequest,
+    current_user: User = Depends(deps.get_current_user),
+) -> Any:
+    """
+    Generate a single executable step list from natural language.
+    """
+    logger.info(f"AI Generate Request | prompt={request.prompt[:80]}")
+    project_memory = None
+    if request.project_id:
+        project_memory = await ai_service.load_project_memory(db, request.project_id)
+
+    steps = await ai_service.generate_steps_from_text(
+        db=db,
+        prompt=request.prompt,
+        business_rules=request.business_rules,
+        project_memory=project_memory,
+        model_id=request.model_id,
+    )
+    if project_memory and steps:
+        steps = ai_service.bind_steps_to_library(steps, project_memory)
+    return {
+        "steps": steps,
+        "message": f"AI 已生成 {len(steps)} 个步骤。"
+    }
 
 @router.post("/discover", response_model=DiscoveryResponse)
 async def discover_elements(

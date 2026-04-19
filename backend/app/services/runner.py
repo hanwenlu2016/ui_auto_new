@@ -335,6 +335,48 @@ class TestRunner:
             "locator_chain": step.get("locator_chain"),
         }
 
+    def _normalize_selector(self, selector: Any) -> str:
+        return re.sub(r":visible\b", "", str(selector or "").strip(), flags=re.IGNORECASE)
+
+    def _extract_element_metadata_candidates(self, element: PageElement) -> List[str]:
+        candidates: List[str] = []
+
+        metadata = getattr(element, "metadata_json", None)
+        if isinstance(metadata, str):
+            try:
+                metadata = json.loads(metadata)
+            except Exception:
+                metadata = None
+
+        if not isinstance(metadata, dict):
+            return candidates
+
+        locator_chain = metadata.get("locator_chain")
+        if isinstance(locator_chain, dict):
+            for raw in [
+                locator_chain.get("primary"),
+                locator_chain.get("fallback_1"),
+                locator_chain.get("fallback_2"),
+                locator_chain.get("fallback_3"),
+            ]:
+                normalized = self._normalize_selector(raw)
+                if normalized:
+                    candidates.append(normalized)
+        elif isinstance(locator_chain, list):
+            for raw in locator_chain:
+                normalized = self._normalize_selector(raw)
+                if normalized:
+                    candidates.append(normalized)
+
+        aliases = metadata.get("selector_aliases")
+        if isinstance(aliases, list):
+            for raw in aliases:
+                normalized = self._normalize_selector(raw)
+                if normalized:
+                    candidates.append(normalized)
+
+        return list(dict.fromkeys(candidates))
+
     async def _execute_step(
         self,
         tool: PlaywrightTool,
@@ -455,6 +497,7 @@ class TestRunner:
             element = res.scalars().first()
             if element and element.locator_value:
                 candidates.append(str(element.locator_value))
+                candidates.extend(self._extract_element_metadata_candidates(element))
 
         # 2. Rich Locator Chain (Semantic, Text, Clean CSS, original XPath)
         locator_chain = step.get("locator_chain")

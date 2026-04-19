@@ -71,6 +71,32 @@ Return ONLY this JSON:
 }
 """
 
+GENERATE_SYSTEM_PROMPT = """
+You are a senior UI automation test designer.
+Convert the user's intent into executable test steps for a Playwright-based platform.
+
+Rules:
+- Prefer these action names: goto, click, fill, select, press, hover, wait, wait_for_selector, assert_text, assert_visible, screenshot, get_text, get_attribute, set_variable
+- Prefer stable selectors from provided known elements and business rules
+- Keep output concise and executable
+- Return ONLY JSON
+
+Return either:
+[
+  {
+    "action": "click",
+    "target": "[data-testid='login-btn']",
+    "value": "",
+    "description": "点击登录按钮"
+  }
+]
+
+or:
+{
+  "steps": [...]
+}
+"""
+
 
 class AIService:
     """
@@ -150,6 +176,41 @@ class AIService:
         except Exception as e:
             logger.error(f"Chat completion failed: {e}")
             return {"content": f"Error: {str(e)}"}
+
+    async def generate_steps_from_text(
+        self,
+        db: AsyncSession,
+        prompt: str,
+        business_rules: Optional[str] = None,
+        project_memory: Optional[Dict[str, Any]] = None,
+        model_id: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        client, model_name = await self._get_client_from_db(db, model_id)
+
+        if not client:
+            return self._mock_generate_steps(prompt)
+
+        user_message = self._build_generate_user_message(
+            prompt=prompt,
+            business_rules=business_rules,
+            project_memory=project_memory,
+        )
+
+        try:
+            response = await client.chat.completions.create(
+                model=model_name,
+                messages=[
+                    {"role": "system", "content": GENERATE_SYSTEM_PROMPT},
+                    {"role": "user", "content": user_message},
+                ],
+                temperature=0.1,
+            )
+            raw = response.choices[0].message.content
+            steps = self._extract_generated_steps(raw)
+            return self._clean_generated_steps(steps or self._mock_generate_steps(prompt))
+        except Exception as e:
+            logger.error(f"generate_steps_from_text failed ({model_name}): {e}")
+            return self._clean_generated_steps(self._mock_generate_steps(prompt))
 
 
 
@@ -281,6 +342,175 @@ class AIService:
         except:
             return None
 
+    def _build_generate_user_message(
+        self,
+        prompt: str,
+        business_rules: Optional[str] = None,
+        project_memory: Optional[Dict[str, Any]] = None,
+    ) -> str:
+        lines = [f"User request:\n{prompt.strip()}"]
+
+        if business_rules:
+            lines.append(f"Business rules:\n{business_rules.strip()}")
+
+        if project_memory:
+            feedback_lines = []
+            for feedback in project_memory.get("feedbacks", [])[:10]:
+                note = (feedback.get("ai_notes") or feedback.get("comment") or "").strip()
+                if note:
+                    feedback_lines.append(f"- {note}")
+            if feedback_lines:
+                lines.append("Recent project feedback:\n" + "\n".join(feedback_lines))
+
+            library_lines = []
+            for page in project_memory.get("page_object_library", [])[:20]:
+                page_name = page.get("page_name") or "Unnamed Page"
+                for element in page.get("elements", [])[:20]:
+                    name = element.get("name") or "UnnamedElement"
+                    selector = element.get("selector") or ""
+                    description = element.get("description") or ""
+                    suffix = f" ({description})" if description else ""
+                    if selector:
+                        library_lines.append(f"- [{page_name}] {name}{suffix} => {selector}")
+            if library_lines:
+                lines.append("Known elements:\n" + "\n".join(library_lines))
+
+        lines.append("Return valid JSON only.")
+        return "\n\n".join(lines)
+
+    def _extract_generated_steps(self, text: str) -> List[Dict[str, Any]]:
+        steps = self._parse_json_array(text)
+        if isinstance(steps, list):
+            return [step for step in steps if isinstance(step, dict)]
+
+        payload = self._parse_json_object(text)
+        if isinstance(payload, dict) and isinstance(payload.get("steps"), list):
+            return [step for step in payload["steps"] if isinstance(step, dict)]
+
+        return []
+
+    def _normalize_generated_action(self, action: Any) -> str:
+        text = str(action or "").strip().lower()
+        if not text:
+            return "click"
+        if "wait_for_selector" in text or "wait for selector" in text or "等待元素" in text:
+            return "wait_for_selector"
+        if "assert_visible" in text or "verify visible" in text or "check visible" in text or "可见" in text:
+            return "assert_visible"
+        if "assert" in text or "verify" in text or "check" in text or "断言" in text or "验证" in text or "检查" in text:
+            return "assert_text"
+        if "hover" in text or "悬停" in text:
+            return "hover"
+        if "select" in text or "选择" in text:
+            return "select"
+        if "press" in text or "按键" in text:
+            return "press"
+        if "click" in text or "点击" in text:
+            return "click"
+        if "fill" in text or "type" in text or "input" in text or "输入" in text or "填写" in text:
+            return "fill"
+        if "goto" in text or "visit" in text or "open" in text or "navigate" in text or "跳转" in text or "访问" in text or "打开" in text:
+            return "goto"
+        if "wait" in text or "sleep" in text or "等待" in text:
+            return "wait"
+        if "screenshot" in text or "截图" in text:
+            return "screenshot"
+        if "get_text" in text or "text_content" in text or "extract text" in text or "提取文本" in text:
+            return "get_text"
+        if "get_attribute" in text or "extract_attr" in text or "extract attribute" in text or "提取属性" in text:
+            return "get_attribute"
+        if "set_variable" in text or "设置变量" in text:
+            return "set_variable"
+        return "click"
+
+    def _parse_wait_to_ms(self, value: Any, wait_ms: Any = None) -> Optional[int]:
+        raw = wait_ms if wait_ms is not None else value
+        if raw is None:
+            return None
+        if isinstance(raw, (int, float)):
+            return int(raw if raw >= 100 else raw * 1000)
+
+        text = str(raw).strip().lower()
+        if not text:
+            return None
+        match = re.match(r"^(\d+(?:\.\d+)?)\s*(ms|s)?$", text)
+        if not match:
+            return None
+        amount = float(match.group(1))
+        unit = match.group(2)
+        if unit == "ms":
+            return int(amount)
+        if unit == "s":
+            return int(amount * 1000)
+        return int(amount if amount >= 100 else amount * 1000)
+
+    def _clean_generated_steps(self, steps: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        cleaned: List[Dict[str, Any]] = []
+        for step in steps:
+            if not isinstance(step, dict):
+                continue
+            action = self._normalize_generated_action(step.get("action"))
+            if not action:
+                continue
+            target = str(step.get("target") or step.get("selector") or "").strip()
+            value = step.get("value")
+            wait_ms = self._parse_wait_to_ms(value=value, wait_ms=step.get("wait_ms")) if action == "wait" else step.get("wait_ms")
+            if action == "goto" and not value and target:
+                value = target
+                target = ""
+            cleaned_step: Dict[str, Any] = {
+                "action": action,
+                "target": target,
+                "selector": target,
+                "value": "" if value is None else str(value),
+                "description": str(step.get("description") or "").strip(),
+            }
+            if action == "wait":
+                wait_ms = wait_ms or 1000
+                cleaned_step["wait_ms"] = wait_ms
+                cleaned_step["value"] = str(wait_ms)
+            elif step.get("wait_ms") is not None:
+                cleaned_step["wait_ms"] = step.get("wait_ms")
+            if step.get("locator_chain") is not None:
+                cleaned_step["locator_chain"] = step.get("locator_chain")
+            if step.get("locator_type") is not None:
+                cleaned_step["locator_type"] = step.get("locator_type")
+            if step.get("variable_name") is not None:
+                cleaned_step["variable_name"] = step.get("variable_name")
+            if step.get("page_id") is not None:
+                cleaned_step["page_id"] = step.get("page_id")
+            if step.get("element_id") is not None:
+                cleaned_step["element_id"] = step.get("element_id")
+            cleaned.append(cleaned_step)
+        return cleaned
+
+    def _mock_generate_steps(self, prompt: str) -> List[Dict[str, Any]]:
+        prompt_text = (prompt or "").strip()
+        if not prompt_text:
+            return []
+
+        url_match = re.search(r"https?://[^\s]+", prompt_text)
+        if url_match:
+            return [
+                {
+                    "action": "goto",
+                    "target": "",
+                    "selector": "",
+                    "value": url_match.group(0),
+                    "description": f"访问页面 {url_match.group(0)}",
+                }
+            ]
+
+        return [
+            {
+                "action": "click",
+                "target": "AI_AUTO",
+                "selector": "AI_AUTO",
+                "value": "",
+                "description": prompt_text,
+            }
+        ]
+
     def _normalize_selector(self, selector: Any) -> str:
         return re.sub(r":visible\b", "", str(selector or "").strip(), flags=re.IGNORECASE)
 
@@ -311,6 +541,39 @@ class AIService:
 
         return list(dict.fromkeys(candidates))
 
+    def _get_element_selector_candidates(self, element: Dict[str, Any]) -> List[str]:
+        candidates: List[str] = []
+
+        normalized = self._normalize_selector(element.get("selector"))
+        if normalized:
+            candidates.append(normalized)
+
+        metadata = element.get("metadata_json")
+        if isinstance(metadata, dict):
+            locator_chain = metadata.get("locator_chain")
+            if isinstance(locator_chain, dict):
+                for raw in [
+                    locator_chain.get("primary"),
+                    locator_chain.get("fallback_1"),
+                    locator_chain.get("fallback_2"),
+                    locator_chain.get("fallback_3"),
+                ]:
+                    normalized = self._normalize_selector(raw)
+                    if normalized:
+                        candidates.append(normalized)
+            elif isinstance(locator_chain, list):
+                for raw in locator_chain:
+                    normalized = self._normalize_selector(raw)
+                    if normalized:
+                        candidates.append(normalized)
+
+            for raw in metadata.get("selector_aliases", []) if isinstance(metadata.get("selector_aliases"), list) else []:
+                normalized = self._normalize_selector(raw)
+                if normalized:
+                    candidates.append(normalized)
+
+        return list(dict.fromkeys(candidates))
+
     def bind_steps_to_library(self, steps: List[Dict[str, Any]], project_memory: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
         Match AI-generated steps to the project's Page Object Library.
@@ -331,9 +594,8 @@ class AIService:
                 e_name = el.get("name", "").lower().strip()
                 if e_name:
                     name_map[e_name] = (el_id, p_id, el.get("selector"))
-                e_sel = self._normalize_selector(el.get("selector"))
-                if e_sel:
-                    selector_map[e_sel] = (el_id, p_id, el.get("selector"))
+                for candidate in self._get_element_selector_candidates(el):
+                    selector_map[candidate] = (el_id, p_id, el.get("selector"))
 
         matched_steps = []
         for step in steps:
@@ -403,7 +665,8 @@ class AIService:
                     "name": e.name,
                     "selector": e.locator_value,
                     "type": e.locator_type,
-                    "description": e.description
+                    "description": e.description,
+                    "metadata_json": e.metadata_json,
                 }
                 for e in p.page_elements
             ]

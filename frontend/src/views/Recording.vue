@@ -280,6 +280,13 @@ const formatWaitForSelectorSeconds = (event: any) => {
   return `${((ms ?? 8000) / 1000).toFixed(1)}s`
 }
 
+const inferLocatorType = (selector: string) => {
+  const value = String(selector || '').trim()
+  if (!value) return 'css'
+  if (value.startsWith('//') || value.startsWith('xpath=')) return 'xpath'
+  return 'css'
+}
+
 const buildDefaultEventDescription = (action: string, selector: string, value: string, waitMs: number | null) => {
   if (action === 'wait') return `等待 ${(waitMs ?? 1000) / 1000}s`
   if (action === 'wait_for_selector') return `等待元素出现: ${selector || '目标元素'} (超时 ${(waitMs ?? 8000) / 1000}s)`
@@ -492,6 +499,8 @@ const handleRecordingStopped = () => {
                     selector: el.selector,
                     type: el.action,
                     selected: true,
+                    locator_chain: el.locator_chain || null,
+                    metadata_json: el.metadata || null,
                 })
             }
         }
@@ -522,13 +531,29 @@ const handleSyncModeling = async () => {
         }
 
         for (const el of selected) {
+          const metadataJson: Record<string, any> = {
+            ...(el.metadata_json || {}),
+            discovered: true,
+            source: 'recording',
+            action_type: el.type,
+            selector_aliases: Array.from(new Set([
+              el.selector,
+              el.locator_chain?.primary,
+              el.locator_chain?.fallback_1,
+              el.locator_chain?.fallback_2,
+              el.locator_chain?.fallback_3
+            ].filter(Boolean)))
+          }
+          if (el.locator_chain) {
+            metadataJson.locator_chain = el.locator_chain
+          }
           await api.post('/elements/', {
             name: el.name,
             description: '',
             page_id: targetPageId,
-            locator_type: 'css',
+            locator_type: inferLocatorType(el.selector),
             locator_value: el.selector,
-            metadata_json: { discovered: true, type: el.type }
+            metadata_json: metadataJson
           })
         }
         message.success(`成功同步 ${selected.length} 个元素到资产库！这些元素现在可以在 AI 自然语言模式中直接被理解和精确调用。`)
