@@ -157,21 +157,18 @@
 
 <script setup lang="ts">
 import { ref, watch, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
 import { NIcon, NButton, NInput, NSpin, NTag, NTabs, NTabPane, NSelect, useMessage } from 'naive-ui'
-import { 
-  SparklesOutline as SparklesIcon, 
+import {
+  SparklesOutline as SparklesIcon,
   CloseOutline as CloseIcon,
   PlanetOutline as SmartIcon,
   PaperPlaneOutline as SendIcon
 } from '@vicons/ionicons5'
 import api from '@/api'
-import { useRecordingStore } from '@/stores/recording'
 import { useAppStore } from '@/stores/app'
 import { bindGeneratedStepsToKnownElements, loadAiContext } from '@/utils/aiContext'
+import { ensureAICaseModule, generateCaseName, normalizeGeneratedSteps } from '@/utils/aiCaseFlow'
 
-const router = useRouter()
-const recordingStore = useRecordingStore()
 const appStore = useAppStore()
 const isOpen = ref(false)
 const prompt = ref('')
@@ -238,107 +235,51 @@ const getActionType = (action: string) => {
   return map[action] || 'default'
 }
 
-const useSteps = (steps: any[]) => {
-  console.log('AI useSteps triggered:', steps)
+const useSteps = async (steps: any[]) => {
+  if (!appStore.selectedProjectId) {
+    message.warning('请先选择项目，再使用 AI 助手自动保存用例')
+    return
+  }
+
+  const normalizedSteps = normalizeGeneratedSteps(steps)
+  if (normalizedSteps.length === 0) {
+    message.warning('未生成有效步骤，无法保存用例')
+    return
+  }
+
   isOpen.value = false
-  
-  const mapAction = (action: string) => {
-    const a = (action || '').toLowerCase()
-    if (a.includes('wait_for_selector') || a.includes('wait for selector') || a.includes('等待元素')) return 'wait_for_selector'
-    if (a.includes('assert_visible') || a.includes('visible') || a.includes('可见')) return 'assert_visible'
-    if (a.includes('click') || a.includes('点击')) return 'click'
-    if (a.includes('press') || a.includes('按键')) return 'press'
-    if (a.includes('fill') || a.includes('type') || a.includes('input') || a.includes('输入') || a.includes('填写')) return 'fill'
-    if (a.includes('select') || a.includes('选择')) return 'select'
-    if (a.includes('hover') || a.includes('悬停')) return 'hover'
-    if (a.includes('goto') || a.includes('visit') || a.includes('open') || a.includes('navigate') || a.includes('跳转') || a.includes('访问') || a.includes('打开')) return 'goto'
-    if (a.includes('assert') || a.includes('verify') || a.includes('check') || a.includes('断言') || a.includes('验证') || a.includes('检查')) return 'assert_text'
-    if (a.includes('wait') || a.includes('sleep') || a.includes('等待')) return 'wait'
-    if (a.includes('screenshot') || a.includes('截图')) return 'screenshot'
-    if (a.includes('get_text') || a.includes('text_content') || a.includes('提取文本')) return 'get_text'
-    if (a.includes('get_attribute') || a.includes('extract_attr') || a.includes('提取属性')) return 'get_attribute'
-    if (a.includes('set_variable') || a.includes('设置变量')) return 'set_variable'
-    return a
-  }
-
-  const parseDurationToMs = (raw: any): number | null => {
-    if (raw === null || raw === undefined) return null
-    if (typeof raw === 'number' && Number.isFinite(raw)) {
-      return Math.round(raw >= 100 ? raw : raw * 1000)
-    }
-    const text = String(raw).trim().toLowerCase()
-    if (!text) return null
-    const m = text.match(/^(\d+(?:\.\d+)?)\s*(ms|s)?$/)
-    if (!m) return null
-    const amount = Number(m[1])
-    const unit = m[2]
-    if (unit === 'ms') return Math.round(amount)
-    if (unit === 's') return Math.round(amount * 1000)
-    return Math.round(amount >= 100 ? amount : amount * 1000)
-  }
-
-  const buildDefaultDescription = (action: string, target: string, value: string, waitMs: number | null) => {
-    if (action === 'goto') return `访问页面 ${value || target || ''}`.trim()
-    if (action === 'wait') return `等待 ${(waitMs ?? 1000) / 1000}s`
-    if (action === 'wait_for_selector') return `等待元素出现: ${target || '目标元素'} (超时 ${(waitMs ?? 8000) / 1000}s)`
-    if (action === 'click') return `点击 ${target || '目标元素'}`
-    if (action === 'fill') return `输入内容到 ${target || '输入框'}`
-    if (action === 'assert_text') return `断言 ${target || '元素'} 包含文本 ${value || ''}`.trim()
-    if (action === 'assert_visible') return `断言元素可见: ${target || '目标元素'}`
-    if (action === 'select') return `选择 ${value || ''} 于 ${target || '下拉框'}`.trim()
-    if (action === 'press') return `在 ${target || '目标元素'} 按键 ${value || ''}`.trim()
-    if (action === 'screenshot') return '截图'
-    return '执行动作'
-  }
-
-  const normalizedSteps = steps.map(s => {
-    const action = mapAction(s.action)
-    let val = String(s.value || '').trim()
-    let tar = s.target || s.selector || ''
-    
-    if (action === 'goto' && !val && tar) {
-      val = tar
-      tar = ''
-    }
-
-    const waitMs = action === 'wait' ? (parseDurationToMs(s.wait_ms ?? val) ?? 1000) : null
-    if (action === 'wait') {
-      val = String(waitMs)
-    }
-    const waitForSelectorMs = action === 'wait_for_selector' ? (parseDurationToMs(s.wait_ms ?? val) ?? 8000) : null
-    if (action === 'wait_for_selector') {
-      val = String(waitForSelectorMs)
-    }
-    const finalWaitMs = action === 'wait' ? waitMs : (action === 'wait_for_selector' ? waitForSelectorMs : null)
-    
-    return {
-      ...s,
-      action: action,
-      target: String(tar || '').trim(),
-      selector: String(tar || '').trim(),
-      value: String(val || '').trim(),
-      wait_ms: finalWaitMs,
-      description: (s.description || '').trim() || buildDefaultDescription(action, String(tar || '').trim(), String(val || '').trim(), finalWaitMs)
-    }
-  })
 
   try {
-    // 1. Save to global store for late pickup
-    recordingStore.setPendingSteps(normalizedSteps)
-    
-    // 2. Broadcast event for immediate pickup if on Recording page
-    window.dispatchEvent(new CustomEvent('ai-use-steps', { detail: normalizedSteps }))
-    
-    message.success(`成功导入 ${normalizedSteps.length} 个步骤，请前往录制页面查看。`)
-  } catch (err) {
-    console.warn('Store or message provider failed, but continuing to navigate:', err)
+    const moduleId = await ensureAICaseModule({
+      projectId: appStore.selectedProjectId,
+      fetchModules: async (projectId) => {
+        const response = await api.get(`/modules/?project_id=${projectId}`)
+        return response.data || []
+      },
+      createModule: async (payload) => {
+        const response = await api.post('/modules/', payload)
+        return response.data
+      }
+    })
+
+    const payload = {
+      name: generateCaseName({
+        prompt: messages.value.length >= 2 ? messages.value[messages.value.length - 2]?.text || '' : '',
+        steps: normalizedSteps
+      }),
+      description: '由 AI 助手自动生成并保存',
+      priority: 'P1',
+      module_id: moduleId,
+      steps: normalizedSteps
+    }
+
+    await api.post('/cases/', payload)
+    appStore.setModuleId(moduleId)
+    message.success(`已自动保存 ${normalizedSteps.length} 个步骤到用例库`)
+  } catch (err: any) {
+    console.error('AI case auto-save failed:', err)
+    message.error(err?.response?.data?.detail || err?.message || '自动保存用例失败')
   }
-  
-  // 3. Navigate
-  router.push('/recording').catch(err => {
-    console.error('Navigation failed:', err)
-    message.error('无法自动跳转到录制页面，请手动点击侧边栏“录制”')
-  })
 }
 
 const submitFeedback = async (_msg: any, step: any, index: number | string, type: string) => {
