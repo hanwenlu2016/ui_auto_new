@@ -24,6 +24,39 @@ from app.core.logger import logger
 # 允许嵌套事件循环 - Celery worker 需要
 nest_asyncio.apply()
 
+def _to_json_safe(obj: any) -> any:
+    """
+    递归将对象转换为 JSON 安全的基元类型。
+    适用于无法直接序列化的错误对象、字节流、枚举等。
+    """
+    import uuid
+    from datetime import datetime
+    from enum import Enum
+    import base64
+
+    if isinstance(obj, dict):
+        return {str(k): _to_json_safe(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [_to_json_safe(i) for i in obj]
+    elif isinstance(obj, (str, int, float, bool, type(None))):
+        return obj
+    elif isinstance(obj, Enum):
+        return obj.value[0] if isinstance(obj.value, (list, tuple)) else obj.value
+    elif isinstance(obj, (uuid.UUID, datetime, Exception)):
+        return str(obj)
+    elif isinstance(obj, bytes):
+        try:
+            return base64.b64encode(obj).decode("utf-8")
+        except:
+            return "<binary data>"
+    elif hasattr(obj, "__class__") and obj.__class__.__name__ == "Error":
+        return str(obj)
+    else:
+        try:
+            return str(obj)
+        except:
+            return f"<unserializable {type(obj).__name__}>"
+
 @celery_app.task(acks_late=True)
 def run_test_case_task(case_id: int, headless: bool = True, browser_type: str = "chromium", executor_id: int = None):
     """
@@ -71,7 +104,7 @@ def run_test_case_task(case_id: int, headless: bool = True, browser_type: str = 
                 logger.error(f"Failed to generate report: {e}", exc_info=True)
                 result['report_error'] = str(e)
             
-            return result
+                return _to_json_safe(result)
     
     try:
         result = asyncio.run(_run())
@@ -171,7 +204,7 @@ def run_test_suite_task(suite_id: int, headless: bool = True, browser_type: str 
                 )
                 logger.info(f"Suite report generated: {report.report_path}")
                 
-                return {
+                return _to_json_safe({
                     "success": True,
                     "suite_id": suite_id,
                     "total_cases": len(results),
@@ -180,14 +213,14 @@ def run_test_suite_task(suite_id: int, headless: bool = True, browser_type: str 
                     "results": results,
                     "report_id": report.id,
                     "report_path": report.report_path
-                }
+                })
             except Exception as e:
                 logger.error(f"Failed to generate suite report: {e}", exc_info=True)
-                return {
+                return _to_json_safe({
                     "success": False, 
                     "error": f"Tests finished but report generation failed: {e}",
                     "results": results
-                }
+                })
 
     try:
         result = asyncio.run(_run())

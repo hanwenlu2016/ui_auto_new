@@ -4,73 +4,45 @@ import json
 import re
 from openai import AsyncOpenAI
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 from app.core.config import settings
 from app.core.logger import logger
+from app.models.user import User
+from app.models.element import PageElement
+from app.models.page import Page
+from app.models.module import Module
+from app.models.heal_log import HealLog
+from app.models.feedback import StepFeedback
 
 
 # ─── Prompt Templates ─────────────────────────────────────────────────────────
 
-SUPER_PROMPT_SYSTEM = """
-You are an elite UI Test Automation Engineer with 10+ years of experience.
-Your mission: convert user instructions into robust, production-grade Playwright test steps.
+DISCOVERY_SYSTEM_PROMPT = """
+You are a UI Modeling Expert. Your task is to analyze a DOM snapshot and identify key interactive elements for test automation.
 
-You MUST:
-1. Prefer stable selectors in this priority order:
-   [data-testid] > [aria-label] > relative XPath > text= > CSS class
+Focus on:
+1. Buttons, Inputs, Selects, Links, and key clickable containers.
+2. Form fields and their associated labels.
+3. Navigation elements.
 
-2. For EVERY interactive step, provide a full "locator_chain" with up to 4 alternatives.
+For each element, provide:
+- name: A clear, semantic name in English or Chinese (e.g. "LoginButton", "用户名输入框")
+- locator_type: One of [xpath, css, id, name]
+- locator_value: The most stable and unique selector possible.
+- type: The element type (button, input, select, link, text, other)
+- description: A brief explanation of what the element does.
 
-3. Detect async elements: if the page likely has loading spinners or dynamic IDs,
-   add an explicit wait step BEFORE the action.
-
-4. Include at least one assertion per test goal.
-
-5. Sanitize all selector output — remove sensitive strings from DOM.
-
-6. NO EMPTY SELECTORS: For interactive steps (click, fill), if no DOM is provided, use semantic, execution-friendly selectors instead of site-specific legacy IDs. 
-
-7. **INTELLIGENT AGENT MODE**: If you cannot determine a precise CSS/XPath selector from the context, or if the instruction is high-level (e.g., "Login with valid credentials"), you MUST set "target": "AI_AUTO" and provide a detailed natural language instruction in "description". The system will use a visual AI agent to execute these steps.
-   Example:
-   {
-     "action": "click",
-     "target": "AI_AUTO",
-     "value": "",
-     "description": "Click the 'Sign In' button in the top navigation bar"
-   }
-
-8. For search-like flows, do NOT assume pressing Enter will submit. Prefer an explicit click on a visible submit/search button unless DOM or BUSINESS RULES prove Enter is the correct trigger.
-
-OUTPUT FORMAT (strict JSON array, no markdown):
+OUTPUT FORMAT (strict JSON array of objects, no markdown):
 [
   {
-    "action": "goto|click|fill|wait|wait_for_selector|hover|select|press|assert_text|assert_visible|get_text|get_attribute|set_variable|screenshot",
-    "target": "selector_string_or_AI_AUTO",
-    "value": "optional_value_or_url",
-    "locator_chain": {
-      "primary": "[data-testid='xxx']",
-      "fallback_1": "[aria-label='xxx']",
-      "fallback_2": "//relative/xpath",
-      "fallback_3": "text=visible_text"
-    },
-    "description": "Detailed description of the step, ESPECIALLY if target is AI_AUTO"
+    "name": "...",
+    "locator_type": "...",
+    "locator_value": "...",
+    "type": "...",
+    "description": "..."
   }
 ]
-"""
-
-SCENARIO_SYSTEM_PROMPT = """
-You are a QA strategist. Given a feature description and page context, generate a comprehensive test plan.
-
-Return a JSON object with three arrays:
-{
-  "happy_path": [...max 5 steps],
-  "boundary": [...max 5 steps],
-  "negative": [...max 5 steps]
-}
-
-IMPORTANT: Limit each array to a maximum of 5 most critical steps. Total response must be concise.
-Each step follows the same schema as standard test steps with locator_chain and assertions.
-Action MUST be one of: [goto, click, fill, wait, wait_for_selector, hover, select, press, assert_text, assert_visible, screenshot].
-ALWAYS provide a 'target' selector for click/fill/hover actions, even if it's a generic guess like 'button:has-text("Login")' or 'input[type="text"]'.
 """
 
 HEAL_SYSTEM_PROMPT = """
@@ -107,46 +79,12 @@ class AIService:
     """
 
     def __init__(self):
-        self._clients: Dict[int, AsyncOpenAI] = {}
+        # Stores (AsyncOpenAI client, config_fingerprint) keyed by model DB id.
+        # The fingerprint is a hash of api_key + base_url + model_identifier;
+        # if any of these change in the DB, the cached client is invalidated and recreated.
+        self._clients: Dict[int, tuple[AsyncOpenAI, str]] = {}
         logger.info("Universal AI Service v4.0 initialized (DB-Driven)")
-        self._action_aliases = {
-            "open": "goto",
-            "visit": "goto",
-            "navigate": "goto",
-            "跳转": "goto",
-            "访问": "goto",
-            "打开": "goto",
-            "input": "fill",
-            "type": "fill",
-            "填写": "fill",
-            "输入": "fill",
-            "sleep": "wait",
-            "等待": "wait",
-            "verify": "assert_text",
-            "check": "assert_text",
-            "验证": "assert_text",
-            "检查": "assert_text",
-            "extract_text": "get_text",
-            "提取文本": "get_text",
-            "extract_attr": "get_attribute",
-            "提取属性": "get_attribute",
-        }
-        self._allowed_actions = {
-            "goto",
-            "click",
-            "fill",
-            "wait",
-            "wait_for_selector",
-            "assert_text",
-            "assert_visible",
-            "screenshot",
-            "hover",
-            "select",
-            "press",
-            "get_text",
-            "get_attribute",
-            "set_variable",
-        }
+
 
     async def _get_client_from_db(
         self, db: AsyncSession, model_id: Optional[str] = None
@@ -167,20 +105,25 @@ class AIService:
             logger.warning("No active AI model found in database.")
             return None, None
 
-        # Cache clients by model ID
-        if db_model.id not in self._clients:
+        # Cache clients by model ID, but invalidate when config changes.
+        # Using a fingerprint of the key fields prevents stale clients after API key rotation.
+        fingerprint = f"{db_model.api_key}:{db_model.base_url}:{db_model.model_identifier}"
+        cached = self._clients.get(db_model.id)
+        if cached is None or cached[1] != fingerprint:
             try:
                 client = AsyncOpenAI(
                     api_key=db_model.api_key,
                     base_url=db_model.base_url,
                     timeout=120.0
                 )
-                self._clients[db_model.id] = client
+                self._clients[db_model.id] = (client, fingerprint)
+                if cached is not None:
+                    logger.info(f"AI client refreshed for model '{db_model.name}' (config changed)")
             except Exception as e:
                 logger.error(f"Failed to init AI client for {db_model.name}: {e}")
                 return None, None
                 
-        return self._clients[db_model.id], db_model.model_identifier
+        return self._clients[db_model.id][0], db_model.model_identifier
 
     async def chat_completion(
         self,
@@ -208,99 +151,43 @@ class AIService:
             logger.error(f"Chat completion failed: {e}")
             return {"content": f"Error: {str(e)}"}
 
-    # ─── Module 1: Multimodal Step Generation ─────────────────────────────────
 
-    async def generate_steps_from_text(
+
+    # ─── Module 2: Page Modeling & Element Discovery ─────────────────────────
+
+    async def discover_page_elements(
         self,
         db: AsyncSession,
-        prompt: str,
-        dom_snapshot: Optional[str] = None,
-        screenshot_description: Optional[str] = None,
-        business_rules: Optional[str] = None,
-        project_memory: Optional[Dict[str, Any]] = None,
+        dom_snapshot: str,
         model_id: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """
-        Generate structured Playwright test steps using DB-configured model.
+        [Module 2] Analyze DOM and return suggested PageElements.
         """
         client, model_name = await self._get_client_from_db(db, model_id)
-        
         if not client:
-            logger.warning("AI client unavailable — using mock rule engine.")
-            return self._mock_generate_steps(prompt)
+            return []
 
-        # Build contextual user message
-        user_message = self._build_user_message(
-            prompt, dom_snapshot, screenshot_description, business_rules, project_memory
-        )
-
+        # Keep snapshot size reasonable (approx 100k chars)
+        snapshot = dom_snapshot[:100000]
+        
         try:
-            logger.info(f"Generating steps | model={model_name} | prompt={prompt[:60]}...")
             response = await client.chat.completions.create(
                 model=model_name,
                 messages=[
-                    {"role": "system", "content": SUPER_PROMPT_SYSTEM},
-                    {"role": "user", "content": user_message},
+                    {"role": "system", "content": DISCOVERY_SYSTEM_PROMPT},
+                    {"role": "user", "content": f"Please analyze this DOM and discover key interactive elements:\n\n{snapshot}"},
                 ],
                 temperature=0.1,
-                max_tokens=3000,
             )
             raw = response.choices[0].message.content
-            steps = self._parse_json_array(raw) or self._mock_generate_steps(prompt)
-            return self._clean_steps(steps)
+            elements = self._parse_json_array(raw) or []
+            return elements
         except Exception as e:
-            logger.error(f"LLM call failed ({model_name}): {e}")
-            return self._clean_steps(self._mock_generate_steps(prompt))
+            logger.error(f"discover_page_elements failed: {e}")
+            return []
 
-    # ─── Module 2: Strategic Scenario Planning ────────────────────────────────
-
-    async def generate_scenarios(
-        self,
-        db: AsyncSession,
-        prompt: str,
-        dom_snapshot: Optional[str] = None,
-        project_memory: Optional[Dict[str, Any]] = None,
-        model_id: Optional[str] = None,
-    ) -> Dict[str, List[Dict[str, Any]]]:
-        """
-        Generate happy_path, boundary, and negative test scenarios.
-        """
-        client, model_name = await self._get_client_from_db(db, model_id)
-
-        if not client:
-            steps = self._mock_generate_steps(prompt)
-            return {"happy_path": steps, "boundary": [], "negative": []}
-
-        user_message = self._build_user_message(
-            prompt, dom_snapshot, project_memory=project_memory,
-            extra_instruction="Generate all three scenario types: happy_path, boundary, negative."
-        )
-
-        try:
-            response = await client.chat.completions.create(
-                model=model_name,
-                messages=[
-                    {"role": "system", "content": SCENARIO_SYSTEM_PROMPT},
-                    {"role": "user", "content": user_message},
-                ],
-                temperature=0.2,
-                max_tokens=4000,
-            )
-            raw = response.choices[0].message.content
-            result = self._parse_json_object(raw)
-            if result and all(k in result for k in ("happy_path", "boundary", "negative")):
-                return {
-                    "happy_path": self._clean_steps(result["happy_path"]),
-                    "boundary": self._clean_steps(result["boundary"]),
-                    "negative": self._clean_steps(result["negative"]),
-                }
-            # Partial fallback
-            steps = self._parse_json_array(raw) or []
-            return {"happy_path": self._clean_steps(steps), "boundary": [], "negative": []}
-        except Exception as e:
-            logger.error(f"generate_scenarios failed ({model_name}): {e}")
-            steps = self._mock_generate_steps(prompt)
-            return {"happy_path": self._clean_steps(steps), "boundary": [], "negative": []}
+    # generate_scenarios removed. Simplified to single path in generate_steps_from_text.
 
     # ─── Module 3: Self-Healing with Locator Chain ───────────────────────────
 
@@ -370,27 +257,7 @@ class AIService:
 
     # ─── Helpers ─────────────────────────────────────────────────────────────
 
-    def _build_user_message(
-        self,
-        prompt: str,
-        dom_snapshot: Optional[str],
-        screenshot_description: Optional[str] = None,
-        business_rules: Optional[str] = None,
-        project_memory: Optional[Dict[str, Any]] = None,
-        extra_instruction: str = ""
-    ) -> str:
-        msg = f"OBJECTIVE: {prompt}\n"
-        if dom_snapshot:
-            msg += f"\nUI CONTEXT (DOM):\n{dom_snapshot[:20000]}\n"
-        if screenshot_description:
-            msg += f"\nVISUAL CONTEXT:\n{screenshot_description}\n"
-        if business_rules:
-            msg += f"\nBUSINESS RULES:\n{business_rules}\n"
-        if project_memory:
-            msg += f"\nPROJECT MEMORY:\n{json.dumps(project_memory, ensure_ascii=False)}\n"
-        if extra_instruction:
-            msg += f"\nINSTRUCTION: {extra_instruction}\n"
-        return msg
+    # ─── Helpers ─────────────────────────────────────────────────────────────
 
     def _parse_json_array(self, text: str) -> Optional[List[Dict[str, Any]]]:
         try:
@@ -414,64 +281,115 @@ class AIService:
         except:
             return None
 
-    def _clean_steps(self, steps: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        cleaned = []
-        for s in steps:
-            action = self._canonical_action(s.get("action", "click"))
-            target = s.get("target") or s.get("selector") or ""
-            value = s.get("value", "")
-            wait_ms = self._parse_wait_ms(s.get("wait_ms"), value)
-            if action == "goto" and not value and target:
-                value = target
-                target = ""
-            if action == "wait" and wait_ms is None:
-                wait_ms = 1000
-                value = "1000"
-            cleaned.append({
-                "action": action,
-                "target": target,
-                "selector": target,
-                "value": str(value or ""),
-                "wait_ms": wait_ms,
-                "locator_chain": s.get("locator_chain"),
-                "variable_name": s.get("variable_name"),
-                "description": s.get("description", "")
-            })
-        return cleaned
+    def bind_steps_to_library(self, steps: List[Dict[str, Any]], project_memory: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """
+        Match AI-generated steps to the project's Page Object Library.
+        Matches by name (case-insensitive) or by selector.
+        """
+        library = project_memory.get("page_object_library", [])
+        if not library:
+            return steps
 
-    def _mock_generate_steps(self, prompt: str) -> List[Dict[str, Any]]:
-        """Fallback rule engine."""
-        p = prompt.lower()
-        if "baidu" in p or "百度" in p:
-            return [{"action": "goto", "target": "", "value": "https://www.baidu.com", "description": "打开百度"}]
-        return [{"action": "wait", "target": "", "value": "1000", "description": "AI 暂不可用，默认等待"}]
+        name_map = {}
+        selector_map = {}
+        
+        for page in library:
+            p_id = page.get("page_id")
+            p_name = page.get("page_name")
+            for el in page.get("elements", []):
+                el_id = el.get("element_id")
+                e_name = el.get("name", "").lower().strip()
+                if e_name:
+                    name_map[e_name] = (el_id, p_id, el.get("selector"))
+                e_sel = el.get("selector", "").strip()
+                if e_sel:
+                    selector_map[e_sel] = (el_id, p_id)
 
-    def _canonical_action(self, action: Any) -> str:
-        raw = str(action or "").strip().lower()
-        canonical = self._action_aliases.get(raw, raw)
-        if canonical not in self._allowed_actions:
-            if "assert" in canonical or "verify" in canonical:
-                return "assert_text"
-            return "click"
-        return canonical
+        matched_steps = []
+        for step in steps:
+            target = (step.get("target") or step.get("selector") or "").strip()
+            desc = step.get("description", "").lower()
+            
+            found_el_id = None
+            found_page_id = None
+            
+            if target in selector_map:
+                found_el_id, found_page_id = selector_map[target]
+            
+            if not found_el_id:
+                for name, (el_id, p_id, sel) in name_map.items():
+                    if target.lower() == name or name in desc:
+                        found_el_id = el_id
+                        found_page_id = p_id
+                        if target.lower() == name:
+                            step["target"] = sel
+                            step["selector"] = sel
+                        break
+            
+            if found_el_id:
+                step["element_id"] = found_el_id
+                step["page_id"] = found_page_id
+                
+            matched_steps.append(step)
+        
+        return matched_steps
 
-    def _parse_wait_ms(self, wait_ms: Any, value: Any) -> Optional[int]:
-        source = wait_ms if wait_ms is not None else value
-        if source is None:
-            return None
-        if isinstance(source, (int, float)):
-            return int(source if source >= 100 else source * 1000)
-        text = str(source).strip().lower()
-        m = re.match(r"^(\d+(?:\.\d+)?)\s*(ms|s)?$", text)
-        if not m:
-            return None
-        amount = float(m.group(1))
-        unit = m.group(2)
-        if unit == "ms":
-            return int(amount)
-        if unit == "s":
-            return int(amount * 1000)
-        return int(amount if amount >= 100 else amount * 1000)
+    async def load_project_memory(self, db: AsyncSession, project_id: int) -> Dict[str, Any]:
+        """
+        Load project-specific context:
+        1. Feedback history (RLHF)
+        2. Page Object Library (Pages & Elements) for Page-Agent framework
+        """
+        fb_result = await db.execute(
+            select(StepFeedback)
+            .where(StepFeedback.project_id == project_id)
+            .where(StepFeedback.feedback_type.in_(["thumbs_up", "correction"]))
+            .order_by(StepFeedback.created_at.desc())
+            .limit(20)
+        )
+        feedbacks = fb_result.scalars().all()
+        
+        page_query = (
+            select(Page)
+            .join(Module)
+            .where(Module.project_id == project_id)
+            .options(joinedload(Page.page_elements))
+        )
+        page_result = await db.execute(page_query)
+        pages = page_result.unique().scalars().all()
+        
+        page_object_library = []
+        for p in pages:
+            elements = [
+                {
+                    "element_id": e.id,
+                    "name": e.name,
+                    "selector": e.locator_value,
+                    "type": e.locator_type,
+                    "description": e.description
+                }
+                for e in p.page_elements
+            ]
+            if elements:
+                page_object_library.append({
+                    "page_id": p.id,
+                    "page_name": p.name,
+                    "elements": elements
+                })
+
+        return {
+            "feedbacks": [
+                {
+                    "feedback_type": f.feedback_type,
+                    "ai_notes": f.ai_notes,
+                    "comment": f.comment,
+                }
+                for f in feedbacks
+            ],
+            "page_object_library": page_object_library
+        }
+
+
 
 
 ai_service = AIService()

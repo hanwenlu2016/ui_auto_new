@@ -14,6 +14,7 @@ class AgentTaskRequest(BaseModel):
     headless: bool = True
     max_steps: int = 20
     use_vision: bool = False
+    project_id: Optional[int] = None
 
 
 class AgentStepResult(BaseModel):

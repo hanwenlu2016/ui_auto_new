@@ -227,7 +227,50 @@ class TestRunner:
 
                     json.dump(attr.asdict(test_result), f, cls=AllureEncoder, indent=4)
 
-        return result
+        # Sanitize result for JSON serialization (Celery results)
+        return self._to_json_safe(result)
+
+    def _to_json_safe(self, obj: Any) -> Any:
+        """
+        Recursively convert non-serializable objects to JSON-safe primitives.
+        Handles: Enum, Exception, UUID, datetime, bytes (base64 encoded), and general 'Error' objects.
+        """
+        import uuid
+        from datetime import datetime
+        from enum import Enum
+        import base64
+
+        if isinstance(obj, dict):
+            return {str(k): self._to_json_safe(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [self._to_json_safe(i) for i in obj]
+        elif isinstance(obj, (str, int, float, bool, type(None))):
+            return obj
+        elif isinstance(obj, Enum):
+            return obj.value[0] if isinstance(obj.value, (list, tuple)) else obj.value
+        elif isinstance(obj, (uuid.UUID, datetime)):
+            return str(obj)
+        elif isinstance(obj, bytes):
+            try:
+                return base64.b64encode(obj).decode("utf-8")
+            except:
+                return "<binary data>"
+        elif isinstance(obj, Exception):
+            return str(obj)
+        elif hasattr(obj, "__class__") and obj.__class__.__name__ == "Error":
+            # Specifically handle objects named 'Error' from libraries
+            return str(obj)
+        else:
+            try:
+                # If it's a Pydantic model (though not likely here)
+                if hasattr(obj, "dict"):
+                    return self._to_json_safe(obj.dict())
+                if hasattr(obj, "model_dump"):
+                    return self._to_json_safe(obj.model_dump())
+                # Fallback to string representation for anything else unknown
+                return str(obj)
+            except:
+                return f"<unserializable {type(obj).__name__}>"
 
     def _canonical_action(self, action: Any) -> str:
         raw = str(action or "").strip().lower()
@@ -395,39 +438,7 @@ class TestRunner:
 
         return step_res
 
-    def _build_visible_selector_variants(self, selector: str, action: str) -> List[str]:
-        """
-        Expand CSS selectors with visibility-first variants to avoid hidden duplicate nodes.
-        e.g. '#kw' -> ['#kw:visible', 'input#kw:visible', 'textarea#kw:visible'] for fill.
-        """
-        s = (selector or "").strip()
-        if not s:
-            return []
-
-        lower = s.lower()
-        # Only handle plain CSS selectors, skip non-css engines/patterns.
-        if (
-            s.startswith("//")
-            or lower.startswith("xpath=")
-            or lower.startswith("text=")
-            or lower.startswith("role=")
-            or lower.startswith("aria=")
-            or lower.startswith("id=")
-            or ">>" in s
-        ):
-            return []
-
-        variants: List[str] = []
-        if ":visible" not in lower:
-            variants.append(f"{s}:visible")
-
-        # For input-like actions, prefer visible form controls first.
-        if action in {"fill", "press", "select"} and s.startswith("#"):
-            variants.append(f"input{s}:visible")
-            variants.append(f"textarea{s}:visible")
-            variants.append(f"select{s}:visible")
-
-        return variants
+    # _build_visible_selector_variants removed. We now trust extracted locators directly.
 
     async def _build_selector_candidates(
         self,
@@ -437,7 +448,7 @@ class TestRunner:
     ) -> List[str]:
         candidates: List[str] = []
 
-        primary_selector = step.get("target") or step.get("selector")
+        # 1. Page Object Library Match (Highest Priority)
         if element_id:
             stmt = select(PageElement).where(PageElement.id == element_id)
             res = await self.db.execute(stmt)
@@ -445,32 +456,34 @@ class TestRunner:
             if element and element.locator_value:
                 candidates.append(str(element.locator_value))
 
-        if primary_selector:
-            candidates.append(str(primary_selector))
-
+        # 2. Rich Locator Chain (Semantic, Text, Clean CSS, original XPath)
         locator_chain = step.get("locator_chain")
         if isinstance(locator_chain, dict):
+            # Order of preference: Primary (Semantic) > Fallback 1 (Text) > Fallback 2 (Clean CSS) > Fallback 3 (XPath)
             ordered = [
                 locator_chain.get("primary"),
                 locator_chain.get("fallback_1"),
                 locator_chain.get("fallback_2"),
                 locator_chain.get("fallback_3"),
-                locator_chain.get("fallback_image"),
             ]
             candidates.extend([str(s) for s in ordered if s])
         elif isinstance(locator_chain, list):
             candidates.extend([str(s) for s in locator_chain if s])
 
-        expanded: List[str] = []
-        for selector in candidates:
-            expanded.extend(self._build_visible_selector_variants(selector, action))
-            expanded.append(selector)
+        # 3. Raw Target (Original extraction from browser-use)
+        primary_selector = step.get("target") or step.get("selector")
+        if primary_selector and primary_selector != "AI_AUTO":
+            candidates.append(str(primary_selector))
+
+        # 4. Image-based Fallback (Experimental)
+        if isinstance(locator_chain, dict) and locator_chain.get("fallback_image"):
+            candidates.append(str(locator_chain["fallback_image"]))
 
         # deduplicate while preserving order
         seen = set()
         unique_candidates = []
-        for selector in expanded:
-            if selector not in seen:
+        for selector in candidates:
+            if selector and selector not in seen:
                 seen.add(selector)
                 unique_candidates.append(selector)
         return unique_candidates
@@ -511,13 +524,34 @@ class TestRunner:
             # 2. Construct natural language prompt
             prompt = step.get("description")
             if not prompt:
-                # Infer from action and value
                 target = step.get("target") or step.get("selector")
+                page_url = ""
+                try:
+                    page_url = tool.page.url if tool.page else ""
+                except Exception:
+                    pass
+
                 if target == "AI_AUTO":
-                    # If AI_AUTO but no description, we are in trouble.
-                    prompt = f"Perform {action}"
-                    if value:
-                         prompt += f" with value '{value}'"
+                    # Build a more actionable prompt from context instead of the useless "Perform click"
+                    loc = f" on page '{page_url}'" if page_url else ""
+                    if action == "click":
+                        prompt = f"Click the most appropriate button or interactive element{loc}"
+                        if value:
+                            prompt += f" related to '{value}'"
+                    elif action == "fill":
+                        prompt = f"Find the most appropriate input field{loc} and type '{value}'"
+                    elif action == "select":
+                        prompt = f"Select the option '{value}' from the most appropriate dropdown{loc}"
+                    elif action == "hover":
+                        prompt = f"Hover over the most relevant element{loc}"
+                        if value:
+                            prompt += f" related to '{value}'"
+                    elif action == "press":
+                        prompt = f"Press the key '{value}' on the focused element{loc}"
+                    else:
+                        prompt = f"Perform {action}{loc}"
+                        if value:
+                            prompt += f" with value '{value}'"
                 else:
                     if action == "click":
                         prompt = f"Click on the element that looks like {target}"
@@ -528,54 +562,65 @@ class TestRunner:
             
             logger.info(f"[PageAgent Execution] Prompt: {prompt}")
 
-            # 3. Execute via PageAgent
-            # We need to expose the LLM proxy route if not already done?
-            # PlaywrightTool might not have the route set up like RecorderService.
-            # We need to set up the route dynamically here.
-            
-            # Define route handler (must be bound to self or defined here)
-            async def _handle_llm_route(route):
-                try:
-                    request = route.request
-                    if request.method != "POST":
-                        await route.continue_()
-                        return
-                    post_data = request.post_data_json
-                    if not post_data:
-                        await route.continue_()
-                        return
-                    
-                    messages = post_data.get("messages", [])
-                    async with AsyncSessionLocal() as db:
-                         response_data = await ai_service.chat_completion(
-                            db=db,
-                            messages=messages,
-                            temperature=post_data.get("temperature", 0.7),
-                        )
-                    
-                    content = response_data.get("content", "") if isinstance(response_data, dict) else response_data
-                    mock_response = {
-                        "id": "chatcmpl-page-agent-fallback",
-                        "object": "chat.completion",
-                        "created": 1677652288,
-                        "model": "gpt-3.5-turbo",
-                        "choices": [{"index": 0, "message": {"role": "assistant", "content": content}, "finish_reason": "stop"}]
-                    }
-                    await route.fulfill(status=200, content_type="application/json", body=json.dumps(mock_response))
-                except Exception as e:
-                    logger.error(f"LLM Route Error: {e}")
-                    await route.abort()
+            # 3. Register LLM proxy route — only once per browser context to prevent handler accumulation.
+            # Playwright stacks route handlers on every .route() call; duplicate registration causes
+            # exponential LLM requests and silent abort errors on the stale handlers.
+            if not getattr(tool, "_llm_route_registered", False):
+                async def _handle_llm_route(route):
+                    try:
+                        request = route.request
+                        if request.method != "POST":
+                            await route.continue_()
+                            return
+                        post_data = request.post_data_json
+                        if not post_data:
+                            await route.continue_()
+                            return
+                        
+                        messages = post_data.get("messages", [])
+                        async with AsyncSessionLocal() as db:
+                            response_data = await ai_service.chat_completion(
+                                db=db,
+                                messages=messages,
+                                temperature=post_data.get("temperature", 0.7),
+                            )
+                        
+                        content = response_data.get("content", "") if isinstance(response_data, dict) else response_data
+                        mock_response = {
+                            "id": "chatcmpl-page-agent-proxy",
+                            "object": "chat.completion",
+                            "created": 1677652288,
+                            "model": "gpt-3.5-turbo",
+                            "choices": [{"index": 0, "message": {"role": "assistant", "content": content}, "finish_reason": "stop"}]
+                        }
+                        await route.fulfill(status=200, content_type="application/json", body=json.dumps(mock_response))
+                    except Exception as e:
+                        logger.error(f"LLM Route Error: {e}")
+                        await route.abort()
 
-            # Set up route (idempotent)
-            await tool.page.context.route("**/v1/chat/completions", _handle_llm_route)
+                await tool.page.context.route("**/v1/chat/completions", _handle_llm_route)
+                tool._llm_route_registered = True
+                logger.info("[PageAgent] LLM proxy route registered on context")
 
-            # Call agent execute
-            # We use a wrapper to catch the promise result
+            # 4. Execute via PageAgent with explicit timeout guard.
+            # LLM reasoning can take 30-120s; without a timeout the evaluate call may
+            # silently fail with a cryptic Playwright timeout after 30s.
+            PAGE_AGENT_TIMEOUT_MS = 110000  # slightly under asyncio guard
+            PAGE_AGENT_ASYNCIO_TIMEOUT_S = 120.0
+
+            # Escape prompt for safe JS string interpolation
+            safe_prompt = prompt.replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ")
             js_code = f"""
             (async () => {{
+                const _timeout = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('PageAgent timeout after {PAGE_AGENT_TIMEOUT_MS}ms')), {PAGE_AGENT_TIMEOUT_MS})
+                );
                 try {{
                     if (!window.pageAgent) throw new Error("PageAgent not initialized");
-                    const result = await window.pageAgent.execute("{prompt}");
+                    const result = await Promise.race([
+                        window.pageAgent.execute("{safe_prompt}"),
+                        _timeout
+                    ]);
                     return {{ success: true, result: result }};
                 }} catch (e) {{
                     return {{ success: false, error: e.toString() }};
@@ -583,8 +628,14 @@ class TestRunner:
             }})()
             """
             
-            # Increase timeout for AI reasoning
-            result = await tool.page.evaluate(js_code)
+            import asyncio
+            try:
+                result = await asyncio.wait_for(
+                    tool.page.evaluate(js_code),
+                    timeout=PAGE_AGENT_ASYNCIO_TIMEOUT_S,
+                )
+            except asyncio.TimeoutError:
+                return {"success": False, "error": f"PageAgent asyncio timeout after {PAGE_AGENT_ASYNCIO_TIMEOUT_S}s"}
             
             if result.get("success"):
                 return {"success": True, "output": result.get("result"), "used_selector": "PageAgent_AI"}
@@ -680,5 +731,5 @@ class TestRunner:
             )
             self.db.add(log)
             await self.db.commit()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"[HealLog] Failed to persist heal log (case={case_id}, step={step_index}): {e}")
