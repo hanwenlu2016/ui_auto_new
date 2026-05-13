@@ -28,7 +28,13 @@ async def get_current_user(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Could not validate credentials",
             )
-    except (PyJWTError, ValidationError):
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Session has expired, please log in again",
+        )
+    except (PyJWTError, ValidationError) as e:
+        logger.error(f"JWT Validation Error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Could not validate credentials",

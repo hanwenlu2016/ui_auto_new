@@ -34,6 +34,7 @@ async def execute_agent_task(
         headless=request.headless,
         max_steps=request.max_steps,
         use_vision=request.use_vision,
+        project_id=request.project_id,
     )
 
     return AgentTaskResponse(**result)
@@ -60,6 +61,7 @@ async def execute_agent_task_stream(
             headless=request.headless,
             max_steps=request.max_steps,
             use_vision=request.use_vision,
+            project_id=request.project_id,
         ):
             # 采用 newline-delimited JSON 格式
             yield json.dumps(item, ensure_ascii=False) + "\n"

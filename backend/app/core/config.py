@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     # 安全配置
     SECRET_KEY: str = "YOUR_SECRET_KEY_HERE_PLEASE_CHANGE_IT"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours, ensures session stability during long recording/AI tasks
 
     # 浏览器配置
     BROWSER_HEADLESS: bool = True  # True=无头模式, False=有头模式
