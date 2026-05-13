@@ -250,29 +250,15 @@
              <span style="color: var(--color-text-3); font-size: 12px;">💡 提示：描述越明确（包含页面元素名称和输入值），生成的质量越高。</span>
            </p>
            
-           <div style="display: flex; gap: 12px; margin-bottom: 12px; align-items: center; justify-content: space-between;">
-             <div style="display: flex; gap: 12px; align-items: center;">
-               <span style="font-size: 13px; color: var(--color-text-2); font-weight: 500;">引擎选择:</span>
-               <n-select
-                 v-model:value="selectedAIModel"
-                 :options="aiModelOptions"
-                 style="width: 160px"
-                 size="small"
-                 placeholder="加载模型中..."
-               />
-             </div>
-             
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span 
-                  @click="agentMode = false"
-                  :style="{ fontSize: '13px', cursor: 'pointer', userSelect: 'none', color: !agentMode ? 'var(--color-primary)' : 'var(--color-text-3)', fontWeight: !agentMode ? '600' : '400' }"
-                >快速</span>
-                <n-switch v-model:value="agentMode" size="small" />
-                <span 
-                  @click="agentMode = true"
-                  :style="{ fontSize: '13px', cursor: 'pointer', userSelect: 'none', color: agentMode ? 'var(--color-primary)' : 'var(--color-text-3)', fontWeight: agentMode ? '600' : '400' }"
-                >精准</span>
-              </div>
+           <div style="display: flex; gap: 12px; margin-bottom: 12px; align-items: center;">
+             <span style="font-size: 13px; color: var(--color-text-2); font-weight: 500;">引擎选择:</span>
+             <n-select
+               v-model:value="selectedAIModel"
+               :options="aiModelOptions"
+               style="width: 160px"
+               size="small"
+               placeholder="加载模型中..."
+             />
            </div>
 
            <n-input
@@ -287,10 +273,7 @@
         <div v-if="aiLoading" style="text-align: center; margin: 30px 0;">
           <n-spin size="medium" />
           <div style="margin-top: 12px; color: var(--color-primary); font-size: 13px;">
-            {{ agentMode ? 'Agent 正在浏览器中执行并验证...' : 'AI 大脑正在飞速运转中...' }}
-          </div>
-          <div v-if="agentMode" style="margin-top: 8px; font-size: 12px; color: var(--color-text-3);">
-            实时步骤已在编辑器背景中同步生成
+            AI 大脑正在飞速运转中...
           </div>
         </div>
         
@@ -433,7 +416,6 @@ const aiPrompt = ref('')
 const aiLoading = ref(false)
 const aiModelOptions = ref<any[]>([])
 const selectedAIModel = ref<string | null>(null)
-const agentMode = ref(false) // Toggle between Fast (AIService) and Precision (AgentService)
 
 const rules = {
   name: { required: true, message: '请输入用例名称', trigger: 'blur' }
@@ -810,187 +792,116 @@ const handleSaveElement = async () => {
 const handleGenerateSteps = async () => {
   if (!aiPrompt.value.trim()) return
   aiLoading.value = true
-  
-  try {
-    if (agentMode.value) {
-      // Precision Mode: Real-time streaming from Agent
-      const response = await fetch('/api/v1/agent/execute_stream', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          task: aiPrompt.value,
-          model_id: selectedAIModel.value,
-          headless: true,
-          max_steps: 20,
-          use_vision: false,
-          project_id: selectedProjectId.value
-        })
-      })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.detail || '请求失败')
+  try {
+    const aiContext = await loadAiContext(selectedProjectId.value, selectedModuleId.value)
+    const resp = await api.post('/ai/generate', {
+      prompt: aiPrompt.value,
+      model_id: selectedAIModel.value,
+      project_id: selectedProjectId.value,
+      business_rules: aiContext.businessRules || undefined
+    })
+
+    const generatedSteps = resp.data.steps
+    if (generatedSteps && generatedSteps.length > 0) {
+      const parseDurationToMs = (raw: any): string => {
+        if (raw === null || raw === undefined) return ''
+        const text = String(raw).trim().toLowerCase()
+        if (!text) return ''
+        const m = text.match(/^(\d+(?:\.\d+)?)\s*(ms|s)?$/)
+        if (!m) return String(raw).trim()
+        const amount = Number(m[1])
+        const unit = m[2]
+        if (unit === 'ms') return String(Math.round(amount))
+        if (unit === 's') return String(Math.round(amount * 1000))
+        return String(Math.round(amount >= 100 ? amount : amount * 1000))
       }
 
-      const reader = response.body?.getReader()
-      if (!reader) throw new Error('流读取器不可用')
-
-      const decoder = new TextDecoder()
-      let buffer = ''
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        
-        buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split('\n')
-        buffer = lines.pop() || ''
-
-        for (const line of lines) {
-          if (!line.trim()) continue
-          try {
-            const item = JSON.parse(line)
-            if (item.type === 'step' && item.data) {
-              const s = item.data
-              // Convert Agent action to Platform step
-              formValue.value.steps.push({
-                action: s.action,
-                target: s.target || '',
-                selector: s.target || '',
-                value: s.value || '',
-                locator_chain: s.locator_chain || null,
-                locator_type: s.locator_type || null,
-                description: s.description || '',
-                variable_name: s.variable_name || '',
-                page_id: s.page_id || null,
-                element_id: s.element_id || null,
-                _custom_locator_mode: !s.element_id
-              })
-            } else if (item.type === 'error') {
-              message.error(item.message)
-            }
-          } catch (e) {
-            console.error('Failed to parse agent stream line', e)
-          }
+      const isValidUrl = (val: string) => {
+        try {
+          const u = new URL(val)
+          return u.protocol === 'http:' || u.protocol === 'https:'
+        } catch {
+          return false
         }
       }
-      message.success('精度模式执行完成')
+
+      const mapAction = (action: string): { normalized: string; degraded: boolean } => {
+        const a = (action || '').toLowerCase()
+        if (a.includes('wait_for_selector') || a.includes('wait for selector') || a.includes('等待元素')) return { normalized: 'wait_for_selector', degraded: false }
+        if (a.includes('assert_visible') || a.includes('visible') || a.includes('可见')) return { normalized: 'assert_visible', degraded: false }
+        if (a.includes('assert') || a.includes('verify') || a.includes('check') || a.includes('断言') || a.includes('验证') || a.includes('检查')) return { normalized: 'assert_text', degraded: false }
+        if (a.includes('hover') || a.includes('悬停')) return { normalized: 'hover', degraded: false }
+        if (a.includes('select') || a.includes('选择')) return { normalized: 'select', degraded: false }
+        if (a.includes('press') || a.includes('按键')) return { normalized: 'press', degraded: false }
+        if (a.includes('click') || a.includes('点击')) return { normalized: 'click', degraded: false }
+        if (a.includes('fill') || a.includes('type') || a.includes('input') || a.includes('输入') || a.includes('填写')) return { normalized: 'fill', degraded: false }
+        if (a.includes('goto') || a.includes('visit') || a.includes('open') || a.includes('navigate') || a.includes('跳转') || a.includes('访问') || a.includes('打开')) return { normalized: 'goto', degraded: false }
+        if (a.includes('wait') || a.includes('sleep') || a.includes('等待')) return { normalized: 'wait', degraded: false }
+        if (a.includes('screenshot') || a.includes('截图')) return { normalized: 'screenshot', degraded: false }
+        if (a.includes('get_text') || a.includes('text_content') || a.includes('提取文本')) return { normalized: 'get_text', degraded: false }
+        if (a.includes('get_attribute') || a.includes('extract_attr') || a.includes('提取属性')) return { normalized: 'get_attribute', degraded: false }
+        if (a.includes('set_variable') || a.includes('设置变量')) return { normalized: 'set_variable', degraded: false }
+        return { normalized: 'click', degraded: true }
+      }
+
+      let degradedCount = 0
+      const mappedSteps = generatedSteps.map((s: any) => {
+        const mapped = mapAction(s.action)
+        if (mapped.degraded) degradedCount += 1
+        const action = mapped.normalized
+        let val = String(s.value || '').trim()
+        let tar = s.target || s.selector || ''
+
+        if (action === 'goto' && !val && tar) {
+          val = tar
+          tar = ''
+        }
+
+        if (action === 'wait') {
+          val = parseDurationToMs(s.wait_ms ?? val)
+          if (!val) val = '1000'
+        }
+        if (action === 'goto' && val && !isValidUrl(val)) {
+          message.warning(`检测到疑似无效 URL: ${val}，请编辑后再执行`)
+        }
+
+        return {
+          action: action,
+          target: String(tar || '').trim(),
+          selector: String(tar || '').trim(),
+          value: String(val || '').trim(),
+          wait_ms: action === 'wait' ? (Number(val) || 1000) : (s.wait_ms ?? null),
+          locator_chain: s.locator_chain || null,
+          locator_type: s.locator_type || null,
+          description: s.description || '',
+          variable_name: s.variable_name || '',
+          page_id: s.page_id || null,
+          element_id: s.element_id || null
+        }
+      })
+
+      const binding = bindGeneratedStepsToKnownElements(mappedSteps, aiContext.knownElements)
+      const finalSteps = binding.steps.map((s: any) => ({
+        ...s,
+        _custom_locator_mode: !s.element_id
+      }))
+      formValue.value.steps = [...formValue.value.steps, ...finalSteps]
+
+      if (degradedCount > 0) {
+        message.warning(`有 ${degradedCount} 个步骤动作无法识别，已降级为 click，请检查后执行`)
+      }
+      if (binding.boundCount > 0) {
+        message.info(`已自动绑定 ${binding.boundCount} 个步骤到已知页面元素`)
+      }
+      if (binding.unboundInteractiveCount > 0) {
+        message.warning(`仍有 ${binding.unboundInteractiveCount} 个交互步骤未绑定到已知元素，建议确认页面元素库`)
+      }
+      message.success(`成功解析并添加 ${binding.steps.length} 个步骤`)
       showAIModal.value = false
       aiPrompt.value = ''
     } else {
-      // Fast Mode: Normal generation
-      const aiContext = await loadAiContext(selectedProjectId.value, selectedModuleId.value)
-      const resp = await api.post('/ai/generate', { 
-        prompt: aiPrompt.value,
-        model_id: selectedAIModel.value,
-        project_id: selectedProjectId.value,
-        business_rules: aiContext.businessRules || undefined
-      })
-      
-      const generatedSteps = resp.data.steps
-      if (generatedSteps && generatedSteps.length > 0) {
-        const parseDurationToMs = (raw: any): string => {
-          if (raw === null || raw === undefined) return ''
-          const text = String(raw).trim().toLowerCase()
-          if (!text) return ''
-          const m = text.match(/^(\d+(?:\.\d+)?)\s*(ms|s)?$/)
-          if (!m) return String(raw).trim()
-          const amount = Number(m[1])
-          const unit = m[2]
-          if (unit === 'ms') return String(Math.round(amount))
-          if (unit === 's') return String(Math.round(amount * 1000))
-          return String(Math.round(amount >= 100 ? amount : amount * 1000))
-        }
-
-        const isValidUrl = (val: string) => {
-          try {
-            const u = new URL(val)
-            return u.protocol === 'http:' || u.protocol === 'https:'
-          } catch {
-            return false
-          }
-        }
-
-        const mapAction = (action: string): { normalized: string; degraded: boolean } => {
-          const a = (action || '').toLowerCase()
-          if (a.includes('wait_for_selector') || a.includes('wait for selector') || a.includes('等待元素')) return { normalized: 'wait_for_selector', degraded: false }
-          if (a.includes('assert_visible') || a.includes('visible') || a.includes('可见')) return { normalized: 'assert_visible', degraded: false }
-          if (a.includes('assert') || a.includes('verify') || a.includes('check') || a.includes('断言') || a.includes('验证') || a.includes('检查')) return { normalized: 'assert_text', degraded: false }
-          if (a.includes('hover') || a.includes('悬停')) return { normalized: 'hover', degraded: false }
-          if (a.includes('select') || a.includes('选择')) return { normalized: 'select', degraded: false }
-          if (a.includes('press') || a.includes('按键')) return { normalized: 'press', degraded: false }
-          if (a.includes('click') || a.includes('点击')) return { normalized: 'click', degraded: false }
-          if (a.includes('fill') || a.includes('type') || a.includes('input') || a.includes('输入') || a.includes('填写')) return { normalized: 'fill', degraded: false }
-          if (a.includes('goto') || a.includes('visit') || a.includes('open') || a.includes('navigate') || a.includes('跳转') || a.includes('访问') || a.includes('打开')) return { normalized: 'goto', degraded: false }
-          if (a.includes('wait') || a.includes('sleep') || a.includes('等待')) return { normalized: 'wait', degraded: false }
-          if (a.includes('screenshot') || a.includes('截图')) return { normalized: 'screenshot', degraded: false }
-          if (a.includes('get_text') || a.includes('text_content') || a.includes('提取文本')) return { normalized: 'get_text', degraded: false }
-          if (a.includes('get_attribute') || a.includes('extract_attr') || a.includes('提取属性')) return { normalized: 'get_attribute', degraded: false }
-          if (a.includes('set_variable') || a.includes('设置变量')) return { normalized: 'set_variable', degraded: false }
-          return { normalized: 'click', degraded: true }
-        }
-
-        let degradedCount = 0
-        const mappedSteps = generatedSteps.map((s: any) => {
-          const mapped = mapAction(s.action)
-          if (mapped.degraded) degradedCount += 1
-          const action = mapped.normalized
-          let val = String(s.value || '').trim()
-          let tar = s.target || s.selector || ''
-          
-          if (action === 'goto' && !val && tar) {
-            val = tar
-            tar = ''
-          }
-
-          if (action === 'wait') {
-            val = parseDurationToMs(s.wait_ms ?? val)
-            if (!val) val = '1000'
-          }
-          if (action === 'goto' && val && !isValidUrl(val)) {
-            message.warning(`检测到疑似无效 URL: ${val}，请编辑后再执行`)
-          }
-          
-          return {
-            action: action,
-            target: String(tar || '').trim(),
-            selector: String(tar || '').trim(),
-            value: String(val || '').trim(),
-            wait_ms: action === 'wait' ? (Number(val) || 1000) : (s.wait_ms ?? null),
-            locator_chain: s.locator_chain || null,
-            locator_type: s.locator_type || null,
-            description: s.description || '',
-            variable_name: s.variable_name || '',
-            page_id: s.page_id || null,
-            element_id: s.element_id || null
-          }
-        })
-
-        const binding = bindGeneratedStepsToKnownElements(mappedSteps, aiContext.knownElements)
-        const finalSteps = binding.steps.map((s: any) => ({
-          ...s,
-          _custom_locator_mode: !s.element_id
-        }))
-        formValue.value.steps = [...formValue.value.steps, ...finalSteps]
-        
-        if (degradedCount > 0) {
-          message.warning(`有 ${degradedCount} 个步骤动作无法识别，已降级为 click，请检查后执行`)
-        }
-        if (binding.boundCount > 0) {
-          message.info(`已自动绑定 ${binding.boundCount} 个步骤到已知页面元素`)
-        }
-        if (binding.unboundInteractiveCount > 0) {
-          message.warning(`仍有 ${binding.unboundInteractiveCount} 个交互步骤未绑定到已知元素，建议确认页面元素库`)
-        }
-        message.success(`成功解析并添加 ${binding.steps.length} 个步骤`)
-        showAIModal.value = false
-        aiPrompt.value = ''
-      } else {
-        message.warning('未生成步骤，请尝试换种描述')
-      }
+      message.warning('未生成步骤，请尝试换种描述')
     }
   } catch (error: any) {
     message.error(error.message || 'AI 解析异常')

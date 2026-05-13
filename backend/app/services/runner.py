@@ -109,6 +109,8 @@ class TestRunner:
             return result
 
         base_url = test_case.module.project.base_url if test_case.module and test_case.module.project else None
+        normalized_steps = [self._normalize_step(step) for step in (test_case.steps or [])]
+        has_explicit_goto = any(step.get("action") == "goto" and str(step.get("value") or "").strip() for step in normalized_steps)
 
         test_uuid = str(uuid.uuid4())
         test_result = TestResult(uuid=test_uuid, name=test_case.name)
@@ -120,13 +122,12 @@ class TestRunner:
 
         async with PlaywrightTool(headless=headless, browser_type=browser_type) as tool:
             try:
-                if base_url:
+                if base_url and not has_explicit_goto:
                     await tool.goto(base_url)
                     await tool.wait(800)
 
-                for step_index, raw_step in enumerate(test_case.steps or []):
+                for step_index, normalized_step in enumerate(normalized_steps):
                     step_start = int(datetime.now().timestamp() * 1000)
-                    normalized_step = self._normalize_step(raw_step)
                     
                     # Create Allure step
                     step_title = f"[{step_index + 1}] {normalized_step['action']} {normalized_step.get('value') or ''}"

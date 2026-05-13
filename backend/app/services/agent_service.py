@@ -10,6 +10,7 @@ Agent 能"看见"页面的 Accessibility Tree，实现 观察→推理→执行�
 """
 import time
 import re
+import json
 import asyncio
 from typing import Optional, List, Dict, Any
 
@@ -285,11 +286,11 @@ class AgentService:
                         step = self._action_to_platform_step(action_model, selector_map)
                         if step:
                             # 实时去重逻辑：如果当前步骤与上一步完全一致，则跳过
-                            current_identity = (step['action'], step['target'], step['value'])
+                            current_identity = self._build_step_identity(step, action_model)
                             if last_step_data == current_identity:
                                 logger.info(f"AgentService Stream: Skipping duplicate step | {step['action']}")
                                 continue
-                            
+
                             last_step_data = current_identity
                             
                             # Bind immediately
@@ -545,6 +546,24 @@ class AgentService:
             logger.debug(traceback.format_exc())
             return None
 
+    def _build_step_identity(self, step: Dict[str, Any], action_model: Any = None) -> Any:
+        target = step.get('target')
+        base_identity = (step.get('action'), target, step.get('value'))
+        if target != 'AI_AUTO':
+            return base_identity
+        if action_model is None:
+            return (*base_identity, step.get('description'))
+        try:
+            action_payload = action_model.model_dump()
+            normalized_payload = {
+                key: value
+                for key, value in action_payload.items()
+                if key not in {'index', 'thought'}
+            }
+            return (*base_identity, json.dumps(normalized_payload, sort_keys=True, ensure_ascii=False))
+        except Exception:
+            return (*base_identity, step.get('description'))
+
     def _extract_steps_from_history(self, history) -> List[Dict[str, Any]]:
         """
         重构后的历史提取。
@@ -555,17 +574,17 @@ class AgentService:
 
         steps = []
         last_identity = None
-        
+
         try:
             for item in history.history:
                 if not item.model_output or not item.model_output.action:
                     continue
-                
+
                 # 获取该轮次交互的元素列表
                 interacted = getattr(item.state, 'interacted_element', None)
                 # 获取该轮次的执行结果列表 (ActionResult)
                 results = item.result or []
-                
+
                 # 配对 Action 与 Result
                 for i, action_model in enumerate(item.model_output.action):
                     # ActionResult 列表索引与 Action 列表一一对应
@@ -574,23 +593,23 @@ class AgentService:
                         result_content = results[i].extracted_content
 
                     step = self._action_to_platform_step(
-                        action_model, 
+                        action_model,
                         interacted_elements=interacted,
                         result_content=result_content
                     )
-                    
+
                     if step:
                         # 历史去重与噪声过滤
-                        current_identity = (step['action'], step['target'], step['value'])
-                        
+                        current_identity = self._build_step_identity(step, action_model)
+
                         # 1. 跳过连续重复的步骤
                         if last_identity == current_identity:
                             continue
-                        
+
                         # 2. 过滤掉内容为空的静默提取
                         if step['action'] == 'get_text' and not step['value']:
                             continue
-                        
+
                         steps.append(step)
                         last_identity = current_identity
         except Exception as e:

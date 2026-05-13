@@ -1,4 +1,4 @@
-# 重构-智能 UI 自动化测试平台 (Intelligent UI Automation Platform)
+# 智能 UI 自动化测试平台 (Intelligent UI Automation Platform)
 
 基于 Python (FastAPI) 和 Vue 3 构建的现代化、企业级 UI 自动化测试平台。它利用 Playwright 实现强大的浏览器自动化，并集成了 AI 能力以简化测试用例的创建。
 

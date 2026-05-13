@@ -127,6 +127,436 @@ class LocatorStabilityTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(bound[0]["page_id"], 6)
         self.assertEqual(bound[0]["target"], '[data-testid="submit-btn"]')
 
+    def test_extract_steps_from_history_keeps_distinct_ai_auto_actions(self):
+        service = AgentService()
+        history = SimpleNamespace(
+            history=[
+                SimpleNamespace(
+                    model_output=SimpleNamespace(
+                        action=[
+                            FakeActionModel({"click_element": {"index": 1}}),
+                            FakeActionModel({"click_element": {"index": 2}}),
+                            FakeActionModel({"input_text": {"index": 3, "text": "admin"}}),
+                        ]
+                    ),
+                    state=SimpleNamespace(interacted_element=[]),
+                    result=[],
+                )
+            ]
+        )
+
+        steps = service._extract_steps_from_history(history)
+
+        self.assertEqual(len(steps), 3)
+        self.assertEqual([step["action"] for step in steps], ["click", "click", "fill"])
+        self.assertTrue(all(step["target"] == "AI_AUTO" for step in steps))
+        self.assertEqual(steps[2]["value"], "admin")
+
+    def test_build_step_identity_distinguishes_different_ai_auto_actions(self):
+        service = AgentService()
+        first_action = FakeActionModel({"click_element": {"index": 1}})
+        second_action = FakeActionModel({"click_element": {"index": 2}})
+        first_step = service._action_to_platform_step(first_action)
+        second_step = service._action_to_platform_step(second_action)
+
+        self.assertIsNotNone(first_step)
+        self.assertIsNotNone(second_step)
+        self.assertNotEqual(
+            service._build_step_identity(first_step, first_action),
+            service._build_step_identity(second_step, second_action),
+        )
+
+    def test_build_step_identity_dedupes_exact_same_ai_auto_action(self):
+        service = AgentService()
+        action = FakeActionModel({"click_element": {"index": 1}})
+        step = service._action_to_platform_step(action)
+
+        self.assertIsNotNone(step)
+        self.assertEqual(
+            service._build_step_identity(step, action),
+            service._build_step_identity(step, action),
+        )
+
+    def test_build_step_identity_ignores_thought_for_ai_auto_action(self):
+        service = AgentService()
+        first_action = FakeActionModel({"thought": "先观察", "click_element": {"index": 1}})
+        second_action = FakeActionModel({"thought": "直接点击", "click_element": {"index": 1}})
+        step = service._action_to_platform_step(first_action)
+
+        self.assertIsNotNone(step)
+        self.assertEqual(
+            service._build_step_identity(step, first_action),
+            service._build_step_identity(step, second_action),
+        )
+
+    def test_build_step_identity_keeps_non_ai_auto_shape(self):
+        service = AgentService()
+
+        self.assertEqual(
+            service._build_step_identity({"action": "click", "target": "#submit", "value": ""}),
+            ("click", "#submit", ""),
+        )
+
+    def test_extract_steps_from_history_skips_only_exact_consecutive_duplicates(self):
+        service = AgentService()
+        history = SimpleNamespace(
+            history=[
+                SimpleNamespace(
+                    model_output=SimpleNamespace(
+                        action=[
+                            FakeActionModel({"click_element": {"index": 1}}),
+                            FakeActionModel({"click_element": {"index": 1}}),
+                            FakeActionModel({"click_element": {"index": 2}}),
+                        ]
+                    ),
+                    state=SimpleNamespace(interacted_element=[]),
+                    result=[],
+                )
+            ]
+        )
+
+        steps = service._extract_steps_from_history(history)
+
+        self.assertEqual(len(steps), 2)
+        self.assertTrue(all(step["target"] == "AI_AUTO" for step in steps))
+
+    def test_build_step_identity_falls_back_to_description_without_action_model(self):
+        service = AgentService()
+        step = {
+            "action": "click",
+            "target": "AI_AUTO",
+            "value": "",
+            "description": "点击右上角登录按钮",
+        }
+
+        self.assertEqual(
+            service._build_step_identity(step),
+            ("click", "AI_AUTO", "", "点击右上角登录按钮"),
+        )
+
+    def test_extract_steps_from_history_preserves_order(self):
+        service = AgentService()
+        history = SimpleNamespace(
+            history=[
+                SimpleNamespace(
+                    model_output=SimpleNamespace(
+                        action=[
+                            FakeActionModel({"go_to_url": {"url": "https://example.com"}}),
+                            FakeActionModel({"click_element": {"index": 1}}),
+                            FakeActionModel({"input_text": {"index": 2, "text": "abc"}}),
+                        ]
+                    ),
+                    state=SimpleNamespace(interacted_element=[]),
+                    result=[],
+                )
+            ]
+        )
+
+        steps = service._extract_steps_from_history(history)
+
+        self.assertEqual([step["action"] for step in steps], ["goto", "click", "fill"])
+        self.assertEqual(steps[0]["value"], "https://example.com")
+        self.assertEqual(steps[2]["value"], "abc")
+
+    def test_extract_steps_from_history_keeps_same_ai_auto_fill_actions_with_same_text(self):
+        service = AgentService()
+        history = SimpleNamespace(
+            history=[
+                SimpleNamespace(
+                    model_output=SimpleNamespace(
+                        action=[
+                            FakeActionModel({"input_text": {"index": 1, "text": "admin"}}),
+                            FakeActionModel({"input_text": {"index": 2, "text": "admin"}}),
+                        ]
+                    ),
+                    state=SimpleNamespace(interacted_element=[]),
+                    result=[],
+                )
+            ]
+        )
+
+        steps = service._extract_steps_from_history(history)
+
+        self.assertEqual(len(steps), 2)
+        self.assertEqual([step["value"] for step in steps], ["admin", "admin"])
+
+    def test_build_step_identity_handles_unserializable_action_model(self):
+        service = AgentService()
+
+        class BadActionModel:
+            def model_dump(self):
+                raise RuntimeError("boom")
+
+        step = {
+            "action": "click",
+            "target": "AI_AUTO",
+            "value": "",
+            "description": "点击登录",
+        }
+
+        self.assertEqual(
+            service._build_step_identity(step, BadActionModel()),
+            ("click", "AI_AUTO", "", "点击登录"),
+        )
+
+    def test_extract_steps_from_history_dedupes_identical_non_ai_auto_steps(self):
+        service = AgentService()
+        history = SimpleNamespace(
+            history=[
+                SimpleNamespace(
+                    model_output=SimpleNamespace(
+                        action=[
+                            FakeActionModel({"go_to_url": {"url": "https://example.com"}}),
+                            FakeActionModel({"go_to_url": {"url": "https://example.com"}}),
+                        ]
+                    ),
+                    state=SimpleNamespace(interacted_element=[]),
+                    result=[],
+                )
+            ]
+        )
+
+        steps = service._extract_steps_from_history(history)
+
+        self.assertEqual(len(steps), 1)
+        self.assertEqual(steps[0]["action"], "goto")
+        self.assertEqual(steps[0]["value"], "https://example.com")
+
+    def test_extract_steps_from_history_keeps_same_ai_auto_action_across_items(self):
+        service = AgentService()
+        history = SimpleNamespace(
+            history=[
+                SimpleNamespace(
+                    model_output=SimpleNamespace(action=[FakeActionModel({"click_element": {"index": 1}})]),
+                    state=SimpleNamespace(interacted_element=[]),
+                    result=[],
+                ),
+                SimpleNamespace(
+                    model_output=SimpleNamespace(action=[FakeActionModel({"click_element": {"index": 2}})]),
+                    state=SimpleNamespace(interacted_element=[]),
+                    result=[],
+                ),
+            ]
+        )
+
+        steps = service._extract_steps_from_history(history)
+
+        self.assertEqual(len(steps), 2)
+        self.assertTrue(all(step["target"] == "AI_AUTO" for step in steps))
+
+    def test_extract_steps_from_history_uses_result_content_for_get_text(self):
+        service = AgentService()
+        history = SimpleNamespace(
+            history=[
+                SimpleNamespace(
+                    model_output=SimpleNamespace(action=[FakeActionModel({"extract_content": {"index": 1}})]),
+                    state=SimpleNamespace(interacted_element=[]),
+                    result=[SimpleNamespace(extracted_content="欢迎回来")],
+                )
+            ]
+        )
+
+        steps = service._extract_steps_from_history(history)
+
+        self.assertEqual(len(steps), 1)
+        self.assertEqual(steps[0]["action"], "get_text")
+        self.assertEqual(steps[0]["value"], "欢迎回来")
+
+    def test_extract_steps_from_history_filters_empty_get_text(self):
+        service = AgentService()
+        history = SimpleNamespace(
+            history=[
+                SimpleNamespace(
+                    model_output=SimpleNamespace(action=[FakeActionModel({"extract_content": {"index": 1}})]),
+                    state=SimpleNamespace(interacted_element=[]),
+                    result=[SimpleNamespace(extracted_content="")],
+                )
+            ]
+        )
+
+        self.assertEqual(service._extract_steps_from_history(history), [])
+
+    def test_extract_steps_from_history_returns_empty_without_history_attr(self):
+        service = AgentService()
+        self.assertEqual(service._extract_steps_from_history(SimpleNamespace()), [])
+
+    def test_extract_steps_from_history_handles_none_history(self):
+        service = AgentService()
+        self.assertEqual(service._extract_steps_from_history(None), [])
+
+    def test_extract_steps_from_history_handles_missing_model_output(self):
+        service = AgentService()
+        history = SimpleNamespace(history=[SimpleNamespace(model_output=None, state=None, result=[])])
+
+        self.assertEqual(service._extract_steps_from_history(history), [])
+
+    def test_extract_steps_from_history_handles_empty_action_list(self):
+        service = AgentService()
+        history = SimpleNamespace(
+            history=[SimpleNamespace(model_output=SimpleNamespace(action=[]), state=None, result=[])]
+        )
+
+        self.assertEqual(service._extract_steps_from_history(history), [])
+
+    def test_build_step_identity_non_ai_auto_ignores_description(self):
+        service = AgentService()
+        first = {"action": "click", "target": "#submit", "value": "", "description": "a"}
+        second = {"action": "click", "target": "#submit", "value": "", "description": "b"}
+
+        self.assertEqual(service._build_step_identity(first), service._build_step_identity(second))
+
+    def test_build_step_identity_ai_auto_uses_description_without_model(self):
+        service = AgentService()
+        first = {"action": "click", "target": "AI_AUTO", "value": "", "description": "a"}
+        second = {"action": "click", "target": "AI_AUTO", "value": "", "description": "b"}
+
+        self.assertNotEqual(service._build_step_identity(first), service._build_step_identity(second))
+
+    def test_action_to_platform_step_marks_missing_interactive_target_as_ai_auto(self):
+        service = AgentService()
+        action_model = FakeActionModel({"click_element": {"index": 1}})
+
+        step = service._action_to_platform_step(action_model)
+
+        self.assertIsNotNone(step)
+        self.assertEqual(step["target"], "AI_AUTO")
+        self.assertEqual(step["action"], "click")
+
+    def test_action_to_platform_step_keeps_fill_value_for_ai_auto(self):
+        service = AgentService()
+        action_model = FakeActionModel({"input_text": {"index": 3, "text": "admin"}})
+
+        step = service._action_to_platform_step(action_model)
+
+        self.assertIsNotNone(step)
+        self.assertEqual(step["target"], "AI_AUTO")
+        self.assertEqual(step["action"], "fill")
+        self.assertEqual(step["value"], "admin")
+
+    def test_extract_steps_from_history_retains_mixed_ai_auto_and_resolved_targets(self):
+        service = AgentService()
+        history = SimpleNamespace(
+            history=[
+                SimpleNamespace(
+                    model_output=SimpleNamespace(
+                        action=[
+                            FakeActionModel({"click_element": {"index": 1}}),
+                            FakeActionModel({"click_element": {"index": 7}}),
+                        ]
+                    ),
+                    state=SimpleNamespace(
+                        interacted_element=[FakeInteractedElement(7, "//button[@id='resolved']")]
+                    ),
+                    result=[],
+                )
+            ]
+        )
+
+        steps = service._extract_steps_from_history(history)
+
+        self.assertEqual(len(steps), 2)
+        self.assertEqual(steps[0]["target"], "AI_AUTO")
+        self.assertEqual(steps[1]["target"], "//button[@id='resolved']")
+
+    def test_extract_steps_from_history_handles_multiple_batches(self):
+        service = AgentService()
+        history = SimpleNamespace(
+            history=[
+                SimpleNamespace(
+                    model_output=SimpleNamespace(action=[FakeActionModel({"click_element": {"index": 1}})]),
+                    state=SimpleNamespace(interacted_element=[]),
+                    result=[],
+                ),
+                SimpleNamespace(
+                    model_output=SimpleNamespace(action=[FakeActionModel({"click_element": {"index": 2}})]),
+                    state=SimpleNamespace(interacted_element=[]),
+                    result=[],
+                ),
+            ]
+        )
+
+        steps = service._extract_steps_from_history(history)
+
+        self.assertEqual(len(steps), 2)
+        self.assertEqual([step["target"] for step in steps], ["AI_AUTO", "AI_AUTO"])
+
+    def test_extract_steps_from_history_ignores_done_action(self):
+        service = AgentService()
+        history = SimpleNamespace(
+            history=[
+                SimpleNamespace(
+                    model_output=SimpleNamespace(action=[FakeActionModel({"done": {"text": "完成"}})]),
+                    state=SimpleNamespace(interacted_element=[]),
+                    result=[],
+                )
+            ]
+        )
+
+        self.assertEqual(service._extract_steps_from_history(history), [])
+
+    def test_build_step_identity_uses_action_payload_for_same_description(self):
+        service = AgentService()
+        first_action = FakeActionModel({"click_element": {"index": 1}})
+        second_action = FakeActionModel({"click_element": {"index": 2}})
+        step = {
+            "action": "click",
+            "target": "AI_AUTO",
+            "value": "",
+            "description": "点击登录按钮",
+        }
+
+        self.assertNotEqual(
+            service._build_step_identity(step, first_action),
+            service._build_step_identity(step, second_action),
+        )
+
+    def test_extract_steps_from_history_keeps_same_action_different_values(self):
+        service = AgentService()
+        history = SimpleNamespace(
+            history=[
+                SimpleNamespace(
+                    model_output=SimpleNamespace(
+                        action=[
+                            FakeActionModel({"input_text": {"index": 1, "text": "admin"}}),
+                            FakeActionModel({"input_text": {"index": 1, "text": "123456"}}),
+                        ]
+                    ),
+                    state=SimpleNamespace(interacted_element=[]),
+                    result=[],
+                )
+            ]
+        )
+
+        steps = service._extract_steps_from_history(history)
+
+        self.assertEqual(len(steps), 2)
+        self.assertEqual([step["value"] for step in steps], ["admin", "123456"])
+
+    def test_extract_steps_from_history_keeps_same_ai_auto_description_different_payloads(self):
+        service = AgentService()
+        history = SimpleNamespace(
+            history=[
+                SimpleNamespace(
+                    model_output=SimpleNamespace(
+                        action=[
+                            FakeActionModel({"click_element": {"index": 11}}),
+                            FakeActionModel({"click_element": {"index": 12}}),
+                        ]
+                    ),
+                    state=SimpleNamespace(interacted_element=[]),
+                    result=[],
+                )
+            ]
+        )
+
+        steps = service._extract_steps_from_history(history)
+
+        self.assertEqual(len(steps), 2)
+        self.assertEqual([step["description"] for step in steps], [
+            "点击元素: AI_AUTO",
+            "点击元素: AI_AUTO",
+        ])
+
     async def test_recorder_reinforcement_passes_db_and_updates_selector(self):
         service = RecorderService()
         service.page = SimpleNamespace(content=AsyncMock(return_value="<html></html>"))
