@@ -13,6 +13,7 @@ Celery Worker 任务定义模块
 """
 import asyncio
 import nest_asyncio
+import base64
 from app.core.celery_app import celery_app
 from app.services.runner import TestRunner
 from app.services.report_service import ReportService
@@ -23,6 +24,25 @@ from app.core.logger import logger
 
 # 允许嵌套事件循环 - Celery worker 需要
 nest_asyncio.apply()
+
+
+def _make_json_safe(value):
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    if isinstance(value, bytes):
+        return base64.b64encode(value).decode("utf-8")
+    if isinstance(value, dict):
+        return {str(k): _make_json_safe(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple, set)):
+        return [_make_json_safe(v) for v in value]
+    if isinstance(value, Exception):
+        return str(value)
+    if hasattr(value, "toString") and callable(getattr(value, "toString")):
+        try:
+            return str(value.toString())
+        except Exception:
+            pass
+    return str(value)
 
 @celery_app.task(acks_late=True)
 def run_test_case_task(case_id: int, headless: bool = True, browser_type: str = "chromium", executor_id: int = None):
@@ -71,11 +91,11 @@ def run_test_case_task(case_id: int, headless: bool = True, browser_type: str = 
                 logger.error(f"Failed to generate report: {e}", exc_info=True)
                 result['report_error'] = str(e)
             
-            return result
+            return _make_json_safe(result)
     
     try:
         result = asyncio.run(_run())
-        return result
+        return _make_json_safe(result)
     except Exception as e:
         logger.error(f"Test case {case_id} failed with error: {e}", exc_info=True)
         raise
@@ -115,22 +135,22 @@ def run_test_suite_task(suite_id: int, headless: bool = True, browser_type: str 
             try:
                 logger.info(f"Running test case {case_id} ({case_name}) in suite {suite_id}")
                 result = await runner.run_test_case(case_id, headless=headless, browser_type=browser_type)
-                return {
+                return _make_json_safe({
                     "case_id": case_id,
                     "case_name": case_name,
                     "result": result,
                     "success": result.get("success", False),
                     "error": result.get("error")
-                }
+                })
             except Exception as e:
                 logger.error(f"Failed to run test case {case_id}: {e}")
-                return {
+                return _make_json_safe({
                     "case_id": case_id,
                     "case_name": case_name,
                     "result": None,
                     "success": False,
                     "error": str(e)
-                }
+                })
 
     async def _run():
         async with AsyncSessionLocal() as db:
@@ -171,7 +191,7 @@ def run_test_suite_task(suite_id: int, headless: bool = True, browser_type: str 
                 )
                 logger.info(f"Suite report generated: {report.report_path}")
                 
-                return {
+                return _make_json_safe({
                     "success": True,
                     "suite_id": suite_id,
                     "total_cases": len(results),
@@ -180,18 +200,18 @@ def run_test_suite_task(suite_id: int, headless: bool = True, browser_type: str 
                     "results": results,
                     "report_id": report.id,
                     "report_path": report.report_path
-                }
+                })
             except Exception as e:
                 logger.error(f"Failed to generate suite report: {e}", exc_info=True)
-                return {
+                return _make_json_safe({
                     "success": False, 
                     "error": f"Tests finished but report generation failed: {e}",
                     "results": results
-                }
+                })
 
     try:
         result = asyncio.run(_run())
-        return result
+        return _make_json_safe(result)
     except Exception as e:
         logger.error(f"Test suite {suite_id} failed with error: {e}", exc_info=True)
         raise

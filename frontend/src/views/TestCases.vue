@@ -242,7 +242,7 @@
         size="large"
         role="dialog"
         aria-modal="true"
-        style="width: 500px;"
+        style="width: 700px;"
       >
         <div style="margin-bottom: 20px;">
            <p style="color: var(--color-text-2); font-size: 13px; line-height: 1.6; margin-bottom: 12px;">
@@ -262,11 +262,17 @@
                />
              </div>
              
-             <div style="display: flex; align-items: center; gap: 8px;">
-               <span :style="{ fontSize: '12px', color: !agentMode ? 'var(--color-primary)' : 'var(--color-text-3)', fontWeight: !agentMode ? '600' : '400' }">快速</span>
-               <n-switch v-model:value="agentMode" size="small" />
-               <span :style="{ fontSize: '12px', color: agentMode ? 'var(--color-primary)' : 'var(--color-text-3)', fontWeight: agentMode ? '600' : '400' }">精准</span>
-             </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span 
+                  @click="agentMode = false"
+                  :style="{ fontSize: '13px', cursor: 'pointer', userSelect: 'none', color: !agentMode ? 'var(--color-primary)' : 'var(--color-text-3)', fontWeight: !agentMode ? '600' : '400' }"
+                >快速</span>
+                <n-switch v-model:value="agentMode" size="small" />
+                <span 
+                  @click="agentMode = true"
+                  :style="{ fontSize: '13px', cursor: 'pointer', userSelect: 'none', color: agentMode ? 'var(--color-primary)' : 'var(--color-text-3)', fontWeight: agentMode ? '600' : '400' }"
+                >精准</span>
+              </div>
            </div>
 
            <n-input
@@ -379,7 +385,7 @@ import { ref, onMounted, h, watch } from 'vue'
 import { NButton, NSpace, useMessage, type DataTableColumns, type FormInst, NCard, NDataTable, NModal, NForm, NFormItem, NInput, NSelect, NDynamicInput, NTag, NSpin, NAlert, NTooltip } from 'naive-ui'
 import api from '@/api'
 import { useAppStore } from '@/stores/app'
-import { bindGeneratedStepsToKnownElements, loadAiContext } from '@/utils/aiContext'
+import { bindGeneratedStepsToKnownElements, loadAiContext, loadLiveAiRuntimeContext } from '@/utils/aiContext'
 
 const appStore = useAppStore()
 
@@ -876,14 +882,21 @@ const handleGenerateSteps = async () => {
     } else {
       // Fast Mode: Normal generation
       const aiContext = await loadAiContext(selectedProjectId.value, selectedModuleId.value)
+      const liveContext = await loadLiveAiRuntimeContext()
+      const businessRules = [aiContext.businessRules, liveContext.contextHint].filter(Boolean).join('\n')
       const resp = await api.post('/ai/generate', { 
         prompt: aiPrompt.value,
         model_id: selectedAIModel.value,
         project_id: selectedProjectId.value,
-        business_rules: aiContext.businessRules || undefined
+        business_rules: businessRules || undefined,
+        dom_snapshot: liveContext.available ? liveContext.domSnapshot : undefined,
+        screenshot_description: liveContext.available
+          ? `Active AUT page title: ${liveContext.title || 'Unknown'}; URL: ${liveContext.url || 'Unknown'}`
+          : undefined
       })
       
       const generatedSteps = resp.data.steps
+      const generationQuality = resp.data.quality || null
       if (generatedSteps && generatedSteps.length > 0) {
         const parseDurationToMs = (raw: any): string => {
           if (raw === null || raw === undefined) return ''
@@ -977,6 +990,18 @@ const handleGenerateSteps = async () => {
         }
         if (binding.unboundInteractiveCount > 0) {
           message.warning(`仍有 ${binding.unboundInteractiveCount} 个交互步骤未绑定到已知元素，建议确认页面元素库`)
+        }
+        if (generationQuality?.fallback_used) {
+          message.warning(`本次生成触发了 AI 兜底模式（${generationQuality.fallback_reason || 'unknown'}），建议检查提示词或模型配置`)
+        }
+        if (typeof generationQuality?.bind_rate === 'number' && generationQuality.bind_rate < 0.5) {
+          message.warning(`本次生成绑定率偏低（${Math.round(generationQuality.bind_rate * 100)}%），建议补充页面元素库或优化用例描述`)
+        }
+        if (Number(generationQuality?.ai_auto_count || 0) > 0) {
+          message.info(`有 ${generationQuality.ai_auto_count} 个步骤使用 AI_AUTO 兜底执行`)
+        }
+        if (liveContext.available) {
+          message.info('本次生成已使用录制浏览器中的真实页面上下文')
         }
         message.success(`成功解析并添加 ${binding.steps.length} 个步骤`)
         showAIModal.value = false

@@ -321,6 +321,11 @@ class AgentService:
                 except:
                     pass
 
+    # Actions that require a target selector to execute.
+    # Steps with an empty target for these actions will be marked AI_AUTO so the runner's
+    # PageAgent fallback can locate the element via natural language instead of failing immediately.
+    _INTERACTIVE_ACTIONS = {"click", "fill", "select", "hover", "press"}
+
     def _action_to_platform_step(self, action_model, selector_map=None, interacted_elements=None, result_content=None) -> Optional[Dict[str, Any]]:
         """
         将单条 ActionModel 转换为平台标准 Step 格式。
@@ -399,6 +404,12 @@ class AgentService:
             # 如果是提取类动作，优先使用 ActionResult 中的内容
             if platform_action == 'get_text' and result_content:
                 value = result_content
+
+            # For interactive actions where browser-use could not resolve a concrete selector,
+            # mark target as AI_AUTO so the runner's PageAgent fallback can handle execution.
+            # Without this, steps with target="" immediately fail with "requires selector" error.
+            if not target and platform_action in self._INTERACTIVE_ACTIONS:
+                target = "AI_AUTO"
 
             # 生成更友好的中文描述
             desc = ""

@@ -399,6 +399,9 @@ onUnmounted(() => {
 
 const handleAISteps = (e: CustomEvent) => {
   const steps = e.detail
+  // 核心修复：每次导入新 AI 步骤前清空当前动作流，防止重复叠加
+  events.value = []
+  
   steps.forEach((s: any) => {
     const isWait = s.action === 'wait'
     const isWaitForSelector = s.action === 'wait_for_selector'

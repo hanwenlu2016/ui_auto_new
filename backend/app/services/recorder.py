@@ -160,6 +160,40 @@ class RecorderService:
         }
         await self._handle_event(None, initial_event)
 
+    async def get_page_context(self, dom_limit: Optional[int] = None) -> Dict[str, Any]:
+        page = self.page
+        if not page:
+            return {
+                "available": False,
+                "source": "recording_browser",
+                "url": None,
+                "title": None,
+                "dom_snapshot": "",
+            }
+
+        title = ""
+        try:
+            title = await page.title()
+        except Exception as exc:
+            logger.warning(f"Failed to read recording page title: {exc}")
+
+        dom_snapshot = ""
+        try:
+            dom_snapshot = await page.content()
+        except Exception as exc:
+            logger.warning(f"Failed to read recording page DOM: {exc}")
+
+        if isinstance(dom_limit, int) and dom_limit > 0:
+            dom_snapshot = dom_snapshot[:dom_limit]
+
+        return {
+            "available": True,
+            "source": "recording_browser",
+            "url": page.url,
+            "title": title,
+            "dom_snapshot": dom_snapshot,
+        }
+
     async def _handle_llm_route(self, route):
         """
         Intercepts LLM requests from PageAgent and routes them to our internal AI service.
@@ -274,6 +308,7 @@ class RecorderService:
     async def stop_recording(self):
         try:
             logger.info("Stopping recording and closing browser...")
+            self.page = None
             if self.context:
                 await self.context.close()
                 self.context = None
@@ -283,6 +318,7 @@ class RecorderService:
             if self.playwright:
                 await self.playwright.stop()
                 self.playwright = None
+            self.event_callback = None
             logger.info("Recording stopped and browser closed successfully")
         except Exception as e:
             logger.error(f"Error closing recording browser: {e}")

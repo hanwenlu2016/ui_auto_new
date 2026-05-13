@@ -352,6 +352,15 @@ class TestRunner:
                 return step_res
 
             selectors = await self._build_selector_candidates(step, element_id, action)
+            if action in {"assert_visible", "assert_text"} and not selectors:
+                semantic_res = await self._execute_semantic_assertion(tool, action, step, selectors)
+                step_res["success"] = semantic_res["success"]
+                step_res["error"] = semantic_res.get("error")
+                if semantic_res.get("output") is not None:
+                    step_res["output"] = semantic_res.get("output")
+                if semantic_res.get("used_selector"):
+                    step_res["used_selector"] = semantic_res["used_selector"]
+                return step_res
             if action in self.ELEMENT_ACTIONS and not selectors:
                 step_res["error"] = f"Action '{action}' requires selector, but none was resolved"
                 return step_res
@@ -429,6 +438,9 @@ class TestRunner:
 
         return variants
 
+    def _is_ai_auto_selector(self, selector: Optional[str]) -> bool:
+        return str(selector or "").strip().upper().startswith("AI_AUTO")
+
     async def _build_selector_candidates(
         self,
         step: Dict[str, Any],
@@ -442,8 +454,11 @@ class TestRunner:
             stmt = select(PageElement).where(PageElement.id == element_id)
             res = await self.db.execute(stmt)
             element = res.scalars().first()
-            if element and element.locator_value:
-                candidates.append(str(element.locator_value))
+            if element:
+                learned_selectors = self._extract_learned_selectors(element.metadata_json)
+                candidates.extend(learned_selectors)
+                if element.locator_value:
+                    candidates.append(str(element.locator_value))
 
         if primary_selector:
             candidates.append(str(primary_selector))
@@ -463,6 +478,8 @@ class TestRunner:
 
         expanded: List[str] = []
         for selector in candidates:
+            if self._is_ai_auto_selector(selector):
+                continue
             expanded.extend(self._build_visible_selector_variants(selector, action))
             expanded.append(selector)
 
@@ -474,6 +491,123 @@ class TestRunner:
                 seen.add(selector)
                 unique_candidates.append(selector)
         return unique_candidates
+
+    def _extract_learned_selectors(self, metadata_json: Optional[Dict[str, Any]]) -> List[str]:
+        if not isinstance(metadata_json, dict):
+            return []
+
+        locator_chain = metadata_json.get("ai_recommended_locator_chain")
+        selectors: List[str] = []
+        selectors.extend([str(s) for s in metadata_json.get("human_verified_selectors") or [] if s])
+        last_healed = metadata_json.get("last_healed_selector")
+        if last_healed:
+            selectors.append(str(last_healed))
+        if isinstance(locator_chain, dict):
+            selectors.extend(
+                [
+                    str(s)
+                    for s in [
+                        locator_chain.get("primary"),
+                        locator_chain.get("fallback_1"),
+                        locator_chain.get("fallback_2"),
+                        locator_chain.get("fallback_3"),
+                    ]
+                    if s
+                ]
+            )
+        selectors.extend([str(s) for s in metadata_json.get("healing_selectors") or [] if s])
+
+        seen = set()
+        unique: List[str] = []
+        for selector in selectors:
+            normalized = selector.strip()
+            if not normalized or normalized in seen:
+                continue
+            seen.add(normalized)
+            unique.append(normalized)
+        return unique
+
+    def _extract_assertion_hints(self, step: Dict[str, Any], selectors: Optional[List[str]] = None) -> List[str]:
+        hints: List[str] = []
+        raw_value = str(step.get("value") or "").strip()
+        if raw_value:
+            hints.append(raw_value)
+
+        description = str(step.get("description") or "").strip()
+        if description:
+            hints.extend(re.findall(r"[\"'“”‘’]([^\"'“”‘’]{2,40})[\"'“”‘’]", description))
+
+        for selector in selectors or []:
+            text = str(selector or "").strip()
+            if text.lower().startswith("text="):
+                hints.append(text.split("=", 1)[1].strip().strip("\"'"))
+
+        normalized_hints: List[str] = []
+        seen = set()
+        for hint in hints:
+            normalized = re.sub(r"\s+", " ", str(hint or "").strip())
+            if not normalized or self._is_ai_auto_selector(normalized):
+                continue
+            if normalized not in seen:
+                seen.add(normalized)
+                normalized_hints.append(normalized)
+        return normalized_hints[:8]
+
+    async def _execute_semantic_assertion(
+        self,
+        tool: PlaywrightTool,
+        action: str,
+        step: Dict[str, Any],
+        selectors: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
+        if not tool.page:
+            return {"success": False, "error": "Browser page not available for semantic assertion"}
+
+        hints = self._extract_assertion_hints(step, selectors)
+        if not hints:
+            return {
+                "success": False,
+                "error": "Semantic assertion fallback requires assertion text or descriptive hints",
+            }
+
+        js_result = await tool.page.evaluate(
+            """
+            ({ hints }) => {
+              const bodyText = String(document.body?.innerText || "");
+              const title = String(document.title || "");
+              const url = String(window.location.href || "");
+              const haystacks = [bodyText, title, url].map((item) => item.toLowerCase());
+              for (const hint of hints) {
+                const normalized = String(hint || "").trim().toLowerCase();
+                if (!normalized) continue;
+                if (haystacks.some((text) => text.includes(normalized))) {
+                  return { matched: true, hint, title, url };
+                }
+              }
+              return { matched: false, title, url };
+            }
+            """,
+            {"hints": hints},
+        )
+
+        if js_result.get("matched"):
+            return {
+                "success": True,
+                "used_selector": f"semantic_text:{js_result.get('hint')}",
+                "output": {
+                    "hint": js_result.get("hint"),
+                    "title": js_result.get("title"),
+                    "url": js_result.get("url"),
+                },
+            }
+
+        return {
+            "success": False,
+            "error": (
+                f"Semantic assertion failed; hints={hints}; "
+                f"title={js_result.get('title')}; url={js_result.get('url')}"
+            ),
+        }
 
     async def _execute_via_page_agent(
         self,
@@ -511,13 +645,34 @@ class TestRunner:
             # 2. Construct natural language prompt
             prompt = step.get("description")
             if not prompt:
-                # Infer from action and value
                 target = step.get("target") or step.get("selector")
+                page_url = ""
+                try:
+                    page_url = tool.page.url if tool.page else ""
+                except Exception:
+                    pass
+
                 if target == "AI_AUTO":
-                    # If AI_AUTO but no description, we are in trouble.
-                    prompt = f"Perform {action}"
-                    if value:
-                         prompt += f" with value '{value}'"
+                    # Build a more actionable prompt from context instead of the useless "Perform click"
+                    loc = f" on page '{page_url}'" if page_url else ""
+                    if action == "click":
+                        prompt = f"Click the most appropriate button or interactive element{loc}"
+                        if value:
+                            prompt += f" related to '{value}'"
+                    elif action == "fill":
+                        prompt = f"Find the most appropriate input field{loc} and type '{value}'"
+                    elif action == "select":
+                        prompt = f"Select the option '{value}' from the most appropriate dropdown{loc}"
+                    elif action == "hover":
+                        prompt = f"Hover over the most relevant element{loc}"
+                        if value:
+                            prompt += f" related to '{value}'"
+                    elif action == "press":
+                        prompt = f"Press the key '{value}' on the focused element{loc}"
+                    else:
+                        prompt = f"Perform {action}{loc}"
+                        if value:
+                            prompt += f" with value '{value}'"
                 else:
                     if action == "click":
                         prompt = f"Click on the element that looks like {target}"
@@ -528,54 +683,65 @@ class TestRunner:
             
             logger.info(f"[PageAgent Execution] Prompt: {prompt}")
 
-            # 3. Execute via PageAgent
-            # We need to expose the LLM proxy route if not already done?
-            # PlaywrightTool might not have the route set up like RecorderService.
-            # We need to set up the route dynamically here.
-            
-            # Define route handler (must be bound to self or defined here)
-            async def _handle_llm_route(route):
-                try:
-                    request = route.request
-                    if request.method != "POST":
-                        await route.continue_()
-                        return
-                    post_data = request.post_data_json
-                    if not post_data:
-                        await route.continue_()
-                        return
-                    
-                    messages = post_data.get("messages", [])
-                    async with AsyncSessionLocal() as db:
-                         response_data = await ai_service.chat_completion(
-                            db=db,
-                            messages=messages,
-                            temperature=post_data.get("temperature", 0.7),
-                        )
-                    
-                    content = response_data.get("content", "") if isinstance(response_data, dict) else response_data
-                    mock_response = {
-                        "id": "chatcmpl-page-agent-fallback",
-                        "object": "chat.completion",
-                        "created": 1677652288,
-                        "model": "gpt-3.5-turbo",
-                        "choices": [{"index": 0, "message": {"role": "assistant", "content": content}, "finish_reason": "stop"}]
-                    }
-                    await route.fulfill(status=200, content_type="application/json", body=json.dumps(mock_response))
-                except Exception as e:
-                    logger.error(f"LLM Route Error: {e}")
-                    await route.abort()
+            # 3. Register LLM proxy route — only once per browser context to prevent handler accumulation.
+            # Playwright stacks route handlers on every .route() call; duplicate registration causes
+            # exponential LLM requests and silent abort errors on the stale handlers.
+            if not getattr(tool, "_llm_route_registered", False):
+                async def _handle_llm_route(route):
+                    try:
+                        request = route.request
+                        if request.method != "POST":
+                            await route.continue_()
+                            return
+                        post_data = request.post_data_json
+                        if not post_data:
+                            await route.continue_()
+                            return
+                        
+                        messages = post_data.get("messages", [])
+                        async with AsyncSessionLocal() as db:
+                            response_data = await ai_service.chat_completion(
+                                db=db,
+                                messages=messages,
+                                temperature=post_data.get("temperature", 0.7),
+                            )
+                        
+                        content = response_data.get("content", "") if isinstance(response_data, dict) else response_data
+                        mock_response = {
+                            "id": "chatcmpl-page-agent-proxy",
+                            "object": "chat.completion",
+                            "created": 1677652288,
+                            "model": "gpt-3.5-turbo",
+                            "choices": [{"index": 0, "message": {"role": "assistant", "content": content}, "finish_reason": "stop"}]
+                        }
+                        await route.fulfill(status=200, content_type="application/json", body=json.dumps(mock_response))
+                    except Exception as e:
+                        logger.error(f"LLM Route Error: {e}")
+                        await route.abort()
 
-            # Set up route (idempotent)
-            await tool.page.context.route("**/v1/chat/completions", _handle_llm_route)
+                await tool.page.context.route("**/v1/chat/completions", _handle_llm_route)
+                tool._llm_route_registered = True
+                logger.info("[PageAgent] LLM proxy route registered on context")
 
-            # Call agent execute
-            # We use a wrapper to catch the promise result
+            # 4. Execute via PageAgent with explicit timeout guard.
+            # LLM reasoning can take 30-120s; without a timeout the evaluate call may
+            # silently fail with a cryptic Playwright timeout after 30s.
+            PAGE_AGENT_TIMEOUT_MS = 110000  # slightly under asyncio guard
+            PAGE_AGENT_ASYNCIO_TIMEOUT_S = 120.0
+
+            # Escape prompt for safe JS string interpolation
+            safe_prompt = prompt.replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ")
             js_code = f"""
             (async () => {{
+                const _timeout = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('PageAgent timeout after {PAGE_AGENT_TIMEOUT_MS}ms')), {PAGE_AGENT_TIMEOUT_MS})
+                );
                 try {{
                     if (!window.pageAgent) throw new Error("PageAgent not initialized");
-                    const result = await window.pageAgent.execute("{prompt}");
+                    const result = await Promise.race([
+                        window.pageAgent.execute("{safe_prompt}"),
+                        _timeout
+                    ]);
                     return {{ success: true, result: result }};
                 }} catch (e) {{
                     return {{ success: false, error: e.toString() }};
@@ -583,8 +749,14 @@ class TestRunner:
             }})()
             """
             
-            # Increase timeout for AI reasoning
-            result = await tool.page.evaluate(js_code)
+            import asyncio
+            try:
+                result = await asyncio.wait_for(
+                    tool.page.evaluate(js_code),
+                    timeout=PAGE_AGENT_ASYNCIO_TIMEOUT_S,
+                )
+            except asyncio.TimeoutError:
+                return {"success": False, "error": f"PageAgent asyncio timeout after {PAGE_AGENT_ASYNCIO_TIMEOUT_S}s"}
             
             if result.get("success"):
                 return {"success": True, "output": result.get("result"), "used_selector": "PageAgent_AI"}
@@ -649,6 +821,18 @@ class TestRunner:
                 # Append fallback error to last error
                 last_error = f"{last_error} | PageAgent Fallback: {fallback_res.get('error')}"
 
+        if action in {"assert_visible", "assert_text"}:
+            semantic_res = await self._execute_semantic_assertion(tool, action, step, selectors)
+            if semantic_res["success"]:
+                return {
+                    "success": True,
+                    "used_selector": semantic_res.get("used_selector"),
+                    "tried_selectors": tried_selectors,
+                    "output": semantic_res.get("output"),
+                    "error": None,
+                }
+            last_error = f"{last_error} | Semantic Assertion: {semantic_res.get('error')}"
+
         return {
             "success": False,
             "used_selector": None,
@@ -680,5 +864,5 @@ class TestRunner:
             )
             self.db.add(log)
             await self.db.commit()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"[HealLog] Failed to persist heal log (case={case_id}, step={step_index}): {e}")

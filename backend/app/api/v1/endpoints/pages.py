@@ -14,6 +14,7 @@ async def read_pages(
     skip: int = 0,
     limit: int = 100,
     module_id: int = None,
+    project_id: int = None,
     current_user: User = Depends(deps.get_current_user),
 ) -> Any:
     """
@@ -22,6 +23,8 @@ async def read_pages(
     service = PageService(db)
     if module_id:
         return await service.get_by_module(db, module_id)
+    if project_id:
+        return await service.get_by_project(db, project_id)
     return await service.get_multi(db, skip=skip, limit=limit)
 
 @router.post("/", response_model=Page)

@@ -3,6 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from app.models.page import Page
+from app.models.module import Module
 from app.schemas.page import PageCreate, PageUpdate
 from app.services.base import CRUDBase
 
@@ -24,6 +25,27 @@ class PageService(CRUDBase[Page, PageCreate, PageUpdate]):
             if page.updater:
                 page.updater_name = page.updater.full_name or page.updater.email
                 
+        return pages
+
+    async def get_by_project(self, db: AsyncSession, project_id: int) -> List[Page]:
+        query = (
+            select(self.model)
+            .options(
+                selectinload(Page.creator),
+                selectinload(Page.updater)
+            )
+            .join(Module, Module.id == self.model.module_id)
+            .where(Module.project_id == project_id)
+        )
+        result = await db.execute(query)
+        pages = result.scalars().all()
+
+        for page in pages:
+            if page.creator:
+                page.creator_name = page.creator.full_name or page.creator.email
+            if page.updater:
+                page.updater_name = page.updater.full_name or page.updater.email
+
         return pages
 
     async def get_multi(

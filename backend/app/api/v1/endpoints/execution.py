@@ -11,6 +11,18 @@ from app.core.config import settings
 
 router = APIRouter()
 
+
+def _json_safe(value: Any) -> Any:
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    if isinstance(value, dict):
+        return {str(k): _json_safe(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple, set)):
+        return [_json_safe(v) for v in value]
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="ignore")
+    return str(value)
+
 class ExecutionOptions(BaseModel):
     headless: Optional[bool] = None  # None means use config default
     browser_type: Optional[str] = None  # None means use config default
@@ -74,5 +86,5 @@ async def get_task_status(task_id: str) -> Any:
     return {
         "task_id": task_id,
         "status": task_result.status,
-        "result": task_result.result if task_result.ready() else None
+        "result": _json_safe(task_result.result) if task_result.ready() else None
     }
