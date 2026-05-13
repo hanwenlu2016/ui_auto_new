@@ -155,14 +155,17 @@
 
 <script setup lang="ts">
 import { ref, watch, nextTick, onMounted } from 'vue'
-import { NIcon, NButton, NInput, NSpin, NTag, NSelect, useMessage, NModal, NCard, NForm, NFormItem } from 'naive-ui'
+import { NIcon, NButton, NInput, NSpin, NTag, NTabs, NTabPane, NSelect, useMessage, NModal, NCard, NForm, NFormItem } from 'naive-ui'
 import { 
   SparklesOutline as SparklesIcon, 
+  CloseOutline as CloseIcon,
   PlanetOutline as SmartIcon,
   PaperPlaneOutline as SendIcon
 } from '@vicons/ionicons5'
 import api from '@/api'
 import { useAppStore } from '@/stores/app'
+import { bindGeneratedStepsToKnownElements, loadAiContext } from '@/utils/aiContext'
+import { ensureAICaseModule, generateCaseName, normalizeGeneratedSteps } from '@/utils/aiCaseFlow'
 
 const appStore = useAppStore()
 const isOpen = ref(false)
@@ -351,7 +354,7 @@ const normalizeStepsForCase = (steps: any[]) => {
       locator_chain: step.locator_chain || null,
       variable_name: step.variable_name || ''
     }
-  })
+}
 }
 
 const fetchProjects = async () => {

@@ -250,15 +250,22 @@
              <span style="color: var(--color-text-3); font-size: 12px;">💡 提示：描述越明确（包含页面元素名称和输入值），生成的质量越高。</span>
            </p>
            
-           <div style="display: flex; gap: 12px; margin-bottom: 12px; align-items: center;">
-             <span style="font-size: 13px; color: var(--color-text-2); font-weight: 500;">引擎选择:</span>
-             <n-select
-               v-model:value="selectedAIModel"
-               :options="aiModelOptions"
-               style="width: 160px"
-               size="small"
-               placeholder="加载模型中..."
-             />
+           <div style="display: flex; gap: 12px; margin-bottom: 12px; align-items: center; justify-content: space-between;">
+             <div style="display: flex; gap: 12px; align-items: center;">
+               <span style="font-size: 13px; color: var(--color-text-2); font-weight: 500;">引擎选择:</span>
+               <n-select
+                 v-model:value="selectedAIModel"
+                 :options="aiModelOptions"
+                 style="width: 200px"
+                 size="small"
+                 placeholder="加载模型中..."
+               />
+             </div>
+             <span style="font-size: 12px; color: var(--color-text-3);">自动绑定当前项目与模块</span>
+           </div>
+
+           <div v-if="!selectedModuleId" style="margin-bottom: 12px; font-size: 12px; color: #d03050;">
+             请先选择模块，再使用 AI 智能生成。
            </div>
 
            <n-input
@@ -284,7 +291,7 @@
             <n-button 
               type="primary" 
               @click="handleGenerateSteps" 
-              :disabled="!aiPrompt || aiLoading"
+              :disabled="!aiPrompt || aiLoading || !selectedModuleId"
               :loading="aiLoading"
             >
               一键生成
@@ -369,6 +376,7 @@ import { NButton, NSpace, useMessage, type DataTableColumns, type FormInst, NCar
 import api from '@/api'
 import { useAppStore } from '@/stores/app'
 import { bindGeneratedStepsToKnownElements, loadAiContext } from '@/utils/aiContext'
+import { normalizeGeneratedSteps } from '@/utils/aiCaseFlow'
 
 const appStore = useAppStore()
 
@@ -790,19 +798,24 @@ const handleSaveElement = async () => {
 }
 
 const handleGenerateSteps = async () => {
+  if (!selectedModuleId.value) {
+    message.warning('请先选择模块')
+    return
+  }
+
   if (!aiPrompt.value.trim()) return
   aiLoading.value = true
 
   try {
     const aiContext = await loadAiContext(selectedProjectId.value, selectedModuleId.value)
-    const resp = await api.post('/ai/generate', {
+    const response = await api.post('/ai/generate', {
       prompt: aiPrompt.value,
       model_id: selectedAIModel.value,
       project_id: selectedProjectId.value,
       business_rules: aiContext.businessRules || undefined
     })
 
-    const generatedSteps = resp.data.steps
+    const generatedSteps = response.data.steps
     if (generatedSteps && generatedSteps.length > 0) {
       const parseDurationToMs = (raw: any): string => {
         if (raw === null || raw === undefined) return ''
@@ -891,13 +904,14 @@ const handleGenerateSteps = async () => {
       if (degradedCount > 0) {
         message.warning(`有 ${degradedCount} 个步骤动作无法识别，已降级为 click，请检查后执行`)
       }
+
       if (binding.boundCount > 0) {
         message.info(`已自动绑定 ${binding.boundCount} 个步骤到已知页面元素`)
       }
       if (binding.unboundInteractiveCount > 0) {
         message.warning(`仍有 ${binding.unboundInteractiveCount} 个交互步骤未绑定到已知元素，建议确认页面元素库`)
       }
-      message.success(`成功解析并添加 ${binding.steps.length} 个步骤`)
+      message.success(`成功解析并导入 ${finalSteps.length} 个步骤`)
       showAIModal.value = false
       aiPrompt.value = ''
     } else {
