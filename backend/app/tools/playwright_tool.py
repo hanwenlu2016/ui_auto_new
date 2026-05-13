@@ -384,16 +384,6 @@ class PlaywrightTool:
             if token and token in text_blob:
                 score += 5
 
-        if "baidu." in url:
-            if candidate.get("id") == "chat-textarea":
-                score += 60
-            if "chat-input-textarea" in text_blob:
-                score += 24
-            if candidate.get("id") == "chat-submit-button":
-                score += 60
-            if "百度一下" in text_blob:
-                score += 30
-
         return score
 
     async def _find_semantic_selector(
@@ -488,91 +478,67 @@ class PlaywrightTool:
                 return locator, healed_selector
             raise original_error
 
-    async def _maybe_click_submit_after_enter(
-        self,
-        *,
-        resolved_selector: str,
-        step_description: Optional[str],
-        timeout: int,
-    ) -> None:
-        if not self.page:
-            raise RuntimeError("Browser not started. Call start() first.")
-
-        url = str(self.page.url or "").lower()
-        if "baidu." not in url or resolved_selector != "#chat-textarea":
-            return
-
-        await self.page.wait_for_timeout(150)
-        submit_selector = await self._find_semantic_selector(
-            action="click",
-            selector="#chat-submit-button",
-            value="submit",
-            step_description=f"{step_description or ''} 搜索 提交 百度一下",
-        )
-        if not submit_selector:
-            return
-
-        locator, recovered_submit_selector = await self._resolve_locator(
-            submit_selector,
-            action="click",
-            timeout=min(timeout, 3000),
-            require_visible=True,
-            step_description="点击搜索提交按钮",
-        )
-        await locator.click()
-        logger.info(
-            "Search submit fallback triggered after Enter | input=%s submit=%s",
-            resolved_selector,
-            recovered_submit_selector,
-        )
     
     async def click(self, selector: str, **kwargs) -> str:
         """
-        Click an element.
-        
-        Args:
-            selector: CSS selector or XPath
-            **kwargs: Additional arguments for locator.click()
+        Click an element, with JS fallback for headless visibility issues.
         """
         if not self.page:
             raise RuntimeError("Browser not started. Call start() first.")
         timeout = int(kwargs.pop("timeout", 10000))
         step_description = str(kwargs.pop("step_description", "") or "")
-        locator, resolved_selector = await self._resolve_locator(
-            selector,
-            action="click",
-            timeout=timeout,
-            require_visible=True,
-            step_description=step_description,
-        )
-        await locator.click(**kwargs)
-        logger.debug(f"Clicked element: {selector}")
-        return resolved_selector
+        try:
+            locator, resolved_selector = await self._resolve_locator(
+                selector,
+                action="click",
+                timeout=timeout,
+                require_visible=True,
+                step_description=step_description,
+            )
+            await locator.click(timeout=timeout, **kwargs)
+            logger.debug(f"Clicked element: {selector}")
+            return resolved_selector
+        except Exception as e:
+            if "Timeout" in str(e) or "visible" in str(e).lower() or "intercepted" in str(e).lower():
+                logger.warning(f"Standard click failed or timed out for {selector}, attempting JS fallback: {e}")
+                locator, resolved_selector = await self._resolve_locator(
+                    selector, action="click", timeout=5000, require_visible=False, step_description=step_description
+                )
+                await locator.first.evaluate("el => el.click()")
+                logger.info(f"JS fallback click succeeded for {selector}")
+                return resolved_selector
+            raise e
     
     async def fill(self, selector: str, value: str, **kwargs) -> str:
         """
-        Fill an input field.
-        
-        Args:
-            selector: CSS selector or XPath
-            value: The value to fill
-            **kwargs: Additional arguments for locator.fill()
+        Fill an input field, with JS fallback for headless visibility issues.
         """
         if not self.page:
             raise RuntimeError("Browser not started. Call start() first.")
         timeout = int(kwargs.pop("timeout", 10000))
         step_description = str(kwargs.pop("step_description", "") or "")
-        locator, resolved_selector = await self._resolve_locator(
-            selector,
-            action="fill",
-            timeout=timeout,
-            require_visible=True,
-            value=value,
-            step_description=step_description,
-        )
-        await locator.fill(value, **kwargs)
-        logger.debug(f"Filled element {selector} with: {value}")
-        return resolved_selector
+        try:
+            locator, resolved_selector = await self._resolve_locator(
+                selector,
+                action="fill",
+                timeout=timeout,
+                require_visible=True,
+                value=value,
+                step_description=step_description,
+            )
+            await locator.fill(value, timeout=timeout, **kwargs)
+            logger.debug(f"Filled element {selector} with: {value}")
+            return resolved_selector
+        except Exception as e:
+            if "Timeout" in str(e) or "visible" in str(e).lower() or "intercepted" in str(e).lower():
+                logger.warning(f"Standard fill failed or timed out for {selector}, attempting JS fallback: {e}")
+                locator, resolved_selector = await self._resolve_locator(
+                    selector, action="fill", timeout=5000, require_visible=False, value=value, step_description=step_description
+                )
+                await locator.first.evaluate("(el, val) => { el.value = val; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); }", value)
+                logger.info(f"JS fallback fill succeeded for {selector}")
+                return resolved_selector
+            raise e
     
     async def wait(self, milliseconds: int) -> None:
         """
@@ -652,21 +618,37 @@ class PlaywrightTool:
         step_description: str = "",
         value: Optional[str] = None,
     ) -> str:
-        """Wait for selector to reach state."""
+        """Wait for selector to reach state, with DOM presence fallback."""
         if not self.page:
             raise RuntimeError("Browser not started. Call start() first.")
         require_visible = state == "visible"
-        locator, resolved_selector = await self._resolve_locator(
-            selector,
-            action="wait_for_selector",
-            timeout=timeout,
-            require_visible=require_visible,
-            value=value,
-            step_description=step_description,
-        )
-        await locator.wait_for(timeout=timeout, state=state)
-        logger.debug(f"Waited for selector: {selector}, timeout={timeout}, state={state}")
-        return resolved_selector
+        try:
+            locator, resolved_selector = await self._resolve_locator(
+                selector,
+                action="wait_for_selector",
+                timeout=timeout,
+                require_visible=require_visible,
+                value=value,
+                step_description=step_description,
+            )
+            await locator.first.wait_for(timeout=timeout, state=state)
+            logger.debug(f"Waited for selector: {selector}, timeout={timeout}, state={state}")
+            return resolved_selector
+        except Exception as e:
+            if require_visible and ("Timeout" in str(e) or "visible" in str(e).lower()):
+                logger.warning(f"wait_for_selector(visible) failed for {selector}, fallback to DOM presence: {e}")
+                locator, resolved_selector = await self._resolve_locator(
+                    selector,
+                    action="wait_for_selector",
+                    timeout=5000,
+                    require_visible=False,
+                    value=value,
+                    step_description=step_description,
+                )
+                await locator.first.wait_for(timeout=5000, state="attached")
+                logger.info(f"Fallback DOM presence wait succeeded for {selector}")
+                return resolved_selector
+            raise e
 
     async def hover(self, selector: str, **kwargs) -> str:
         """Hover an element."""
@@ -718,12 +700,6 @@ class PlaywrightTool:
             step_description=step_description,
         )
         await locator.press(key, **kwargs)
-        if str(key).strip().lower() == "enter":
-            await self._maybe_click_submit_after_enter(
-                resolved_selector=resolved_selector,
-                step_description=step_description,
-                timeout=timeout,
-            )
         logger.debug(f"Pressed key '{key}' on {selector}")
         return resolved_selector
 
