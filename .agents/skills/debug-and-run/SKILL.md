@@ -11,7 +11,7 @@ description: 本地启动、调试和排查本项目问题。包括启动后端�
 
 | 服务 | 技术 | 端口 | 命令 |
 |------|------|------|------|
-| 后端 API | FastAPI | 8000 | `uv run uvicorn app.main:app --reload` |
+| 后端 API | FastAPI | 8000 | `uvicorn app.main:app --reload` |
 | 前端 | Vite/Vue3 | 5173 | `npm run dev` |
 | 任务队列 | Celery | - | `celery -A app.core.celery_app worker` |
 
@@ -23,7 +23,7 @@ description: 本地启动、调试和排查本项目问题。包括启动后端�
 ```bash
 cd backend
 source .venv/bin/activate
-uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ### 2. 启动 Celery Worker
@@ -34,6 +34,17 @@ source .venv/bin/activate
 celery -A app.core.celery_app worker --loglevel=info
 # 调试模式 (单进程，方便查看日志):
 celery -A app.core.celery_app worker --loglevel=debug --concurrency=1 --pool=solo
+```
+
+### ⚠️ 项目目录改名/移动后必须重建 venv
+
+`.venv` 里的脚本 shebang 包含绝对路径，目录改名后会失效，导致回退到系统 Python。
+
+```bash
+cd backend
+rm -rf .venv
+uv venv
+uv pip install -e .
 ```
 
 ### 3 启动前端

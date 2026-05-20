@@ -161,6 +161,7 @@ const rules = {
 }
 
 const locatorOptions = [
+  { label: 'Playwright 语义', value: 'playwright_semantic' },
   { label: 'XPath', value: 'xpath' },
   { label: 'CSS Selector', value: 'css' },
   { label: 'ID', value: 'id' },

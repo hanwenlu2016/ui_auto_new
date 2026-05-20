@@ -155,17 +155,15 @@
 
 <script setup lang="ts">
 import { ref, watch, nextTick, onMounted } from 'vue'
-import { NIcon, NButton, NInput, NSpin, NTag, NTabs, NTabPane, NSelect, useMessage, NModal, NCard, NForm, NFormItem } from 'naive-ui'
+import { NIcon, NButton, NInput, NSpin, NTag, NSelect, useMessage, NModal, NCard, NForm, NFormItem } from 'naive-ui'
 import { 
   SparklesOutline as SparklesIcon, 
-  CloseOutline as CloseIcon,
   PlanetOutline as SmartIcon,
   PaperPlaneOutline as SendIcon
 } from '@vicons/ionicons5'
 import api from '@/api'
 import { useAppStore } from '@/stores/app'
-import { bindGeneratedStepsToKnownElements, loadAiContext } from '@/utils/aiContext'
-import { ensureAICaseModule, generateCaseName, normalizeGeneratedSteps } from '@/utils/aiCaseFlow'
+import { normalizeGeneratedSteps } from '@/utils/aiCaseFlow'
 
 const appStore = useAppStore()
 const isOpen = ref(false)
@@ -265,7 +263,7 @@ const handleSend = async () => {
               currentMsg.text = `正在执行第 ${item.step_number} 步...`
             } else if (item.type === 'done') {
               if (Array.isArray(item.final_steps)) {
-                currentMsg.steps = mergeAssistantSteps(currentMsg.steps || [], item.final_steps)
+                currentMsg.steps = item.final_steps
               }
               currentMsg.text = `智能推演执行完毕，已完美提取 ${item.total_steps} 个步骤。`
             } else if (item.type === 'error') {
@@ -298,31 +296,10 @@ const mapActionIcon = (action: string) => {
 }
 
 const mergeAssistantSteps = (streamedSteps: any[], finalSteps: any[]) => {
-  const merged = [...(streamedSteps || [])]
-  for (const step of finalSteps || []) {
-    const exists = merged.some((item) => item.action === step.action && item.target === step.target && item.value === step.value)
-    if (!exists) {
-      merged.push(step)
-    }
-  }
-  return merged
+  return finalSteps || []
 }
 
-const parseDurationToMs = (raw: any): number | null => {
-  if (raw === null || raw === undefined) return null
-  if (typeof raw === 'number' && Number.isFinite(raw)) {
-    return Math.round(raw >= 100 ? raw : raw * 1000)
-  }
-  const text = String(raw).trim().toLowerCase()
-  if (!text) return null
-  const m = text.match(/^(\d+(?:\.\d+)?)\s*(ms|s)?$/)
-  if (!m) return null
-  const amount = Number(m[1])
-  const unit = m[2]
-  if (unit === 'ms') return Math.round(amount)
-  if (unit === 's') return Math.round(amount * 1000)
-  return Math.round(amount >= 100 ? amount : amount * 1000)
-}
+
 
 const buildCaseName = (sourcePrompt: string, steps: any[]) => {
   const promptName = sourcePrompt.trim().replace(/\s+/g, ' ')
@@ -332,30 +309,7 @@ const buildCaseName = (sourcePrompt: string, steps: any[]) => {
   return String(firstMeaningfulStep.description || firstMeaningfulStep.target || firstMeaningfulStep.action).slice(0, 60)
 }
 
-const normalizeStepsForCase = (steps: any[]) => {
-  return steps.map((step: any) => {
-    const isWait = step.action === 'wait'
-    const isWaitForSelector = step.action === 'wait_for_selector'
-    const waitMs = (isWait || isWaitForSelector)
-      ? (parseDurationToMs(step.wait_ms ?? step.value) ?? (isWait ? 1000 : 8000))
-      : null
 
-    return {
-      action: step.action,
-      target: step.target || step.selector || '',
-      selector: step.target || step.selector || '',
-      value: (isWait || isWaitForSelector)
-        ? String(waitMs)
-        : (step.value || ''),
-      wait_ms: waitMs,
-      description: step.description || '',
-      page_id: step.page_id || null,
-      element_id: step.element_id || null,
-      locator_chain: step.locator_chain || null,
-      variable_name: step.variable_name || ''
-    }
-}
-}
 
 const fetchProjects = async () => {
   const res = await api.get('/projects/')
@@ -396,7 +350,7 @@ const useSteps = async (steps: any[], sourcePrompt: string) => {
   }
 
   try {
-    pendingSaveSteps.value = normalizeStepsForCase(steps)
+    pendingSaveSteps.value = normalizeGeneratedSteps(steps)
     saveForm.value = {
       name: buildCaseName(sourcePrompt, steps),
       description: sourcePrompt.trim() || '由 AI 助手自动生成',

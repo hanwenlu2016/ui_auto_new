@@ -1,121 +1,108 @@
-# 智能 UI 自动化测试平台 (Intelligent UI Automation Platform)
+# CLAUDE.md
 
-基于 Python (FastAPI) 和 Vue 3 构建的现代化、企业级 UI 自动化测试平台。它利用 Playwright 实现强大的浏览器自动化，并集成了 AI 能力以简化测试用例的创建。
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 🏗 架构设计
-![架构概览](./assets/architecture_diagram.png)
-![架构设计](./assets/mermaid-diagram-01.png)
+## Commands
 
-## ✨ 核心功能
+### Backend
+```bash
+# Start dev server (from backend/)
+uv run uvicorn app.main:app --reload
 
-### 🚀 核心自动化能力
--   **Page Object Model (POM)**: 结构化管理页面和 UI 元素，确保测试的可维护性。
--   **多浏览器支持**: 无缝支持 Chromium, Firefox, 和 WebKit (通过 Playwright)。
--   **分布式执行**: 使用 Celery 和 Redis 实现异步测试执行。
--   **"Injection + Proxy" (注入 + 代理)** 模式，确保前端执行的灵活性与后端密钥的安全性。
+# Install deps
+uv sync
 
-### 🤖 Page-Agent 智能集成 (New!)
-本项目深度集成了 [Alibaba Page-Agent](https://github.com/alibaba/page-agent)，实现了基于自然语言的智能操作执行与自我修复能力。
+# Run Celery worker (for async test execution)
+celery -A app.core.celery_app worker --loglevel=info
 
+# Alembic migrations
+alembic revision --autogenerate -m "description"
+alembic upgrade head
+```
 
-#### 核心能力
-1.  **Agent-First Execution (智能优先执行)**
-    *   AI 生成的测试步骤如果难以用传统选择器描述，将标记为 `AI_AUTO`。
-    *   执行引擎直接调用 Page-Agent，将自然语言指令（如"点击右上角的登录按钮"）转化为操作。
+### Frontend
+```bash
+# Start dev server (from frontend/)
+npm run dev
 
-2.  **Auto-Healing Fallback (自动修复兜底)**
-    *   当常规 CSS/XPath 选择器失效时，自动触发 Page-Agent。
-    *   利用当前页面 DOM 和元素描述，通过 LLM 重新定位并执行操作，实现测试过程的自我修复。
+# Install deps
+npm install
 
-3.  **Secure Proxy (安全代理)**
-    *   前端 Page-Agent 不直接持有 API Key。
-    *   所有 LLM 请求由后端拦截并转发，确保敏感信息不泄露。
+# Build
+npm run build
 
-### 🎥 智能录制
--   **交互式录制**: 内置浏览器录制器，可捕获用户操作并将其转换为测试步骤。
--   **项目上下文感知**: 自动检测当前项目并配置录制环境（如 Base URL）。
--   **智能元素检测**: 捕获健壮的选择器 (Selector) 并支持立即回放验证。
+# Preview production build
+npm run preview
+```
 
-### 🤖 AI 智能体 2.0 (✨ 深度加固)
--   **多场景策略生成**: 不只是简单的原子动作，AI 现在能一次性规划 **常规 (Happy Path)**、**边界 (Boundary)** 和 **异常 (Negative)** 三个维度的完整测试集。
--   **多模态上下文感知**: 自动注入解析后的 **DOM 结构 (Top 100)** 和 **页面截图描述**，让 AI 真正“看见”页面元素。
--   **自愈与进化 (RLHF)**: 
-    - 集成 **自愈日志 (HealLog)**，自动记录选择器失效及修复路径。
-    - 支持 **用户反馈 (👍/👎)**，通过强化学习反馈循环 (RLHF) 持续优化元素定位算法。
--   **推理型模型适配**: 原生适配 **MiniMax-M2.5** 等推理型 (Reasoning) 模型，优化长链路推理超时与输出截断。
--   **标准操作对齐**: 生成步骤自动映射到系统内置的“跳转”、“点击”、“输入”、“断言”和“等待”，实现 100% 导入即用。
+## Project Architecture
 
-### 📊 报告与分析
--   **Allure 集成**: 生成包含截图和日志的详细交互式测试报告。
--   **数据隔离**: 确保每次测试运行都有干净、隔离的结果，避免历史数据污染。
+A UI automation testing platform with Playwright browser automation, AI-powered test generation, and self-healing capabilities.
 
-## 🛠 技术栈
+### Backend Structure (`backend/app/`)
 
-### 后端 (Backend)
--   **框架**: FastAPI (Python 3.12+)
--   **数据库**: PostgreSQL / SQLite (使用 SQLAlchemy Async)
--   **任务队列**: Celery + Redis
--   **自动化引擎**: Playwright
--   **测试框架**: Pytest
+**API Layer** (`api/v1/endpoints/`): Thin route handlers that validate input (Pydantic), delegate to services, and return responses. All endpoints require auth via `deps.get_current_user`. Key endpoints:
 
-### 前端 (Frontend)
--   **框架**: Vue 3 + TypeScript
--   **构建工具**: Vite
--   **UI 组件库**: Naive UI
--   **状态管理**: Pinia
+| Endpoint | Prefix | Purpose |
+|---|---|---|
+| `login.py` | `/login` | JWT auth |
+| `projects.py` | `/projects` | CRUD projects (each has base_url) |
+| `modules.py` | `/modules` | CRUD modules (belong to a project) |
+| `pages.py` | `/pages` | CRUD pages (belong to a module) |
+| `elements.py` | `/elements` | CRUD page elements (belong to a page) |
+| `cases.py` | `/cases` | CRUD test cases (belong to a module, have steps) |
+| `suites.py` | `/suites` | CRUD test suites (aggregate test cases) |
+| `execution.py` | `/execution` | Trigger async test run via Celery |
+| `recording.py` | `/recording` | Browser recording sessions |
+| `reports.py` | `/reports` | Test reports (Allure) |
+| `ai.py` | `/ai` | AI generate/discover/heal/feedback |
+| `ai_models.py` | `/ai-models` | CRUD AI model configs |
+| `agent.py` | `/agent` | AI Agent execution endpoints (browser-use) |
+| `dashboard.py` | `/dashboard` | Stats and metrics |
 
-## ⚡️ 快速开始
+**Service Layer** (`services/`): Business logic. All services inherit from `CRUDBase` (in `base.py`) providing `get/get_multi/create/update/remove`. Key services:
+- `ai_service.py` — 4 AI modules: generate steps, discover page elements, heal selectors, RLHF feedback. Provider-agnostic (OpenAI-compatible), model config stored in `ai_models` DB table. Caches `AsyncOpenAI` clients per model ID, invalidates on config change.
+- `runner.py` — `TestRunner` executes test cases via Playwright. Handles selector resolution (Page Object → multi-strategy locator chain → raw target → semantic healing → visual matching), Allure result generation, and heal log recording.
+- `recorder.py` — Browser recording session management.
 
-### 前置要求
--   Python 3.12+
--   Node.js 18+
--   Redis (用于任务队列)
+**Models** (`models/`): SQLAlchemy models. Entity hierarchy: Project → Module → Page → PageElement. TestCase has JSON `steps` field. HealLog records selector failures and repairs. StepFeedback stores RLHF data.
 
-### 后端设置
-1.  进入后端目录:
-    ```bash
-    cd backend
-    ```
-2.  安装依赖 (使用 `uv` 或 `pip`):
-    ```bash
-    uv sync  # 或者 pip install -r requirements.txt
-    ```
-3.  启动 API 服务:
-    ```bash
-    uv run uvicorn app.main:app --reload
-    ```
-4.  启动 Celery Worker (用于执行测试):
-    ```bash
-    celery -A app.core.celery_app worker --loglevel=info
-    ```
+**Schema** (`schemas/`): Pydantic models for request/response validation. Matches models 1:1.
 
-### 前端设置
-1.  进入前端目录:
-    ```bash
-    cd frontend
-    ```
-2.  安装依赖:
-    ```bash
-    npm install
-    ```
-3.  启动开发服务器:
-    ```bash
-    npm run dev
-    ```
+**Core** (`core/`):
+- `config.py` — `Settings` via pydantic-settings, env/configurable (DB, Redis, JWT, browser)
+- `celery_app.py` — Celery instance
+- `security.py` — JWT token create/verify
+- `logger.py` — Logging setup
 
-## 📝 使用指南
+**Worker** (`worker.py`): Celery task definitions. `run_test_case_task` and `run_test_suite_task` — each creates an isolated DB session, invokes `TestRunner`, generates Allure report, cleans up temp dirs.
 
-1.  **创建项目**: 进入 **项目管理 (Projects)**，定义一个新的 Web 项目并设置 Base URL。
-2.  **录制用例**:
-    -   进入 **录制 (Recording)** 页面。
-    -   选择你的项目并点击 **开始录制**。
-    -   在浏览器中进行操作。
-    -   点击 **停止** 并 **保存用例**。
-3.  **AI 生成**:
-    -   进入 **测试用例 (Test Cases)** -> **创建用例**。
-    -   点击 **✨ AI 生成** 按钮。
-    -   输入指令 (例如: "Open http://localhost:5173 and click Login")。
-    -   点击 **生成**，系统将自动填充步骤。
-4.  **运行与报告**:
-    -   在测试用例或套件上点击 **运行**。
-    -   在 **测试报告 (Reports)** 页面查看详细的 Allure 结果。
+### Frontend Structure (`frontend/src/`)
+
+**Views** (`views/`): One per route — `Login.vue`, `Dashboard.vue`, `Projects.vue`, `Modules.vue`, `Pages.vue`, `PageElements.vue`, `TestCases.vue`, `TestSuites.vue`, `Recording.vue`, `Reports.vue`, `AIModels.vue`.
+
+**Components** (`components/`): `AIChatConsole.vue` — reusable AI chat dialog for generating test steps.
+
+**Stores** (`stores/`): Pinia stores — `user.ts` (auth token, user info), `app.ts`, `recording.ts` (pending steps buffer), `tab.ts`.
+
+**Utils** (`utils/`): `aiCaseFlow.ts` — step normalization functions shared between AI generation and manual editing. `aiContext.ts` — DOM extraction for AI context.
+
+**API** (`api/`): Axios client with JWT Bearer token interceptor and 401 redirect.
+
+**Router** (`router/`): Vue Router with auth guard. Main layout wraps all authenticated routes.
+
+### Key Data Flows
+
+1. **AI Test Generation**: User prompt → `POST /api/v1/ai/generate` → `AIService.generate_steps_from_text()` (LLM call) → optional `bind_steps_to_library()` (matches generated steps to existing Page Elements) → returned as processable step objects.
+
+2. **Test Execution**: `POST /execution/cases/{id}/run` → Celery task → `TestRunner.run_test_case()` → Playwright executes steps (resolving selectors via Page Object library → multi-strategy locator chain → raw target → semantic healing → visual matching) → Allure results generated → report stored.
+
+3. **Self-Healing**: Step fails → `_try_selectors()` tries all selector candidates → if all fail and action is interactive → Tier 1 semantic healing (`_find_semantic_selector()`) → Tier 2 visual matching (`_visual_match()`) → `_write_heal_log()` records the healing.
+
+4. **AI Model Config**: `ai_models` DB table stores api_key/base_url/model_identifier. `AIService._get_client_from_db()` fetches by ID or default, caches AsyncOpenAI clients, invalidates on config fingerprint change.
+
+### Important Patterns
+
+- **Multi-Strategy Locator Chain**: Each element stores 5 independent selector strategies (`strategy_role`, `strategy_attr`, `strategy_text`, `strategy_label`, `strategy_xpath`) plus backward-compatible `primary/fallback_1/fallback_2/fallback_3`. Each strategy uses a different mechanism (role, attribute, text, label, XPath) so they fail independently rather than cascading.
+- **RLHF**: User feedback (thumbs up/down, corrections) stored as `StepFeedback`, injected into future AI prompts as project memory.
+- **CRUD pattern**: Create a new service = extend `CRUDBase[Model, CreateSchema, UpdateSchema]`, then mount in endpoints. See any existing service file for the pattern.

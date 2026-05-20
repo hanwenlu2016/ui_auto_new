@@ -28,8 +28,6 @@ from app.models.element import PageElement
 from app.models.module import Module
 from app.models.heal_log import HealLog
 from app.tools.playwright_tool import PlaywrightTool
-from app.services.ai_service import ai_service
-from app.db.session import AsyncSessionLocal
 
 
 class TestRunner:
@@ -425,18 +423,6 @@ class TestRunner:
                     step_res["output"] = result.get("output")
                 return step_res
 
-            # Check for AI_AUTO instruction for direct PageAgent execution
-            target = step.get("target") or step.get("selector")
-            if target == "AI_AUTO" and action in self.INTERACTIVE_ACTIONS:
-                agent_res = await self._execute_via_page_agent(tool, action, resolved_value, step)
-                step_res["success"] = agent_res["success"]
-                step_res["error"] = agent_res.get("error")
-                if agent_res.get("output") is not None:
-                    step_res["output"] = agent_res.get("output")
-                if agent_res.get("used_selector"):
-                    step_res["used_selector"] = agent_res["used_selector"]
-                return step_res
-
             selectors = await self._build_selector_candidates(step, element_id, action)
             if action in self.ELEMENT_ACTIONS and not selectors:
                 step_res["error"] = f"Action '{action}' requires selector, but none was resolved"
@@ -500,11 +486,17 @@ class TestRunner:
                 candidates.append(str(element.locator_value))
                 candidates.extend(self._extract_element_metadata_candidates(element))
 
-        # 2. Rich Locator Chain (Semantic, Text, Clean CSS, original XPath)
+        # 2. Multi-strategy Locator Chain
+        # Each strategy is independent — failure of one doesn't cascade to others
         locator_chain = step.get("locator_chain")
         if isinstance(locator_chain, dict):
-            # Order of preference: Primary (Semantic) > Fallback 1 (Text) > Fallback 2 (Clean CSS) > Fallback 3 (XPath)
             ordered = [
+                locator_chain.get("strategy_role"),    # role=button[name='Submit']
+                locator_chain.get("strategy_attr"),    # [data-testid='btn']
+                locator_chain.get("strategy_text"),    # text="Submit"
+                locator_chain.get("strategy_label"),   # placeholder='Enter'
+                locator_chain.get("strategy_xpath"),   # //button[@data-testid='btn']
+                # Backward compatible fields
                 locator_chain.get("primary"),
                 locator_chain.get("fallback_1"),
                 locator_chain.get("fallback_2"),
@@ -516,12 +508,8 @@ class TestRunner:
 
         # 3. Raw Target (Original extraction from browser-use)
         primary_selector = step.get("target") or step.get("selector")
-        if primary_selector and primary_selector != "AI_AUTO":
+        if primary_selector:
             candidates.append(str(primary_selector))
-
-        # 4. Image-based Fallback (Experimental)
-        if isinstance(locator_chain, dict) and locator_chain.get("fallback_image"):
-            candidates.append(str(locator_chain["fallback_image"]))
 
         # deduplicate while preserving order
         seen = set()
@@ -532,162 +520,57 @@ class TestRunner:
                 unique_candidates.append(selector)
         return unique_candidates
 
-    async def _execute_via_page_agent(
+    async def _semantic_fallback(
         self,
         tool: PlaywrightTool,
         action: str,
         value: Any,
         step: Dict[str, Any],
     ) -> Dict[str, Any]:
-        """
-        Attempts to use PageAgent (client-side AI agent) to perform the action.
-        Used for both direct execution (AI_AUTO) and fallback healing.
-        """
+        """Tier 1 fallback: Use Playwright's semantic locator healing."""
+        description = step.get("description", "")
+        target = step.get("target", "")
         try:
-            logger.info(f"[PageAgent Execution] Action={action} Target={step.get('target')} Desc={step.get('description')}")
-            
-            # 1. Check if PageAgent is available in the page
-            is_available = await tool.page.evaluate("() => typeof window.pageAgent !== 'undefined'")
-            if not is_available:
-                # Inject it if missing (similar to recorder)
-                import os
-                base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-                page_agent_path = os.path.join(base_dir, "app", "core", "static", "js", "page-agent.js")
-                init_agent_path = os.path.join(base_dir, "app", "core", "static", "js", "init-agent.js")
-                
-                if os.path.exists(page_agent_path):
-                    await tool.page.add_script_tag(path=page_agent_path)
-                    if os.path.exists(init_agent_path):
-                        await tool.page.add_script_tag(path=init_agent_path)
-                    
-                    # Wait for init
-                    await tool.page.wait_for_function("() => typeof window.pageAgent !== 'undefined'", timeout=5000)
-                else:
-                    return {"success": False, "error": "PageAgent script not found"}
-
-            # 2. Construct natural language prompt
-            prompt = step.get("description")
-            if not prompt:
-                target = step.get("target") or step.get("selector")
-                page_url = ""
-                try:
-                    page_url = tool.page.url if tool.page else ""
-                except Exception:
-                    pass
-
-                if target == "AI_AUTO":
-                    # Build a more actionable prompt from context instead of the useless "Perform click"
-                    loc = f" on page '{page_url}'" if page_url else ""
-                    if action == "click":
-                        prompt = f"Click the most appropriate button or interactive element{loc}"
-                        if value:
-                            prompt += f" related to '{value}'"
-                    elif action == "fill":
-                        prompt = f"Find the most appropriate input field{loc} and type '{value}'"
-                    elif action == "select":
-                        prompt = f"Select the option '{value}' from the most appropriate dropdown{loc}"
-                    elif action == "hover":
-                        prompt = f"Hover over the most relevant element{loc}"
-                        if value:
-                            prompt += f" related to '{value}'"
-                    elif action == "press":
-                        prompt = f"Press the key '{value}' on the focused element{loc}"
-                    else:
-                        prompt = f"Perform {action}{loc}"
-                        if value:
-                            prompt += f" with value '{value}'"
-                else:
-                    if action == "click":
-                        prompt = f"Click on the element that looks like {target}"
-                    elif action == "fill":
-                        prompt = f"Type '{value}' into the input field for {target}"
-                    else:
-                        prompt = f"Perform {action} on {target}"
-            
-            logger.info(f"[PageAgent Execution] Prompt: {prompt}")
-
-            # 3. Register LLM proxy route — only once per browser context to prevent handler accumulation.
-            # Playwright stacks route handlers on every .route() call; duplicate registration causes
-            # exponential LLM requests and silent abort errors on the stale handlers.
-            if not getattr(tool, "_llm_route_registered", False):
-                async def _handle_llm_route(route):
-                    try:
-                        request = route.request
-                        if request.method != "POST":
-                            await route.continue_()
-                            return
-                        post_data = request.post_data_json
-                        if not post_data:
-                            await route.continue_()
-                            return
-                        
-                        messages = post_data.get("messages", [])
-                        async with AsyncSessionLocal() as db:
-                            response_data = await ai_service.chat_completion(
-                                db=db,
-                                messages=messages,
-                                temperature=post_data.get("temperature", 0.7),
-                            )
-                        
-                        content = response_data.get("content", "") if isinstance(response_data, dict) else response_data
-                        mock_response = {
-                            "id": "chatcmpl-page-agent-proxy",
-                            "object": "chat.completion",
-                            "created": 1677652288,
-                            "model": "gpt-3.5-turbo",
-                            "choices": [{"index": 0, "message": {"role": "assistant", "content": content}, "finish_reason": "stop"}]
-                        }
-                        await route.fulfill(status=200, content_type="application/json", body=json.dumps(mock_response))
-                    except Exception as e:
-                        logger.error(f"LLM Route Error: {e}")
-                        await route.abort()
-
-                await tool.page.context.route("**/v1/chat/completions", _handle_llm_route)
-                tool._llm_route_registered = True
-                logger.info("[PageAgent] LLM proxy route registered on context")
-
-            # 4. Execute via PageAgent with explicit timeout guard.
-            # LLM reasoning can take 30-120s; without a timeout the evaluate call may
-            # silently fail with a cryptic Playwright timeout after 30s.
-            PAGE_AGENT_TIMEOUT_MS = 110000  # slightly under asyncio guard
-            PAGE_AGENT_ASYNCIO_TIMEOUT_S = 120.0
-
-            # Escape prompt for safe JS string interpolation
-            safe_prompt = prompt.replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ")
-            js_code = f"""
-            (async () => {{
-                const _timeout = new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('PageAgent timeout after {PAGE_AGENT_TIMEOUT_MS}ms')), {PAGE_AGENT_TIMEOUT_MS})
-                );
-                try {{
-                    if (!window.pageAgent) throw new Error("PageAgent not initialized");
-                    const result = await Promise.race([
-                        window.pageAgent.execute("{safe_prompt}"),
-                        _timeout
-                    ]);
-                    return {{ success: true, result: result }};
-                }} catch (e) {{
-                    return {{ success: false, error: e.toString() }};
-                }}
-            }})()
-            """
-            
-            import asyncio
-            try:
-                result = await asyncio.wait_for(
-                    tool.page.evaluate(js_code),
-                    timeout=PAGE_AGENT_ASYNCIO_TIMEOUT_S,
-                )
-            except asyncio.TimeoutError:
-                return {"success": False, "error": f"PageAgent asyncio timeout after {PAGE_AGENT_ASYNCIO_TIMEOUT_S}s"}
-            
-            if result.get("success"):
-                return {"success": True, "output": result.get("result"), "used_selector": "PageAgent_AI"}
-            else:
-                return {"success": False, "error": f"PageAgent execution failed: {result.get('error')}"}
-
+            healed = await tool._find_semantic_selector(
+                action=action,
+                selector=target,
+                value=value,
+                step_description=description,
+            )
+            if healed:
+                res = await tool.execute_action(action=action, selector=healed, value=value)
+                if res["success"]:
+                    res["used_selector"] = healed
+                    return res
         except Exception as e:
-            return {"success": False, "error": f"PageAgent execution exception: {str(e)}"}
+            logger.warning(f"Semantic fallback failed: {e}")
+        return {"success": False, "error": "Semantic fallback did not find element"}
+
+    async def _visual_fallback(
+        self,
+        tool: PlaywrightTool,
+        action: str,
+        value: Any,
+        step: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Tier 2 fallback: Visual element matching via accessibility tree."""
+        description = step.get("description", "")
+        target = step.get("target", "")
+        try:
+            pos = await tool._visual_match(
+                description=description,
+                target_hint=target,
+            )
+            if pos:
+                x, y = pos
+                if action == "click":
+                    await tool.page.mouse.click(x, y)
+                elif action == "hover":
+                    await tool.page.mouse.move(x, y)
+                return {"success": True, "used_selector": f"visual_match({x},{y})"}
+        except Exception as e:
+            logger.warning(f"Visual fallback failed: {e}")
+        return {"success": False, "error": "Visual fallback did not find element"}
 
     async def _try_selectors(
         self,
@@ -721,28 +604,47 @@ class TestRunner:
             except Exception as e:
                 last_error = str(e)
         
-        # If all selectors failed, try PageAgent fallback
+        # If all selectors failed, try multi-tier fallback
         if action in self.INTERACTIVE_ACTIONS:
-            fallback_res = await self._execute_via_page_agent(tool, action, value, step)
-            if fallback_res["success"]:
-                 await self._write_heal_log(
+            # Tier 1: Semantic healing
+            semantic_res = await self._semantic_fallback(tool, action, value, step)
+            if semantic_res["success"]:
+                healed_sel = semantic_res.get("used_selector", "semantic_healed")
+                await self._write_heal_log(
                     case_id=case_id,
                     element_id=element_id,
                     step_index=step_index,
                     original_selector=selectors[0] if selectors else "unknown",
-                    healed_selector="PageAgent_AI",
-                    heal_method="page_agent_fallback",
+                    healed_selector=healed_sel,
+                    heal_method="semantic_healing",
                     status="auto_healed",
                 )
-                 return {
+                return {
                     "success": True,
-                    "used_selector": "PageAgent_AI",
+                    "used_selector": healed_sel,
                     "tried_selectors": tried_selectors,
-                    "output": fallback_res.get("output"),
+                    "output": semantic_res.get("output"),
                 }
-            else:
-                # Append fallback error to last error
-                last_error = f"{last_error} | PageAgent Fallback: {fallback_res.get('error')}"
+            # Tier 2: Visual matching
+            visual_res = await self._visual_fallback(tool, action, value, step)
+            if visual_res["success"]:
+                healed_sel = visual_res.get("used_selector", "visual_matched")
+                await self._write_heal_log(
+                    case_id=case_id,
+                    element_id=element_id,
+                    step_index=step_index,
+                    original_selector=selectors[0] if selectors else "unknown",
+                    healed_selector=healed_sel,
+                    heal_method="visual_matching",
+                    status="auto_healed",
+                )
+                return {
+                    "success": True,
+                    "used_selector": healed_sel,
+                    "tried_selectors": tried_selectors,
+                    "output": visual_res.get("output"),
+                }
+            last_error = f"{last_error} | Semantic: {semantic_res.get('error')} | Visual: {visual_res.get('error')}"
 
         return {
             "success": False,

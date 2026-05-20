@@ -14,22 +14,17 @@
 -   **分布式执行**: 使用 Celery 和 Redis 实现异步测试执行。
 -   **"Injection + Proxy" (注入 + 代理)** 模式，确保前端执行的灵活性与后端密钥的安全性。
 
-### 🤖 Page-Agent 智能集成 (New!)
-本项目深度集成了 [Alibaba Page-Agent](https://github.com/alibaba/page-agent)，实现了基于自然语言的智能操作执行与自我修复能力。
-
+### 🤖 AI Agent 精准执行
+本项目深度集成 [browser-use](https://github.com/browser-use/browser-use)，实现基于自然语言的智能浏览器操作与多策略元素定位。
 
 #### 核心能力
-1.  **Agent-First Execution (智能优先执行)**
-    *   AI 生成的测试步骤如果难以用传统选择器描述，将标记为 `AI_AUTO`。
-    *   执行引擎直接调用 Page-Agent，将自然语言指令（如"点击右上角的登录按钮"）转化为操作。
+1.  **Multi-Strategy Locator Chain (多策略定位器链)**
+    *   每个元素提取 5 种独立定位策略：role语义定位、稳定属性、文本内容、标签/占位符、属性XPath。
+    *   各策略独立失效，不会级联崩溃，大幅提升回放稳定性。
 
 2.  **Auto-Healing Fallback (自动修复兜底)**
-    *   当常规 CSS/XPath 选择器失效时，自动触发 Page-Agent。
-    *   利用当前页面 DOM 和元素描述，通过 LLM 重新定位并执行操作，实现测试过程的自我修复。
-
-3.  **Secure Proxy (安全代理)**
-    *   前端 Page-Agent 不直接持有 API Key。
-    *   所有 LLM 请求由后端拦截并转发，确保敏感信息不泄露。
+    *   选择器失效时，依次尝试语义自愈（Playwright ARIA snapshot 评分匹配）和可视化匹配（Accessibility Tree 定位）。
+    *   完全基于浏览器原生能力，无需依赖额外的 LLM 调用。
 
 ### 🎥 智能录制
 -   **交互式录制**: 内置浏览器录制器，可捕获用户操作并将其转换为测试步骤。

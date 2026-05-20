@@ -284,6 +284,7 @@ const inferLocatorType = (selector: string) => {
   const value = String(selector || '').trim()
   if (!value) return 'css'
   if (value.startsWith('//') || value.startsWith('xpath=')) return 'xpath'
+  if (value.startsWith('text=') || value.startsWith('role=') || value.includes('data-testid=')) return 'playwright_semantic'
   return 'css'
 }
 

@@ -149,7 +149,7 @@ class LocatorStabilityTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(len(steps), 3)
         self.assertEqual([step["action"] for step in steps], ["click", "click", "fill"])
-        self.assertTrue(all(step["target"] == "AI_AUTO" for step in steps))
+        self.assertTrue(all(step["target"] == "" for step in steps))
         self.assertEqual(steps[2]["value"], "admin")
 
     def test_build_step_identity_distinguishes_different_ai_auto_actions(self):
@@ -218,20 +218,20 @@ class LocatorStabilityTests(unittest.IsolatedAsyncioTestCase):
         steps = service._extract_steps_from_history(history)
 
         self.assertEqual(len(steps), 2)
-        self.assertTrue(all(step["target"] == "AI_AUTO" for step in steps))
+        self.assertTrue(all(step["target"] == "" for step in steps))
 
     def test_build_step_identity_falls_back_to_description_without_action_model(self):
         service = AgentService()
         step = {
             "action": "click",
-            "target": "AI_AUTO",
+            "target": "",
             "value": "",
             "description": "点击右上角登录按钮",
         }
 
         self.assertEqual(
             service._build_step_identity(step),
-            ("click", "AI_AUTO", "", "点击右上角登录按钮"),
+            ("click", "", "", "点击右上角登录按钮"),
         )
 
     def test_extract_steps_from_history_preserves_order(self):
@@ -289,14 +289,14 @@ class LocatorStabilityTests(unittest.IsolatedAsyncioTestCase):
 
         step = {
             "action": "click",
-            "target": "AI_AUTO",
+            "target": "",
             "value": "",
             "description": "点击登录",
         }
 
         self.assertEqual(
             service._build_step_identity(step, BadActionModel()),
-            ("click", "AI_AUTO", "", "点击登录"),
+            ("click", "", "", "点击登录"),
         )
 
     def test_extract_steps_from_history_dedupes_identical_non_ai_auto_steps(self):
@@ -342,7 +342,7 @@ class LocatorStabilityTests(unittest.IsolatedAsyncioTestCase):
         steps = service._extract_steps_from_history(history)
 
         self.assertEqual(len(steps), 2)
-        self.assertTrue(all(step["target"] == "AI_AUTO" for step in steps))
+        self.assertTrue(all(step["target"] == "" for step in steps))
 
     def test_extract_steps_from_history_uses_result_content_for_get_text(self):
         service = AgentService()
@@ -407,8 +407,8 @@ class LocatorStabilityTests(unittest.IsolatedAsyncioTestCase):
 
     def test_build_step_identity_ai_auto_uses_description_without_model(self):
         service = AgentService()
-        first = {"action": "click", "target": "AI_AUTO", "value": "", "description": "a"}
-        second = {"action": "click", "target": "AI_AUTO", "value": "", "description": "b"}
+        first = {"action": "click", "target": "", "value": "", "description": "a"}
+        second = {"action": "click", "target": "", "value": "", "description": "b"}
 
         self.assertNotEqual(service._build_step_identity(first), service._build_step_identity(second))
 
@@ -419,7 +419,7 @@ class LocatorStabilityTests(unittest.IsolatedAsyncioTestCase):
         step = service._action_to_platform_step(action_model)
 
         self.assertIsNotNone(step)
-        self.assertEqual(step["target"], "AI_AUTO")
+        self.assertEqual(step["target"], "")
         self.assertEqual(step["action"], "click")
 
     def test_action_to_platform_step_keeps_fill_value_for_ai_auto(self):
@@ -429,7 +429,7 @@ class LocatorStabilityTests(unittest.IsolatedAsyncioTestCase):
         step = service._action_to_platform_step(action_model)
 
         self.assertIsNotNone(step)
-        self.assertEqual(step["target"], "AI_AUTO")
+        self.assertEqual(step["target"], "")
         self.assertEqual(step["action"], "fill")
         self.assertEqual(step["value"], "admin")
 
@@ -455,7 +455,7 @@ class LocatorStabilityTests(unittest.IsolatedAsyncioTestCase):
         steps = service._extract_steps_from_history(history)
 
         self.assertEqual(len(steps), 2)
-        self.assertEqual(steps[0]["target"], "AI_AUTO")
+        self.assertEqual(steps[0]["target"], "")
         self.assertEqual(steps[1]["target"], "//button[@id='resolved']")
 
     def test_extract_steps_from_history_handles_multiple_batches(self):
@@ -478,7 +478,7 @@ class LocatorStabilityTests(unittest.IsolatedAsyncioTestCase):
         steps = service._extract_steps_from_history(history)
 
         self.assertEqual(len(steps), 2)
-        self.assertEqual([step["target"] for step in steps], ["AI_AUTO", "AI_AUTO"])
+        self.assertEqual([step["target"] for step in steps], ["", ""])
 
     def test_extract_steps_from_history_ignores_done_action(self):
         service = AgentService()
@@ -500,7 +500,7 @@ class LocatorStabilityTests(unittest.IsolatedAsyncioTestCase):
         second_action = FakeActionModel({"click_element": {"index": 2}})
         step = {
             "action": "click",
-            "target": "AI_AUTO",
+            "target": "",
             "value": "",
             "description": "点击登录按钮",
         }
@@ -553,8 +553,8 @@ class LocatorStabilityTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(len(steps), 2)
         self.assertEqual([step["description"] for step in steps], [
-            "点击元素: AI_AUTO",
-            "点击元素: AI_AUTO",
+            "点击元素: 当前焦点",
+            "点击元素: 当前焦点",
         ])
 
     async def test_recorder_reinforcement_passes_db_and_updates_selector(self):

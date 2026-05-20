@@ -28,8 +28,10 @@ Focus on:
 
 For each element, provide:
 - name: A clear, semantic name in English or Chinese (e.g. "LoginButton", "用户名输入框")
-- locator_type: One of [xpath, css, id, name]
-- locator_value: The most stable and unique selector possible.
+- locator_type: One of [playwright_semantic, css, xpath]
+- locator_value: The most stable and unique Playwright selector. 
+  * HIGHEST PRIORITY: test-id (e.g. [data-testid="submit"]), text match (e.g. text="Login"), role match (e.g. role=button[name="Submit"]).
+  * AVOID: dynamic classes (e.g. el-button--primary), auto-generated IDs, or overly absolute XPaths.
 - type: The element type (button, input, select, link, text, other)
 - description: A brief explanation of what the element does.
 
@@ -52,17 +54,17 @@ Mission: Find the SAME logical element in the current DOM (Healing) OR generate 
 Given: (1) element metadata, (2) current page HTML, (3) optional context/screenshot description.
 
 Goals:
-- Prioritize stable attributes: data-testid, aria-label, name, then unique text, then semantic structure.
+- Prioritize stable Playwright semantic locators: data-testid, role, aria-label, text.
 - Avoid volatile attributes: auto-generated IDs, dynamic classes, absolute XPaths.
-- Provide a robust 'locator_chain' with primary and fallbacks.
+- Provide a robust 'locator_chain' with primary and fallbacks in valid Playwright locator string format.
 
 Return ONLY this JSON:
 {
   "locator_chain": {
     "primary": "[data-testid='xxx']",
-    "fallback_1": "[aria-label='xxx']",
-    "fallback_2": "//relative/xpath",
-    "fallback_3": "text='visible_text'",
+    "fallback_1": "role=button[name='xxx']",
+    "fallback_2": "text='visible_text'",
+    "fallback_3": "//relative/xpath",
     "fallback_image": null
   },
   "confidence": 0.95,
@@ -78,6 +80,7 @@ Convert the user's intent into executable test steps for a Playwright-based plat
 Rules:
 - Prefer these action names: goto, click, fill, select, press, hover, wait, wait_for_selector, assert_text, assert_visible, screenshot, get_text, get_attribute, set_variable
 - Prefer stable selectors from provided known elements and business rules
+- If target element is NOT in known elements, GENERATE a stable Playwright semantic locator (e.g. text="Submit", role=button[name="Login"], [aria-label="Search"]). DO NOT generate complex CSS/XPath if a text or role is obvious.
 - Keep output concise and executable
 - Return ONLY JSON
 
@@ -159,7 +162,7 @@ class AIService:
         model_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
-        Generic chat completion wrapper for internal use (e.g. PageAgent proxy).
+        Generic chat completion wrapper for internal use.
         """
         client, model_name = await self._get_client_from_db(db, model_id)
         
@@ -504,8 +507,8 @@ class AIService:
         return [
             {
                 "action": "click",
-                "target": "AI_AUTO",
-                "selector": "AI_AUTO",
+                "target": f"text={prompt_text[:60]}",
+                "selector": f"text={prompt_text[:60]}",
                 "value": "",
                 "description": prompt_text,
             }
@@ -637,7 +640,7 @@ class AIService:
         """
         Load project-specific context:
         1. Feedback history (RLHF)
-        2. Page Object Library (Pages & Elements) for Page-Agent framework
+        2. Page Object Library (Pages & Elements) for element binding
         """
         fb_result = await db.execute(
             select(StepFeedback)

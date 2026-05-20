@@ -430,6 +430,7 @@ const rules = {
 }
 
 const locatorOptions = [
+  { label: 'Playwright 语义', value: 'playwright_semantic' },
   { label: 'XPath', value: 'xpath' },
   { label: 'CSS Selector', value: 'css' },
   { label: 'ID', value: 'id' },
@@ -679,7 +680,7 @@ const handleEdit = async (row: TestCase) => {
     name: row.name,
     description: row.description,
     priority: row.priority || 'P1',
-    steps: row.steps ? row.steps.map(s => ({
+    steps: row.steps ? normalizeGeneratedSteps(row.steps).map((s: any) => ({
       ...s,
       _custom_locator_mode: !s.element_id && (s.target || s.selector) ? true : false
     })) : []
@@ -737,6 +738,7 @@ const handleOpenElementModal = async (stepIndex: number, isLibraryMode: boolean)
     // Auto-detect if no locator_type provided but target is given
     if (!step.locator_type && targetVal) {
       if (targetVal.startsWith('/')) locType = 'xpath'
+      else if (targetVal.startsWith('text=') || targetVal.startsWith('role=') || targetVal.includes('data-testid=')) locType = 'playwright_semantic'
       else if (targetVal.startsWith('#') || targetVal.startsWith('.')) locType = 'css'
       else locType = 'css'
     }

@@ -355,6 +355,12 @@ class PlaywrightTool:
         if candidate.get("tag") in {"input", "textarea"}:
             score += 10
 
+        # Role-based weighting for click actions
+        if action in {"click", "hover"} and candidate.get("tag") in {"button", "a"}:
+            score += 12
+        if action in {"fill", "press"} and candidate.get("editable"):
+            score += 15
+
         width = float(candidate.get("width") or 0)
         height = float(candidate.get("height") or 0)
         x = float(candidate.get("x") or 0)
@@ -383,6 +389,16 @@ class PlaywrightTool:
         for token in self._extract_hint_tokens(selector, step_description, value):
             if token and token in text_blob:
                 score += 5
+
+        # Fuzzy text matching against candidate text/placeholder/aria_label
+        for token in self._extract_hint_tokens(selector, step_description, value):
+            if not token:
+                continue
+            for field in ["text", "placeholder", "aria_label", "name"]:
+                field_val = str(candidate.get(field, "")).lower()
+                if token in field_val:
+                    score += 8
+                    break
 
         return score
 
@@ -431,13 +447,72 @@ class PlaywrightTool:
         best_score, best_candidate = scored[0]
         second_score = scored[1][0] if len(scored) > 1 else 0.0
         search_intent = self._looks_like_search_intent(action, selector, step_description, value)
-        if len(candidates) == 1 and best_score >= 18:
+        # Lowered thresholds for more aggressive healing without PageAgent fallback
+        if len(candidates) == 1 and best_score >= 12:
             return best_candidate.get("selector")
-        if search_intent and best_score >= 24:
+        if search_intent and best_score >= 18:
             return best_candidate.get("selector")
-        if best_score >= 34 and (best_score - second_score) >= 6:
+        if best_score >= 24 and (best_score - second_score) >= 4:
             return best_candidate.get("selector")
         return None
+
+    async def _visual_match(
+        self,
+        description: str = "",
+        target_hint: str = "",
+        timeout: int = 5000,
+    ) -> Optional[Tuple[float, float]]:
+        """
+        Use the accessibility snapshot to find an element by description/text hints,
+        then return its bounding box center coordinates. Entirely DOM-structure independent.
+        """
+        if not self.page:
+            return None
+
+        try:
+            snapshot = await self.page.accessibility.snapshot()
+            if not snapshot:
+                return None
+
+            tokens = self._extract_hint_tokens(target_hint, description)
+            if not tokens:
+                return None
+
+            def find_in_tree(node, search_tokens):
+                name = (node.get('name') or '').lower()
+                role = (node.get('role') or '').lower()
+                value = (node.get('value') or '').lower()
+                combined = f"{name} {role} {value}"
+                for token in search_tokens:
+                    if token and token in combined:
+                        return node
+                for child in node.get('children', []):
+                    result = find_in_tree(child, search_tokens)
+                    if result:
+                        return result
+                return None
+
+            match = find_in_tree(snapshot, tokens)
+            if not match:
+                return None
+
+            role = match.get('role', 'button')
+            name = match.get('name', '')
+            if name:
+                locator = self.page.get_by_role(role, name=name)
+            else:
+                locator = self.page.get_by_role(role)
+
+            count = await locator.count()
+            if count > 0:
+                box = await locator.first.bounding_box()
+                if box:
+                    return (box['x'] + box['width'] / 2, box['y'] + box['height'] / 2)
+
+            return None
+        except Exception as e:
+            logger.warning(f"Visual match failed: {e}")
+            return None
 
     async def _resolve_locator(
         self,
@@ -774,6 +849,13 @@ class PlaywrightTool:
         result = {"success": False, "error": None, "output": None}
         
         try:
+            # Wait for page stability before any interactive action
+            if action in {"click", "fill", "select", "hover", "press"}:
+                try:
+                    await self.page.wait_for_load_state("domcontentloaded", timeout=3000)
+                except Exception:
+                    pass
+
             call_kwargs = dict(kwargs)
             timeout_ms = call_kwargs.pop("timeout_ms", None)
             if timeout_ms is not None and "timeout" not in call_kwargs:

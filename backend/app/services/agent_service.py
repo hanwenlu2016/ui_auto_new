@@ -1,10 +1,10 @@
 """
 Agent Service — v1.0 (browser-use Powered)
 
-使用 browser-use 库实现 AI Agent 驱动的浏览器自动化执行。
-Agent 能"看见"页面的 Accessibility Tree，实现 观察→推理→执行→验证 的闭环。
+使用 browser-use 库实现 AI Agent 驱动的浏览器自动化执行.
+Agent 能"看见"页面的 Accessibility Tree,实现 观察→推理→执行→验证 的闭环.
 
-与 AIService 的区别：
+与 AIService 的区别:
 - AIService: 纯 Prompt → LLM → JSON Steps (盲猜模式, 快速但不精准)
 - AgentService: 自然语言 → Agent 打开浏览器执行 → 提取已验证的 Steps (精准模式)
 """
@@ -20,16 +20,15 @@ from app.core.logger import logger
 # browser-use imports
 from browser_use import Agent, Browser
 from browser_use.llm import ChatDeepSeek, ChatOpenAI
-from browser_use.dom.views import filter_dynamic_classes
 
 
 class AgentService:
     """
     browser-use Agent Service — AI 精准执行引擎
 
-    核心能力：
+    核心能力:
     1. 接收自然语言任务描述
-    2. 启动浏览器，Agent 实时观察页面 Accessibility Tree
+    2. 启动浏览器,Agent 实时观察页面 Accessibility Tree
     3. LLM 基于真实页面结构推理下一步
     4. Agent 执行操作并验证结果
     5. 提取已验证的 Steps 返回给平台
@@ -41,7 +40,7 @@ class AgentService:
 
     def _build_llm(self, model_config: Any):
         """
-        根据数据库模型配置构建 LLM 实例。
+        根据数据库模型配置构建 LLM 实例.
 
         - DeepSeek → ChatDeepSeek (browser-use 原生支持)
         - 其他 OpenAI 兼容厂商 → ChatOpenAI (LangChain)
@@ -72,10 +71,23 @@ class AgentService:
             except json.JSONDecodeError:
                 logger.warning(f"Failed to parse kwargs JSON for model {model_config.name}")
 
-        # 根据模型标识符本身判断是否属于 DeepSeek 系列，而非强依赖域名（适应各种内部网关 / 第三方API代理转发）
+        # 根据模型标识符本身判断是否属于 DeepSeek 系列,而非强依赖域名(适应各种内部网关 / 第三方API代理转发)
         is_deepseek = "deepseek" in (model_name or "").lower()
 
         if is_deepseek:
+            # DeepSeek Reasoner / R1 系列,以及可能存在的 v4
+            is_reasoning_model = any(keyword in (model_name or "").lower() for keyword in ["reasoner", "r1", "v4-"])
+            
+            if is_reasoning_model:
+                if "reasoning_effort" not in extra_kwargs:
+                    extra_kwargs["reasoning_effort"] = "high"
+                
+                # 兼容一些第三方中转 API 的 thinking 模式(官方 API 暂不支持此 extra_body 字段,但支持 reasoning_content)
+                # 如果是官方 API 且识别为 reasoning 模型,ChatDeepSeek 内部会自动处理
+                if "extra_body" not in extra_kwargs:
+                    # 仅在非官方或特定场景下添加,标准 ChatDeepSeek 包装器会处理官方逻辑
+                    pass 
+
             logger.info(f"AgentService: Using ChatDeepSeek for {model_config.name} (temp={temperature}, kwargs={extra_kwargs})")
             return ChatDeepSeek(
                 base_url=base_url,
@@ -106,16 +118,16 @@ class AgentService:
         project_id: Optional[int] = None,
     ) -> Dict[str, Any]:
         """
-        执行 AI Agent 任务。
+        执行 AI Agent 任务.
 
         Args:
             db: 数据库会话
             task: 自然语言任务描述
-            model_id: AI 模型 ID (可选，默认使用系统默认模型)
+            model_id: AI 模型 ID (可选,默认使用系统默认模型)
             headless: 是否无头模式
             max_steps: Agent 最大步骤数
             use_vision: 是否使用视觉模型 (消耗更多 Token)
-            project_id: 当前关联项目ID（用于拉取 Page Object 库和记忆）
+            project_id: 当前关联项目ID(用于拉取 Page Object 库和记忆)
 
         Returns:
             dict: 包含 success, message, steps, execution_time 等
@@ -135,7 +147,7 @@ class AgentService:
         if not db_model or not db_model.is_active:
             return {
                 "success": False,
-                "message": "未找到可用的 AI 模型配置，请先在 AI 配置页面添加模型。",
+                "message": "未找到可用的 AI 模型配置,请先在 AI 配置页面添加模型.",
                 "steps": [],
                 "execution_time": 0.0,
                 "total_agent_steps": 0,
@@ -143,6 +155,7 @@ class AgentService:
             }
 
         # 2. 构建 LLM
+        is_deepseek = db_model and "deepseek" in (db_model.model_identifier or "").lower()
         try:
             llm = self._build_llm(db_model)
         except Exception as e:
@@ -163,8 +176,8 @@ class AgentService:
         
         try:
             # 3.1 配置并启动浏览器
-            logger.info(f"AgentService: Initializing browser (headless={headless})...")
-            browser = Browser(headless=headless)
+            logger.info(f"AgentService: Initializing browser (headless={headless}, incognito=True)...")
+            browser = Browser(headless=headless, args=["--incognito"])
             await browser.start()
             
             # 3.2 创建 Agent
@@ -174,13 +187,31 @@ class AgentService:
                 llm=llm,
                 browser=browser,
                 use_vision=use_vision,
+                use_thinking=True if is_deepseek else False, # DeepSeek 模型开启思维链以提高 JSON 结构准确度
                 extend_system_message="""
-你是一个 UI 自动化测试执行引擎。请严格按照用户意图执行浏览器操作。
-注意事项：
-1. 优先使用 data-testid、aria-label 等稳定属性定位元素
-2. 操作前确认元素可见且可交互
-3. 每一步都要验证结果是否符合预期
-4. 遇到加载状态时适当等待
+你是一个具备高度推理能力的 UI 自动化专家. 你的目标是将用户的自然语言意图转化为精准的浏览器操作序列.
+
+【思维引擎 (Chain of Thought)】
+在输出 JSON 前, 请在 `thinking` 字段中按以下顺序思考:
+1. 目标理解: 用一句话概括用户最终想完成什么.
+2. 状态检查: 当前 URL 是什么? 是否需要跳转?
+3. 元素识别: 我该点击或输入哪个元素? 它有什么独特的属性 (id, name, data-testid, aria-label)?
+4. 预期变化: 操作后页面应该发生什么变化?
+
+【动作规范】
+1. 导航优先: 如果任务包含 URL 且当前不在该页面, Step 1 必须是 `navigate`.
+2. 属性优先: 在操作元素时, 优先选择具备稳定属性 (如 id, data-testid) 的元素.
+3. 参数嵌套: 严禁展平参数. 必须使用 `{"click": {"index": 1}}` 这种结构.
+4. 耐心等待: 在执行点击 (尤其是提交/搜索按钮) 后, 页面加载需要时间. 如果状态未变, 请先使用 `wait` 动作等待 (例如 `{"wait": {"seconds": 3}}`), 绝不要立即重复之前的操作或重新 `navigate`.
+5. 完成确认: 只有当确定所有步骤已完成且页面处于预期状态时, 才调用 `done` 动作 (例如 `{"done": {"text": "任务完成"}}`).
+
+【输出示例】
+{
+  "thinking": "用户想要登录. 当前在空白页, 我需要先 navigate 到登录页. 然后识别账号输入框并 input.",
+  "action": [
+    { "navigate": { "url": "http://localhost:5173/login" } }
+  ]
+}
 """,
             )
 
@@ -219,7 +250,7 @@ class AgentService:
 
         return {
             "success": len(errors) == 0 and len(steps) > 0,
-            "message": f"Agent 执行完成，共识别 {len(steps)} 个有效步骤（耗时 {execution_time:.1f}s）" if not errors else f"执行遇到问题: {'; '.join(errors)}",
+            "message": f"Agent 执行完成,共识别 {len(steps)} 个有效步骤(耗时 {execution_time:.1f}s)" if not errors else f"执行遇到问题: {'; '.join(errors)}",
             "steps": steps,
             "execution_time": round(execution_time, 2),
             "total_agent_steps": total_steps,
@@ -237,7 +268,7 @@ class AgentService:
         project_id: Optional[int] = None,
     ):
         """
-        流式执行 AI Agent 任务，实时通过 yield 返回步骤。
+        流式执行 AI Agent 任务, 实时通过 yield 返回步骤
         """
         from app.services.ai_model_service import ai_model_service
         from app.services.ai_service import ai_service
@@ -257,6 +288,7 @@ class AgentService:
             yield {"type": "error", "message": "未找到可用的 AI 模型配置"}
             return
 
+        is_deepseek = db_model and "deepseek" in (db_model.model_identifier or "").lower()
         try:
             llm = self._build_llm(db_model)
         except Exception as e:
@@ -266,18 +298,18 @@ class AgentService:
         browser = None
         try:
             logger.info(f"AgentService Stream: Initializing browser (headless={headless})...")
-            browser = Browser(headless=headless)
+            browser = Browser(headless=headless, args=["--incognito"])
             await browser.start()
 
             queue = asyncio.Queue()
 
-            # 记录上一个发送的步骤，用于实时去重
+            # 记录上一个发送的步骤,用于实时去重
             last_step_data = None
 
             async def step_callback(state, agent_output, step_number):
                 nonlocal last_step_data
                 if agent_output and agent_output.action:
-                    # state 是 BrowserStateSummary，在 v0.11+ 中 selector_map 在 dom_state 下
+                    # state 是 BrowserStateSummary,在 v0.11+ 中 selector_map 在 dom_state 下
                     selector_map = None
                     if hasattr(state, 'dom_state') and hasattr(state.dom_state, 'selector_map'):
                         selector_map = state.dom_state.selector_map
@@ -285,7 +317,7 @@ class AgentService:
                     for action_model in agent_output.action:
                         step = self._action_to_platform_step(action_model, selector_map)
                         if step:
-                            # 实时去重逻辑：如果当前步骤与上一步完全一致，则跳过
+                            # 实时去重逻辑:如果当前步骤与上一步完全一致,则跳过
                             current_identity = self._build_step_identity(step, action_model)
                             if last_step_data == current_identity:
                                 logger.info(f"AgentService Stream: Skipping duplicate step | {step['action']}")
@@ -306,16 +338,31 @@ class AgentService:
                 browser=browser,
                 use_vision=use_vision,
                 register_new_step_callback=step_callback,
-                use_thinking=False,  # 禁用思维过程以提升速度
-                max_actions_per_step=10,  # 允许每步执行更多动作，减少轮换次数
+                use_thinking=True if is_deepseek else False,  # DeepSeek 开启思维过程以提升 JSON 稳定性
+                max_actions_per_step=10,  # 允许每步执行更多动作,减少轮换次数
                 extend_system_message="""
-你是一个 UI 自动化测试执行引擎。请严格按照用户意图执行浏览器操作。
-注意事项：
-1. 优先使用 data-testid、aria-label 等稳定属性定位元素
-2. 操作前确认元素可见且可交互
-3. 每一步都要验证结果是否符合预期
-4. 遇到加载状态时适当等待
-5. 完成任务后直接调用 done
+你是一个具备高度推理能力的 UI 自动化专家. 你的目标是将用户的自然语言意图转化为精准的浏览器操作序列.
+
+【思维引擎 (Chain of Thought)】
+在输出 JSON 前, 请在 `thinking` 字段中按以下顺序思考:
+1. 目标理解: 用户想完成什么?
+2. 状态检查: 是否需要 navigate?
+3. 元素识别: 优先使用稳定属性 (data-testid, aria-label, id).
+4. 完成确认: 任务是否已彻底完成? (如完成, 使用 `{"done": {"text": "成功"}}`)
+
+【动作规范】
+1. 导航优先: 任务包含 URL 时, Step 1 必须是 `navigate`.
+2. 参数嵌套: 严禁展平参数. 正确结构: `{"click": {"index": 1}}`.
+3. 耐心等待: 点击按钮后如页面未变化, 优先使用 `wait` 等待 (例如 `{"wait": {"seconds": 3}}`), 严禁立即重复相同操作.
+4. 稳定性: 避免产生重复或无效的中间步骤.
+
+【输出示例】
+{
+  "thinking": "用户想要登录. 第一步先跳转到目标 URL.",
+  "action": [
+    { "navigate": { "url": "http://localhost:5173/login" } }
+  ]
+}
 """,
             )
 
@@ -350,13 +397,13 @@ class AgentService:
                     pass
 
     # Actions that require a target selector to execute.
-    # Steps with an empty target for these actions will be marked AI_AUTO so the runner's
-    # PageAgent fallback can locate the element via natural language instead of failing immediately.
+    # Steps without a resolved selector will rely on the runner's multi-strategy fallback chain
+    # (semantic healing → visual matching) instead of failing immediately.
     _INTERACTIVE_ACTIONS = {"click", "fill", "select", "hover", "press"}
 
     def _action_to_platform_step(self, action_model, selector_map=None, interacted_elements=None, result_content=None) -> Optional[Dict[str, Any]]:
         """
-        将单条 ActionModel 转换为平台标准 Step 格式。
+        将单条 ActionModel 转换为平台标准 Step 格式
         selector_map: 用于实时回调 (BrowserStateSummary)
         interacted_elements: 用于历史提取 (BrowserStateHistory)
         result_content: 动作执行结果 (例如提取到的文本)
@@ -410,21 +457,27 @@ class AgentService:
 
                 idx = params.get('index')
                 
-                # 情况 A：有实时 selector_map
+                # 情况 A:有实时 selector_map
                 if idx is not None and selector_map:
                     element = selector_map.get(idx)
                     if element:
                         target = getattr(element, 'css_selector', None) or \
                                  getattr(element, 'xpath', None) or \
                                  f"xpath=//node()[@highlight_index={idx}]"
-                # 情况 B：有历史 interacted_elements
+                # 情况 B:有历史 interacted_elements
                 elif idx is not None and interacted_elements:
                     for el in interacted_elements:
                         if not el:
                             continue
                         if idx != getattr(el, 'highlight_index', None):
                             continue
-                        target = getattr(el, 'x_path', None) or getattr(el, 'xpath', None) or ""
+                        
+                        # 尝试生成更稳定的属性 XPath (Healing), 否则回退到 structural XPath
+                        attrs = getattr(el, 'attributes', {}) or {}
+                        tag = getattr(el, 'node_name', getattr(el, 'tag_name', '*'))
+                        text = getattr(el, 'node_value', getattr(el, 'text', ''))
+                        target = self._build_stable_xpath(tag, attrs, text) or \
+                                 getattr(el, 'x_path', None) or getattr(el, 'xpath', None) or ""
                         if target:
                             break
             elif isinstance(params, str):
@@ -433,15 +486,12 @@ class AgentService:
             if platform_action == 'wait' and not value:
                 value = "1000"
             
-            # 如果是提取类动作，优先使用 ActionResult 中的内容
+            # 如果是提取类动作,优先使用 ActionResult 中的内容
             if platform_action == 'get_text' and result_content:
                 value = result_content
 
-            # For interactive actions where browser-use could not resolve a concrete selector,
-            # mark target as AI_AUTO so the runner's PageAgent fallback can handle execution.
-            # Without this, steps with target="" immediately fail with "requires selector" error.
-            if not target and platform_action in self._INTERACTIVE_ACTIONS:
-                target = "AI_AUTO"
+            # For interactive actions without a resolved selector, keep target empty.
+            # The runner will use multi-strategy fallback (semantic healing → visual matching).
 
             # 生成更友好的中文描述
             desc = ""
@@ -464,9 +514,11 @@ class AgentService:
             else:
                 desc = f"执行 {platform_action} {target} {value}".strip()
 
-            # 1. Generate Redundant Locator Chain
+            # Generate multi-strategy independent locator chain.
+            # Each strategy uses a completely different mechanism to locate the element,
+            # so they fail independently rather than cascading.
             locator_chain = None
-            if target and target != "AI_AUTO" and isinstance(params, dict) and (selector_map or interacted_elements):
+            if target and isinstance(params, dict) and (selector_map or interacted_elements):
                 element = None
                 idx = params.get('index')
                 if idx is not None and selector_map:
@@ -476,61 +528,58 @@ class AgentService:
                         if el and idx == getattr(el, 'highlight_index', None):
                             element = el
                             break
-                
+
                 if element:
-                    # Level 1: Stable Attributes (ID, TestID, Name, ARIA)
-                    attrs = getattr(element, 'attributes', {})
-                    stable_id = attrs.get('data-testid') or attrs.get('id') or attrs.get('name') or attrs.get('aria-label')
-                    
-                    # Level 2: Text-Based (Fuzzy match)
-                    meaningful_text = ""
+                    attrs = getattr(element, 'attributes', {}) or {}
+                    tag = (getattr(element, 'node_name', '') or '').lower()
+                    text = ""
                     if hasattr(element, 'get_meaningful_text_for_llm'):
-                        meaningful_text = element.get_meaningful_text_for_llm()
-                    
-                    # Quote text for Playwright selector safety
-                    safe_text = meaningful_text.replace('"', '\\"').strip()
-                    text_selector = f'text="{safe_text}"' if safe_text and len(safe_text) < 60 else None
+                        text = (element.get_meaningful_text_for_llm() or "").strip()
 
-                    # Level 3: Cleaned CSS (Filtering dynamic classes)
-                    raw_css = getattr(element, 'css_selector', None)
-                    clean_css = None
-                    if raw_css:
-                        cls_str = attrs.get('class', '')
-                        stable_classes = filter_dynamic_classes(cls_str)
-                        tag = getattr(element, 'node_name', '').lower() or "*"
-                        if stable_classes:
-                            clean_css = f"{tag}.{stable_classes.replace(' ', '.')}"
-                        else:
-                            clean_css = tag
+                    strategy_role = self._build_role_selector(tag, attrs, text)
+                    strategy_attr = self._build_stable_attr_selector(attrs)
+                    strategy_text = self._build_text_selector(text)
+                    strategy_label = self._build_label_selector(attrs)
+                    strategy_xpath = self._build_stable_xpath(tag, attrs, text)
 
-                    # Construct the chain
-                    # priority: data-testid > data-qa > data-cy > aria-label > id > name
-                    primary = str(target)
+                    # Primary uses the most stable available strategy
+                    primary = strategy_attr or str(target)
                     for attr in ['data-testid', 'data-test', 'data-qa', 'data-cy', 'aria-label', 'id', 'name']:
                         val = attrs.get(attr)
                         if val:
                             if attr == 'id':
                                 primary = f"#{val}"
                             elif attr == 'aria-label':
-                                primary = f"[aria-label=\"{val.replace('\"', '\\\"')}\"]"
+                                primary = f"[aria-label=\"{str(val).replace('\"', '\\\"')}\"]"
                             else:
-                                primary = f"[{attr}=\"{val.replace('\"', '\\\"')}\"]"
+                                primary = f"[{attr}=\"{str(val).replace('\"', '\\\"')}\"]"
                             break
 
                     locator_chain = {
+                        "strategy_role": strategy_role,
+                        "strategy_attr": strategy_attr,
+                        "strategy_text": strategy_text,
+                        "strategy_label": strategy_label,
+                        "strategy_xpath": strategy_xpath,
+                        # Backward-compatible fields
                         "primary": primary,
-                        "fallback_1": text_selector,
-                        "fallback_2": clean_css if clean_css and clean_css != primary else None,
-                        "fallback_3": getattr(element, 'xpath', None),
+                        "fallback_1": strategy_role or strategy_text,
+                        "fallback_2": strategy_text or strategy_xpath,
+                        "fallback_3": strategy_xpath,
                     }
 
             # If no complex chain was built, use the simple one
-            if not locator_chain and target and target != "AI_AUTO":
+            if not locator_chain and target:
                 locator_chain = {
+                    "strategy_attr": str(target),
+                    "strategy_role": None,
+                    "strategy_text": None,
+                    "strategy_label": None,
+                    "strategy_xpath": None,
                     "primary": str(target),
                     "fallback_1": None,
                     "fallback_2": None,
-                    "fallback_3": None
+                    "fallback_3": None,
                 }
 
             return {
@@ -549,8 +598,10 @@ class AgentService:
     def _build_step_identity(self, step: Dict[str, Any], action_model: Any = None) -> Any:
         target = step.get('target')
         base_identity = (step.get('action'), target, step.get('value'))
-        if target != 'AI_AUTO':
+        if target:
             return base_identity
+        # For steps without a concrete selector, use description and action payload
+        # to distinguish genuinely different actions
         if action_model is None:
             return (*base_identity, step.get('description'))
         try:
@@ -564,10 +615,105 @@ class AgentService:
         except Exception:
             return (*base_identity, step.get('description'))
 
+    # ==========================================
+    # Multi-Strategy Selector Builders
+    # Each strategy is independent — failure of one doesn't cascade.
+    # ==========================================
+
+    @staticmethod
+    def _build_role_selector(tag: str, attrs: dict, text: str) -> Optional[str]:
+        """Build Playwright role-based semantic locator (e.g. role=button[name='Submit'])."""
+        ROLE_MAP = {
+            'button': 'button', 'a': 'link', 'textarea': 'textbox',
+            'select': 'combobox', 'img': 'img', 'nav': 'navigation',
+            'main': 'main', 'header': 'banner', 'footer': 'contentinfo',
+            'form': 'form', 'table': 'table', 'li': 'listitem',
+            'ul': 'list', 'ol': 'list',
+            'h1': 'heading', 'h2': 'heading', 'h3': 'heading',
+            'h4': 'heading', 'h5': 'heading', 'h6': 'heading',
+        }
+        role = ROLE_MAP.get(tag)
+        if not role:
+            input_type = attrs.get('type', 'text')
+            if tag == 'input':
+                role = {
+                    'text': 'textbox', 'email': 'textbox', 'password': 'textbox',
+                    'search': 'searchbox', 'checkbox': 'checkbox', 'radio': 'radio',
+                    'submit': 'button', 'button': 'button', 'reset': 'button',
+                }.get(input_type)
+        if not role:
+            role = attrs.get('role')
+        if not role:
+            return None
+
+        name = attrs.get('aria-label') or attrs.get('name') or attrs.get('title') or text or ""
+        name = str(name).replace('"', '\\"')[:80]
+        if name:
+            return f'role={role}[name="{name}"]'
+        return f'role={role}'
+
+    @staticmethod
+    def _build_stable_attr_selector(attrs: dict) -> Optional[str]:
+        """Build most stable attribute-based CSS selector."""
+        for attr in ['data-testid', 'data-test', 'data-qa', 'data-cy', 'aria-label', 'id', 'name']:
+            val = attrs.get(attr)
+            if not val:
+                continue
+            if attr == 'id':
+                return f'#{val}'
+            safe_val = str(val).replace('"', '\\"')
+            return f'[{attr}="{safe_val}"]'
+        return None
+
+    @staticmethod
+    def _build_text_selector(text: str) -> Optional[str]:
+        """Build text-based selector."""
+        if not text or len(text) < 2:
+            return None
+        safe_text = text.replace('"', '\\"').strip()[:60]
+        if safe_text:
+            return f'text="{safe_text}"'
+        return None
+
+    @staticmethod
+    def _build_label_selector(attrs: dict) -> Optional[str]:
+        """Build label/placeholder selector for form inputs."""
+        placeholder = attrs.get('placeholder')
+        if placeholder:
+            safe = str(placeholder).replace('"', '\\"')[:100]
+            return f'[placeholder="{safe}"]'
+        label = attrs.get('aria-label')
+        if label:
+            safe = str(label).replace('"', '\\"')[:100]
+            return f'[aria-label="{safe}"]'
+        title = attrs.get('title')
+        if title:
+            safe = str(title).replace('"', '\\"')[:100]
+            return f'[title="{safe}"]'
+        return None
+
+    @staticmethod
+    def _build_stable_xpath(tag: str, attrs: dict, text: str) -> Optional[str]:
+        """Build a short, attribute-based relative XPath (not structural path)."""
+        tag = tag or '*'
+        for attr in ['data-testid', 'data-test', 'data-qa', 'data-cy', 'aria-label', 'id']:
+            val = attrs.get(attr)
+            if val:
+                safe_val = str(val).replace("'", "\\'")
+                return f"//{tag}[@{attr}='{safe_val}']"
+        if text and len(text) < 60:
+            safe_text = text.replace("'", "\\'")
+            return f"//{tag}[contains(text(),'{safe_text}')]"
+        name = attrs.get('name')
+        if name:
+            safe_name = str(name).replace("'", "\\'")
+            return f"//{tag}[@name='{safe_name}']"
+        return None
+
     def _extract_steps_from_history(self, history) -> List[Dict[str, Any]]:
         """
-        重构后的历史提取。
-        支持 Action-Result 配对，确保提取的内容不为空。
+        重构后的历史提取.
+        支持 Action-Result 配对,确保提取的内容不为空.
         """
         if not history or not hasattr(history, 'history'):
             return []
@@ -590,6 +736,10 @@ class AgentService:
                     # ActionResult 列表索引与 Action 列表一一对应
                     result_content = None
                     if i < len(results):
+                        # 如果该动作执行失败(有 error),则跳过该步骤,不计入测试用例
+                        if results[i].error:
+                            logger.info(f"AgentService: Skipping failed action {action_model}: {results[i].error}")
+                            continue
                         result_content = results[i].extracted_content
 
                     step = self._action_to_platform_step(
@@ -614,7 +764,44 @@ class AgentService:
                         last_identity = current_identity
         except Exception as e:
             logger.warning(f"AgentService: History extraction error: {e}")
-        return steps
+        
+        # 3. 步骤后处理:去除导航前的干扰步骤
+        # 如果历史记录中包含跳转(navigate),则认为跳转之前的交互步骤都是无效的探索
+        first_nav_idx = -1
+        for i, step in enumerate(steps):
+            if step['action'] == 'goto':
+                first_nav_idx = i
+                break
+        
+        if first_nav_idx > 0:
+            logger.info(f"AgentService: Discarding {first_nav_idx} pre-navigation noise steps")
+            steps = steps[first_nav_idx:]
+            
+        # 4. 去除完整的重复循环 (Restart Loops)
+        # 如果模型多次尝试 navigate 到同一个连续的 URL，说明前面的尝试失败了，只保留最后一次尝试。
+        cleaned_steps = []
+        goto_seen = {} # url -> index in cleaned_steps
+        last_goto_url = None
+        
+        for step in steps:
+            if step['action'] == 'goto':
+                url = step.get('value', '')
+                # 如果这个跳转和上一次记录的跳转不同，清空历史记录，这意味着用户真的想要去新的页面
+                if last_goto_url and url != last_goto_url:
+                    goto_seen.clear()
+                    
+                if url in goto_seen:
+                    # 遇到了连续的相同跳转，说明是重试循环，截断之前的尝试
+                    truncate_idx = goto_seen[url]
+                    logger.info(f"AgentService: Truncating loop starting at step {truncate_idx} for url {url}")
+                    cleaned_steps = cleaned_steps[:truncate_idx]
+                
+                goto_seen[url] = len(cleaned_steps)
+                last_goto_url = url
+                
+            cleaned_steps.append(step)
+            
+        return cleaned_steps
 
 
 # 全局实例
